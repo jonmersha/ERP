@@ -1,0 +1,164 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System user with role-based access",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "finance", "store", "procurement", "sales", "factory_manager"] },
+        "unitId": { "type": "string", "description": "ID of the factory, warehouse, or outlet they belong to" }
+      },
+      "required": ["uid", "email", "name", "role"]
+    },
+    "Factory": {
+      "title": "Factory",
+      "description": "Food production facility",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "location": { "type": "string" }
+      },
+      "required": ["name", "location"]
+    },
+    "Warehouse": {
+      "title": "Warehouse",
+      "description": "Storage facility for raw materials or finished goods",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "location": { "type": "string" },
+        "factoryId": { "type": "string" }
+      },
+      "required": ["name", "location"]
+    },
+    "SalesOutlet": {
+      "title": "SalesOutlet",
+      "description": "Retail or wholesale distribution point",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "location": { "type": "string" }
+      },
+      "required": ["name", "location"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "Provider of raw materials",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "contact": { "type": "string" },
+        "email": { "type": "string", "format": "email" }
+      },
+      "required": ["name", "contact"]
+    },
+    "RawMaterial": {
+      "title": "RawMaterial",
+      "description": "Input for food production",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "unit": { "type": "string", "enum": ["kg", "liter", "unit", "bag"] }
+      },
+      "required": ["name", "unit"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Finished food product",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "packageSize": { "type": "string" },
+        "unit": { "type": "string" },
+        "price": { "type": "number" }
+      },
+      "required": ["name", "category", "packageSize", "price"]
+    },
+    "Inventory": {
+      "title": "Inventory",
+      "description": "Stock levels in a specific unit",
+      "type": "object",
+      "properties": {
+        "unitId": { "type": "string" },
+        "itemId": { "type": "string" },
+        "itemType": { "type": "string", "enum": ["raw", "product"] },
+        "quantity": { "type": "number" },
+        "batchNumber": { "type": "string" },
+        "expiryDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["unitId", "itemId", "itemType", "quantity"]
+    },
+    "PurchaseOrder": {
+      "title": "PurchaseOrder",
+      "description": "Order for raw materials",
+      "type": "object",
+      "properties": {
+        "supplierId": { "type": "string" },
+        "factoryId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "delivered", "cancelled"] },
+        "totalAmount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["supplierId", "factoryId", "status", "totalAmount"]
+    },
+    "ProductionPlan": {
+      "title": "ProductionPlan",
+      "description": "Scheduled manufacturing task",
+      "type": "object",
+      "properties": {
+        "factoryId": { "type": "string" },
+        "productId": { "type": "string" },
+        "quantity": { "type": "number" },
+        "status": { "type": "string", "enum": ["planned", "in_progress", "completed"] },
+        "startDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["factoryId", "productId", "quantity", "status"]
+    },
+    "SalesOrder": {
+      "title": "SalesOrder",
+      "description": "Customer order for products",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "outletId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "delivered", "paid"] },
+        "totalAmount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["outletId", "status", "totalAmount"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "Staff member details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "department": { "type": "string" },
+        "role": { "type": "string" },
+        "salary": { "type": "number" },
+        "factoryId": { "type": "string" },
+        "hireDate": { "type": "string", "format": "date" }
+      },
+      "required": ["name", "email", "department", "role"]
+    }
+  },
+  "firestore": {
+    "users": { "schema": "User", "description": "System users" },
+    "factories": { "schema": "Factory", "description": "Production units" },
+    "warehouses": { "schema": "Warehouse", "description": "Storage units" },
+    "outlets": { "schema": "SalesOutlet", "description": "Sales units" },
+    "suppliers": { "schema": "Supplier", "description": "Raw material providers" },
+    "rawMaterials": { "schema": "RawMaterial", "description": "Inventory items (raw)" },
+    "products": { "schema": "Product", "description": "Inventory items (finished)" },
+    "inventory": { "schema": "Inventory", "description": "Stock records" },
+    "purchaseOrders": { "schema": "PurchaseOrder", "description": "Procurement records" },
+    "productionPlans": { "schema": "ProductionPlan", "description": "Manufacturing records" },
+    "salesOrders": { "schema": "SalesOrder", "description": "Sales records" },
+    "employees": { "schema": "Employee", "description": "Workforce records" }
+  }
+}

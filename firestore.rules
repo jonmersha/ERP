@@ -1,0 +1,105 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Fields: uid (string), email (string), name (string), role (string), unitId (string, optional)
+    //
+    // Collection: factories, warehouses, outlets, suppliers, rawMaterials, products
+    // Fields: various strings and numbers as defined in blueprint
+    //
+    // Collection: inventory, purchaseOrders, productionPlans, salesOrders
+    // Fields: various strings, numbers, and status enums
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "jonmersha@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function hasAnyRole(roles) {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles;
+    }
+
+    // Validation Helpers
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && (isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role));
+    }
+
+    // Master Data (Factories, Warehouses, Outlets, Suppliers, RawMaterials, Products)
+    match /factories/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    match /warehouses/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    match /outlets/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    match /suppliers/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || hasRole('procurement');
+    }
+    match /rawMaterials/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || hasRole('procurement');
+    }
+    match /products/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || hasRole('factory_manager');
+    }
+
+    // Operational Data
+    match /inventory/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || hasAnyRole(['store', 'factory_manager', 'sales']);
+    }
+    match /purchaseOrders/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || hasAnyRole(['procurement', 'finance']);
+    }
+    match /productionPlans/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || hasRole('factory_manager');
+    }
+    match /salesOrders/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || hasAnyRole(['sales', 'finance']);
+    }
+    match /employees/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Default Deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
