@@ -1,15 +1,18 @@
 import { collection, addDoc, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { ProductionPlan } from '../types';
+import { ProductionPlan, UserProfile } from '../types';
 
-export const createProductionPlan = async (form: any) => {
+export const createProductionPlan = async (form: any, profile: UserProfile | null) => {
   await addDoc(collection(db, 'productionPlans'), {
     ...form,
     quantity: Number(form.quantity),
-    startDate: new Date(form.startDate).toISOString()
+    quantityProduced: 0,
+    startDate: new Date(form.startDate).toISOString(),
+    status: 'planned',
+    companyId: profile?.companyId || ''
   });
 };
 
-export const updateProductionPlanStatus = async (planId: string, status: ProductionPlan['status']) => {
-  await updateDoc(doc(db, 'productionPlans', planId), { status });
+export const updateProductionProgress = async (planId: string, quantityProduced: number, status: ProductionPlan['status']) => {
+  await updateDoc(doc(db, 'productionPlans', planId), { quantityProduced, status });
 };

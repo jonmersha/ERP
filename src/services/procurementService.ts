@@ -15,7 +15,8 @@ export const createPurchaseOrder = async (
     supplierName: supplier?.name || 'Unknown',
     totalAmount,
     createdBy: profile?.uid,
-    createdAt: new Date(poForm.createdAt).toISOString()
+    createdAt: new Date(poForm.createdAt).toISOString(),
+    companyId: profile?.companyId || ''
   });
 };
 
@@ -35,8 +36,11 @@ export const updatePurchaseOrder = async (
   });
 };
 
-export const createSupplier = async (supplierForm: any) => {
-  await addDoc(collection(db, 'suppliers'), supplierForm);
+export const createSupplier = async (supplierForm: any, profile: UserProfile | null) => {
+  await addDoc(collection(db, 'suppliers'), {
+    ...supplierForm,
+    companyId: profile?.companyId || ''
+  });
 };
 
 export const updateOrderStatus = async (orderId: string, status: PurchaseOrder['status']) => {

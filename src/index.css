@@ -6,3 +6,25 @@
   --font-serif: "Cormorant Garamond", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
+
+:root {
+  --color-main: #166534;
+  --color-accent: #d97706;
+  --color-bg: #F5F5F0;
+  --color-text: #000000;
+  --color-surface: #ffffff;
+}
+
+[data-theme='dark'] {
+  --color-main: #4ade80;
+  --color-accent: #fbbf24;
+  --color-bg: #18181b;
+  --color-text: #ffffff;
+  --color-surface: #27272a;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.3s, color 0.3s;
+}

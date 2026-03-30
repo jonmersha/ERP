@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../firebase';
@@ -10,19 +10,39 @@ import {
   Factory, 
   Users, 
   LogOut, 
-  Menu, 
-  X,
   TrendingUp,
   Warehouse,
-  Database
+  Database,
+  CreditCard,
+  Calendar,
+  CheckCircle2,
+  BookOpen,
+  Wrench,
+  Truck,
+  ChevronDown,
+  Sun,
+  Moon
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { profile, isAdmin } = useAuth();
+  const { profile, hasRole } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' || 'light';
+    setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -31,114 +51,117 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['admin', 'finance', 'store', 'procurement', 'sales', 'factory_manager'] },
-    { name: 'Procurement', path: '/procurement', icon: ShoppingCart, roles: ['admin', 'procurement', 'finance', 'store'] },
-    { name: 'Inventory', path: '/inventory', icon: Warehouse, roles: ['admin', 'store', 'factory_manager', 'sales'] },
-    { name: 'Production', path: '/production', icon: Factory, roles: ['admin', 'factory_manager'] },
-    { name: 'Sales', path: '/sales', icon: TrendingUp, roles: ['admin', 'sales', 'finance'] },
-    { name: 'HR', path: '/hr', icon: Users, roles: ['admin'] },
-    { name: 'Master Data', path: '/master-data', icon: Database, roles: ['admin', 'factory_manager'] },
+    { 
+      name: 'Operations', 
+      icon: Factory, 
+      roles: ['admin', 'factory_manager', 'procurement', 'store'],
+      submenu: [
+        { name: 'Planning', path: '/planning', icon: Calendar },
+        { name: 'Procurement', path: '/procurement', icon: ShoppingCart },
+        { name: 'Inventory', path: '/inventory', icon: Warehouse },
+        { name: 'Production', path: '/production', icon: Factory },
+        { name: 'Recipes', path: '/recipes', icon: BookOpen },
+        { name: 'Maintenance', path: '/maintenance', icon: Wrench },
+        { name: 'Logistics', path: '/logistics', icon: Truck },
+        { name: 'Quality', path: '/quality', icon: CheckCircle2 },
+      ]
+    },
+    { 
+      name: 'Sales & Finance', 
+      icon: CreditCard, 
+      roles: ['admin', 'sales', 'finance'],
+      submenu: [
+        { name: 'Sales', path: '/sales', icon: TrendingUp },
+        { name: 'Finance', path: '/finance', icon: CreditCard },
+      ]
+    },
+    { 
+      name: 'Administration', 
+      icon: Database, 
+      roles: ['admin'],
+      submenu: [
+        { name: 'HR', path: '/hr', icon: Users },
+        { name: 'Users', path: '/users', icon: Users },
+        { name: 'Master Data', path: '/master-data', icon: Database },
+      ]
+    },
   ];
 
   const filteredNavItems = navItems.filter(item => 
-    isAdmin || (profile?.role && item.roles.includes(profile.role))
+    item.roles.some(role => hasRole(role))
   );
 
   return (
-    <div className="min-h-screen bg-[#F5F5F0] flex">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-black/5 shadow-sm">
-        <div className="p-6 border-bottom border-black/5">
-          <h1 className="text-2xl font-serif font-bold text-[#5A5A40]">Cibus ERP</h1>
-          <p className="text-xs text-black/40 uppercase tracking-widest mt-1">Food Complex Management</p>
-        </div>
-        
-        <nav className="flex-1 p-4 space-y-1">
-          {filteredNavItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                location.pathname === item.path
-                  ? 'bg-[#5A5A40] text-white shadow-md'
-                  : 'text-black/60 hover:bg-black/5'
-              }`}
-            >
-              <item.icon size={20} />
-              <span className="font-medium">{item.name}</span>
-            </Link>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-black/5">
-          <div className="flex items-center space-x-3 px-4 py-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-[#5A5A40]/10 flex items-center justify-center text-[#5A5A40] font-bold">
-              {profile?.name?.[0] || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-black truncate">{profile?.name}</p>
-              <p className="text-xs text-black/40 truncate capitalize">{profile?.role}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleSignOut}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
-          >
-            <LogOut size={20} />
-            <span className="font-medium">Sign Out</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-black/5 flex items-center justify-between px-4 z-50">
-        <h1 className="text-xl font-serif font-bold text-[#5A5A40]">Cibus ERP</h1>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-black/60">
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: -100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            className="md:hidden fixed inset-0 bg-white z-40 pt-16"
-          >
-            <nav className="p-4 space-y-2">
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
+      <header className="bg-[var(--color-surface)] border-b border-black/5 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center space-x-8">
+            <h1 className="text-xl font-serif font-bold text-[var(--color-main)]">Sheger ERP</h1>
+            <nav className="hidden md:flex items-center space-x-1">
               {filteredNavItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center space-x-3 px-4 py-4 rounded-xl ${
-                    location.pathname === item.path
-                      ? 'bg-[#5A5A40] text-white'
-                      : 'text-black/60'
-                  }`}
-                >
-                  <item.icon size={24} />
-                  <span className="text-lg font-medium">{item.name}</span>
-                </Link>
+                <div key={item.name} className="relative group">
+                  {item.submenu ? (
+                    <button
+                      onClick={() => setOpenSubmenu(openSubmenu === item.name ? null : item.name)}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        openSubmenu === item.name ? 'bg-black/5 text-[var(--color-main)]' : 'text-[var(--color-text)]/60 hover:text-[var(--color-main)]'
+                      }`}
+                    >
+                      <item.icon size={18} />
+                      <span>{item.name}</span>
+                      <ChevronDown size={14} />
+                    </button>
+                  ) : (
+                    <Link
+                      to={item.path!}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        location.pathname === item.path ? 'bg-[var(--color-main)] text-white' : 'text-[var(--color-text)]/60 hover:text-[var(--color-main)]'
+                      }`}
+                    >
+                      <item.icon size={18} />
+                      <span>{item.name}</span>
+                    </Link>
+                  )}
+                  
+                  {item.submenu && openSubmenu === item.name && (
+                    <div className="absolute top-full left-0 mt-1 w-48 bg-[var(--color-surface)] rounded-xl shadow-lg border border-black/5 py-2 z-50">
+                      {item.submenu.map(sub => (
+                        <Link
+                          key={sub.path}
+                          to={sub.path}
+                          onClick={() => setOpenSubmenu(null)}
+                          className="flex items-center space-x-2 px-4 py-2 text-sm text-[var(--color-text)]/60 hover:bg-black/5 hover:text-[var(--color-main)]"
+                        >
+                          <sub.icon size={16} />
+                          <span>{sub.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center space-x-3 px-4 py-4 text-red-600"
-              >
-                <LogOut size={24} />
-                <span className="text-lg font-medium">Sign Out</span>
-              </button>
             </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
 
-      {/* Main Content */}
-      <main className="flex-1 pt-16 md:pt-0 overflow-auto">
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
-          {children}
+          <div className="flex items-center space-x-4">
+            <button onClick={toggleTheme} className="p-2 text-[var(--color-text)]/40 hover:text-[var(--color-main)]">
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
+            <div className="flex items-center space-x-2 px-3 py-1.5 bg-[var(--color-main)]/10 rounded-full">
+              <div className="w-6 h-6 rounded-full bg-[var(--color-main)] flex items-center justify-center text-white text-xs font-bold">
+                {profile?.name?.[0] || 'U'}
+              </div>
+              <span className="text-sm font-medium text-[var(--color-main)]">{profile?.name}</span>
+            </div>
+            <button onClick={handleSignOut} className="text-[var(--color-text)]/40 hover:text-red-600">
+              <LogOut size={20} />
+            </button>
+          </div>
         </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto p-4 md:p-8">
+        {children}
       </main>
     </div>
   );

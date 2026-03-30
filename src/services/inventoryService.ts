@@ -17,17 +17,20 @@ export const receivePurchaseOrder = async (
     warehouseId: warehouseId,
     receivedBy: profile?.uid || '',
     receivedAt: new Date().toISOString(),
-    items: selectedPO.items.map(item => ({
+    items: (selectedPO.items || []).map(item => ({
       itemId: item.itemId,
       quantityReceived: item.quantity
     })),
-    notes: notes
+    notes: notes,
+    companyId: profile?.companyId || ''
   };
   batch.set(grnRef, grnData);
 
-  for (const item of selectedPO.items) {
+  const items = selectedPO.items || [];
+  for (const item of items) {
     const inventoryQuery = query(
       collection(db, 'inventory'),
+      where('companyId', '==', profile?.companyId),
       where('unitId', '==', warehouseId),
       where('itemId', '==', item.itemId),
       where('itemType', '==', 'raw')
@@ -46,12 +49,50 @@ export const receivePurchaseOrder = async (
         itemId: item.itemId,
         itemType: 'raw',
         quantity: item.quantity,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        companyId: profile?.companyId || ''
       });
     }
   }
 
   batch.update(doc(db, 'purchaseOrders', selectedPO.id), { status: 'received' });
+  await batch.commit();
+};
+
+export const transferProductionToWarehouse = async (
+  productId: string,
+  quantity: number,
+  warehouseId: string,
+  profile: UserProfile | null
+) => {
+  const batch = writeBatch(db);
+  
+  const inventoryQuery = query(
+    collection(db, 'inventory'),
+    where('companyId', '==', profile?.companyId),
+    where('unitId', '==', warehouseId),
+    where('itemId', '==', productId),
+    where('itemType', '==', 'product')
+  );
+  const inventorySnap = await getDocs(inventoryQuery);
+
+  if (!inventorySnap.empty) {
+    const invDoc = inventorySnap.docs[0];
+    batch.update(invDoc.ref, {
+      quantity: invDoc.data().quantity + quantity
+    });
+  } else {
+    const newInvRef = doc(collection(db, 'inventory'));
+    batch.set(newInvRef, {
+      unitId: warehouseId,
+      itemId: productId,
+      itemType: 'product',
+      quantity: quantity,
+      createdAt: new Date().toISOString(),
+      companyId: profile?.companyId || ''
+    });
+  }
+
   await batch.commit();
 };
 
@@ -70,17 +111,20 @@ export const shipSalesOrder = async (
     warehouseId: warehouseId,
     shippedBy: profile?.uid || '',
     shippedAt: new Date().toISOString(),
-    items: selectedSO.items.map(item => ({
+    items: (selectedSO.items || []).map(item => ({
       productId: item.productId,
       quantityShipped: item.quantity
     })),
-    notes: notes
+    notes: notes,
+    companyId: profile?.companyId || ''
   };
   batch.set(dnRef, dnData);
 
-  for (const item of selectedSO.items) {
+  const items = selectedSO.items || [];
+  for (const item of items) {
     const inventoryQuery = query(
       collection(db, 'inventory'),
+      where('companyId', '==', profile?.companyId),
       where('unitId', '==', warehouseId),
       where('itemId', '==', item.productId),
       where('itemType', '==', 'product')
@@ -97,7 +141,20 @@ export const shipSalesOrder = async (
         quantity: currentQty - item.quantity
       });
     } else {
-      throw new Error(`No stock found for ${item.productName} in selected warehouse`);
+      // Check if it exists in another warehouse
+      const anyInventoryQuery = query(
+        collection(db, 'inventory'),
+        where('companyId', '==', profile?.companyId),
+        where('itemId', '==', item.productId),
+        where('itemType', '==', 'product')
+      );
+      const anyInventorySnap = await getDocs(anyInventoryQuery);
+      
+      if (!anyInventorySnap.empty) {
+          throw new Error(`Stock for ${item.productName} found in other warehouses, but not in the selected one.`);
+      } else {
+          throw new Error(`No stock found for ${item.productName} anywhere.`);
+      }
     }
   }
 

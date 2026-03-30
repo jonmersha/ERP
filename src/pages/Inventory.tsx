@@ -97,8 +97,8 @@ const Inventory: React.FC = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[#5A5A40]">Inventory Management</h2>
-          <p className="text-black/40 mt-1">Track stock levels and manage material movements</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Inventory Management</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">Track stock levels and manage material movements</p>
         </div>
         <div className="flex space-x-4">
           <button 
@@ -127,7 +127,7 @@ const Inventory: React.FC = () => {
       </header>
 
       {/* Tabs */}
-      <div className="flex space-x-1 bg-black/5 p-1 rounded-2xl w-fit">
+      <div className="flex space-x-1 bg-[var(--color-text)]/5 p-1 rounded-2xl w-fit">
         {[
           { id: 'stock', label: 'Stock Levels', icon: Package },
           { id: 'incoming', label: 'Incoming Goods', icon: ArrowDownLeft },
@@ -139,8 +139,8 @@ const Inventory: React.FC = () => {
             onClick={() => setActiveTab(tab.id as any)}
             className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
               activeTab === tab.id 
-                ? 'bg-white text-[#5A5A40] shadow-sm' 
-                : 'text-black/40 hover:text-black/60'
+                ? 'bg-[var(--color-surface)] text-[var(--color-main)] shadow-sm' 
+                : 'text-[var(--color-text)]/40 hover:text-[var(--color-text)]/60'
             }`}
           >
             <tab.icon size={16} />

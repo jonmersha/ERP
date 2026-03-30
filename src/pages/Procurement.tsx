@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProcurementData } from '../hooks/useProcurementData';
 import { createPurchaseOrder, updatePurchaseOrder, createSupplier, updateOrderStatus } from '../services/procurementService';
 import { PurchaseOrder, PurchaseOrderItem } from '../types';
-import { Truck, Plus, Search, FileText, Loader2, Trash2, CheckCircle, Package, XCircle } from 'lucide-react';
+import { Truck, Plus, Search, FileText, Loader2, Trash2, CheckCircle, Package, XCircle, Calendar } from 'lucide-react';
 import Modal from '../components/Modal';
 import StatsCard from '../components/common/StatsCard';
 import Badge from '../components/common/Badge';
@@ -69,7 +70,7 @@ const Procurement: React.FC = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await createSupplier(supplierForm);
+      await createSupplier(supplierForm, profile);
       setIsSupplierModalOpen(false);
       setSupplierForm({ name: '', contact: '', email: '' });
     } catch (error) {
@@ -115,7 +116,7 @@ const Procurement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-[#5A5A40]" size={32} />
+        <Loader2 className="animate-spin text-[var(--color-main)]" size={32} />
       </div>
     );
   }
@@ -124,13 +125,20 @@ const Procurement: React.FC = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[#5A5A40]">Procurement</h2>
-          <p className="text-black/40 mt-1">Manage suppliers and raw material acquisitions</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Procurement</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">Manage suppliers and raw material acquisitions</p>
         </div>
         <div className="flex space-x-4">
+          <Link 
+            to="/planning"
+            className="flex items-center space-x-2 bg-[var(--color-surface)] text-[var(--color-main)] px-6 py-3 rounded-2xl shadow-sm border border-[var(--color-text)]/5 hover:bg-[var(--color-bg)] transition-all"
+          >
+            <Calendar size={20} />
+            <span className="font-bold">Planning</span>
+          </Link>
           <button 
             onClick={() => setIsSupplierModalOpen(true)}
-            className="flex items-center space-x-2 bg-white text-[#5A5A40] px-6 py-3 rounded-2xl shadow-sm border border-black/5 hover:bg-[#F5F5F0] transition-all"
+            className="flex items-center space-x-2 bg-[var(--color-surface)] text-[var(--color-main)] px-6 py-3 rounded-2xl shadow-sm border border-[var(--color-text)]/5 hover:bg-[var(--color-bg)] transition-all"
           >
             <Plus size={20} />
             <span className="font-bold">Add Supplier</span>
@@ -148,7 +156,7 @@ const Procurement: React.FC = () => {
               });
               setIsPOModalOpen(true);
             }}
-            className="flex items-center space-x-2 bg-[#5A5A40] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[#4A4A34] transition-all"
+            className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
           >
             <Plus size={20} />
             <span className="font-bold">New Purchase Order</span>
@@ -179,14 +187,14 @@ const Procurement: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-3xl shadow-sm border border-black/5 overflow-hidden">
-            <div className="p-6 border-b border-black/5">
-              <h3 className="font-serif font-bold text-lg text-black">Purchase Orders</h3>
+          <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 overflow-hidden">
+            <div className="p-6 border-b border-[var(--color-text)]/5">
+              <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">Purchase Orders</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#F5F5F0]/50 text-[10px] font-bold text-black/40 uppercase tracking-widest">
+                  <tr className="bg-[var(--color-bg)]/50 text-[10px] font-bold text-[var(--color-text)]/40 uppercase tracking-widest">
                     <th className="px-6 py-4">Order ID</th>
                     <th className="px-6 py-4">Supplier</th>
                     <th className="px-6 py-4">Amount</th>
@@ -194,12 +202,12 @@ const Procurement: React.FC = () => {
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-black/5 text-sm">
+                <tbody className="divide-y divide-[var(--color-text)]/5 text-sm">
                   {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-black/[0.02] transition-colors group">
-                      <td className="px-6 py-4 font-mono font-bold text-[#5A5A40]">#{order.id.slice(0, 8)}</td>
-                      <td className="px-6 py-4 font-bold text-black">{order.supplierName}</td>
-                      <td className="px-6 py-4 font-bold text-black">${order.totalAmount.toLocaleString()}</td>
+                    <tr key={order.id} className="hover:bg-[var(--color-text)]/[0.02] transition-colors group">
+                      <td className="px-6 py-4 font-mono font-bold text-[var(--color-main)]">#{order.id.slice(0, 8)}</td>
+                      <td className="px-6 py-4 font-bold text-[var(--color-text)]">{order.supplierName}</td>
+                      <td className="px-6 py-4 font-bold text-[var(--color-text)]">${order.totalAmount.toLocaleString()}</td>
                       <td className="px-6 py-4">
                         <Badge variant={
                           order.status === 'received' ? 'success' : 
@@ -269,17 +277,17 @@ const Procurement: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-3xl shadow-sm border border-black/5 overflow-hidden">
-            <div className="p-6 border-b border-black/5 flex justify-between items-center">
-              <h3 className="font-serif font-bold text-lg text-black">Suppliers</h3>
-              <Truck size={20} className="text-black/20" />
+          <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 overflow-hidden">
+            <div className="p-6 border-b border-[var(--color-text)]/5 flex justify-between items-center">
+              <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">Suppliers</h3>
+              <Truck size={20} className="text-[var(--color-text)]/20" />
             </div>
-            <div className="divide-y divide-black/5 max-h-[500px] overflow-y-auto">
+            <div className="divide-y divide-[var(--color-text)]/5 max-h-[500px] overflow-y-auto">
               {suppliers.map(supplier => (
-                <div key={supplier.id} className="p-4 hover:bg-black/[0.02] transition-colors">
-                  <h4 className="font-bold text-black">{supplier.name}</h4>
-                  <p className="text-xs text-black/40 mt-1">{supplier.contact}</p>
-                  <p className="text-xs text-black/40">{supplier.email}</p>
+                <div key={supplier.id} className="p-4 hover:bg-[var(--color-text)]/[0.02] transition-colors">
+                  <h4 className="font-bold text-[var(--color-text)]">{supplier.name}</h4>
+                  <p className="text-xs text-[var(--color-text)]/40 mt-1">{supplier.contact}</p>
+                  <p className="text-xs text-[var(--color-text)]/40">{supplier.email}</p>
                 </div>
               ))}
             </div>
@@ -301,7 +309,7 @@ const Procurement: React.FC = () => {
                 required
                 value={poForm.supplierId}
                 onChange={e => setPoForm({ ...poForm, supplierId: e.target.value })}
-                className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               >
                 <option value="">Select Supplier</option>
                 {suppliers.map(s => (
@@ -316,7 +324,7 @@ const Procurement: React.FC = () => {
                 required
                 value={poForm.createdAt}
                 onChange={e => setPoForm({ ...poForm, createdAt: e.target.value })}
-                className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               />
             </div>
           </div>
@@ -327,7 +335,7 @@ const Procurement: React.FC = () => {
               <select 
                 value={poForm.factoryId}
                 onChange={e => setPoForm({ ...poForm, factoryId: e.target.value })}
-                className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               >
                 <option value="">Select Factory</option>
                 {factories.map(f => (
@@ -340,7 +348,7 @@ const Procurement: React.FC = () => {
               <select 
                 value={poForm.warehouseId}
                 onChange={e => setPoForm({ ...poForm, warehouseId: e.target.value })}
-                className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               >
                 <option value="">Select Warehouse</option>
                 {warehouses.map(w => (
@@ -384,7 +392,7 @@ const Procurement: React.FC = () => {
                     required
                     min="1"
                     value={item.quantity}
-                    onChange={e => updatePOItem(index, 'quantity', parseInt(e.target.value))}
+                    onChange={e => updatePOItem(index, 'quantity', parseInt(e.target.value) || 0)}
                     className="w-full p-2 bg-white rounded-lg border border-black/5 text-sm"
                   />
                 </div>
@@ -396,7 +404,7 @@ const Procurement: React.FC = () => {
                     min="0"
                     step="0.01"
                     value={item.price}
-                    onChange={e => updatePOItem(index, 'price', parseFloat(e.target.value))}
+                    onChange={e => updatePOItem(index, 'price', parseFloat(e.target.value) || 0)}
                     className="w-full p-2 bg-white rounded-lg border border-black/5 text-sm"
                   />
                 </div>
@@ -423,7 +431,7 @@ const Procurement: React.FC = () => {
             <button 
               disabled={submitting}
               type="submit"
-              className="bg-[#5A5A40] text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-[#4A4A34] disabled:opacity-50 transition-all"
+              className="bg-[var(--color-main)] text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-[var(--color-main)]/90 disabled:opacity-50 transition-all"
             >
               {submitting ? 'Saving...' : editingOrder ? 'Update Order' : 'Create Order'}
             </button>
@@ -445,7 +453,7 @@ const Procurement: React.FC = () => {
               required
               value={supplierForm.name}
               onChange={e => setSupplierForm({ ...supplierForm, name: e.target.value })}
-              className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+              className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               placeholder="e.g., Global Materials Inc."
             />
           </div>
@@ -456,7 +464,7 @@ const Procurement: React.FC = () => {
               required
               value={supplierForm.contact}
               onChange={e => setSupplierForm({ ...supplierForm, contact: e.target.value })}
-              className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+              className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               placeholder="e.g., John Doe"
             />
           </div>
@@ -467,14 +475,14 @@ const Procurement: React.FC = () => {
               required
               value={supplierForm.email}
               onChange={e => setSupplierForm({ ...supplierForm, email: e.target.value })}
-              className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+              className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               placeholder="e.g., john@globalmaterials.com"
             />
           </div>
           <button 
             disabled={submitting}
             type="submit"
-            className="w-full bg-[#5A5A40] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[#4A4A34] disabled:opacity-50 transition-all"
+            className="w-full bg-[var(--color-main)] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[var(--color-main)]/90 disabled:opacity-50 transition-all"
           >
             {submitting ? 'Creating...' : 'Create Supplier'}
           </button>

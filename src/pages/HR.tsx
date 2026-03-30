@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { useHRData } from '../hooks/useHRData';
 import { createEmployee } from '../services/hrService';
+import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
-import { Users, UserPlus, Search, Briefcase, Mail, DollarSign, Loader2 } from 'lucide-react';
+import { Users, UserPlus, Search, Briefcase, Mail, DollarSign, Loader2, XCircle } from 'lucide-react';
 import Modal from '../components/Modal';
 import StatsCard from '../components/common/StatsCard';
 
 const HR: React.FC = () => {
+  const { profile } = useAuth();
   const { employees, factories, loading } = useHRData();
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     role: '',
@@ -24,8 +27,9 @@ const HR: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setError(null);
     try {
-      await createEmployee(form);
+      await createEmployee(form, profile);
       setIsModalOpen(false);
       setForm({
         name: '',
@@ -36,17 +40,18 @@ const HR: React.FC = () => {
         hireDate: new Date().toISOString().split('T')[0],
         factoryId: ''
       });
-    } catch (error) {
-      console.error("Error adding employee:", error);
+    } catch (err: any) {
+      console.error("Error adding employee:", err);
+      setError(err.message || "Failed to add employee");
     } finally {
       setSubmitting(false);
     }
   };
 
   const filteredEmployees = employees.filter(emp => 
-    emp.name.toLowerCase().includes(search.toLowerCase()) ||
-    emp.role.toLowerCase().includes(search.toLowerCase()) ||
-    emp.department.toLowerCase().includes(search.toLowerCase())
+    (emp.name?.toLowerCase() || '').includes(search.toLowerCase()) ||
+    (emp.role?.toLowerCase() || '').includes(search.toLowerCase()) ||
+    (emp.department?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
   const totalPayroll = employees.reduce((sum, emp) => sum + emp.salary, 0);
@@ -67,13 +72,25 @@ const HR: React.FC = () => {
           <p className="text-black/40 mt-1">Manage workforce across all production units</p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setError(null);
+            setIsModalOpen(true);
+          }}
           className="flex items-center space-x-2 bg-[#5A5A40] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[#4A4A30] transition-all"
         >
           <UserPlus size={20} />
           <span className="font-bold">Add Employee</span>
         </button>
       </header>
+
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-2xl border border-red-100 text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+            <XCircle size={16} />
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard 
@@ -120,29 +137,29 @@ const HR: React.FC = () => {
             >
               <div className="flex justify-between items-start">
                 <div className="w-12 h-12 bg-[#5A5A40] text-white rounded-2xl flex items-center justify-center font-serif text-xl font-bold">
-                  {emp.name[0]}
+                  {emp.name?.[0] || '?'}
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-bold text-black/40 uppercase tracking-widest">{emp.department}</p>
-                  <p className="font-bold text-black">{emp.role}</p>
+                  <p className="text-[10px] font-bold text-black/40 uppercase tracking-widest">{emp.department || 'N/A'}</p>
+                  <p className="font-bold text-black">{emp.role || 'N/A'}</p>
                 </div>
               </div>
               
               <div>
-                <h4 className="font-serif font-bold text-lg text-black">{emp.name}</h4>
+                <h4 className="font-serif font-bold text-lg text-black">{emp.name || 'Unknown'}</h4>
                 <div className="flex items-center text-xs text-black/40 mt-1">
                   <Mail size={12} className="mr-1" />
-                  {emp.email}
+                  {emp.email || 'No email'}
                 </div>
               </div>
 
               <div className="pt-4 border-t border-black/5 flex justify-between items-center">
                 <div className="flex items-center text-[#5A5A40] font-bold">
                   <DollarSign size={14} className="mr-0.5" />
-                  {emp.salary.toLocaleString()}
+                  {Number(emp.salary || 0).toLocaleString()}
                 </div>
                 <div className="text-[10px] text-black/40">
-                  Hired: {new Date(emp.hireDate).toLocaleDateString()}
+                  Hired: {emp.hireDate ? new Date(emp.hireDate).toLocaleDateString() : 'N/A'}
                 </div>
               </div>
             </motion.div>
@@ -206,7 +223,7 @@ const HR: React.FC = () => {
                 required
                 min="0"
                 value={form.salary}
-                onChange={e => setForm({ ...form, salary: parseInt(e.target.value) })}
+                onChange={e => setForm({ ...form, salary: parseInt(e.target.value) || 0 })}
                 className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
               />
             </div>

@@ -1,17 +1,32 @@
 export type UserRole = 'admin' | 'finance' | 'store' | 'procurement' | 'sales' | 'factory_manager';
 
+export interface Company {
+  id: string;
+  name: string;
+  code: string; // Unique code for users to join
+  address?: string;
+  phone?: string;
+  email?: string;
+  logoUrl?: string;
+  bannerUrl?: string;
+  createdAt: string;
+  ownerId: string;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
   name: string;
-  role: UserRole;
+  roles: UserRole[];
   unitId?: string;
+  companyId: string;
 }
 
 export interface Factory {
   id: string;
   name: string;
   location: string;
+  companyId: string;
 }
 
 export interface Warehouse {
@@ -19,12 +34,14 @@ export interface Warehouse {
   name: string;
   location: string;
   factoryId?: string;
+  companyId: string;
 }
 
 export interface SalesOutlet {
   id: string;
   name: string;
   location: string;
+  companyId: string;
 }
 
 export interface Supplier {
@@ -32,18 +49,21 @@ export interface Supplier {
   name: string;
   contact: string;
   email?: string;
+  companyId: string;
 }
 
 export interface RawMaterial {
   id: string;
   name: string;
   unit: 'kg' | 'liter' | 'unit' | 'bag';
+  companyId: string;
 }
 
 export interface Category {
   id: string;
   name: string;
   description?: string;
+  companyId: string;
 }
 
 export interface Product {
@@ -53,6 +73,7 @@ export interface Product {
   packageSize: string;
   unit: string;
   price: number;
+  companyId: string;
 }
 
 export interface InventoryItem {
@@ -63,6 +84,7 @@ export interface InventoryItem {
   quantity: number;
   batchNumber?: string;
   expiryDate?: string;
+  companyId: string;
 }
 
 export interface PurchaseOrderItem {
@@ -83,6 +105,7 @@ export interface PurchaseOrder {
   totalAmount: number;
   createdBy: string;
   createdAt: string;
+  companyId: string;
 }
 
 export interface SalesOrderItem {
@@ -102,15 +125,95 @@ export interface SalesOrder {
   totalAmount: number;
   createdBy: string;
   createdAt: string;
+  companyId: string;
 }
 
 export interface ProductionPlan {
   id: string;
   factoryId: string;
   productId: string;
+  productType: string;
+  year: number;
+  quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+  month?: number; // 1-12
+  day?: number; // 1-31
   quantity: number;
+  quantityProduced: number; // Progress tracking
   status: 'planned' | 'in_progress' | 'completed';
-  startDate: string;
+  companyId: string;
+}
+
+export interface ProcurementPlan {
+  id: string;
+  materialId: string;
+  quantity: number;
+  status: 'planned' | 'ordered' | 'received';
+  year: number;
+  quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+  month?: number; // 1-12
+  companyId: string;
+}
+
+export interface SalesPlan {
+  id: string;
+  productId: string;
+  targetQuantity: number;
+  year: number;
+  quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+  month?: number; // 1-12
+  status: 'draft' | 'approved';
+  companyId: string;
+}
+
+export interface BOMItem {
+  materialId: string;
+  quantity: number;
+  unit: string;
+}
+
+export interface ProcessingStep {
+  order: number;
+  description: string;
+  durationMinutes: number;
+}
+
+export interface Recipe {
+  id: string;
+  productId: string;
+  name: string;
+  bom: BOMItem[];
+  processingSteps: ProcessingStep[];
+  yieldPercentage: number;
+  companyId: string;
+}
+
+export interface Equipment {
+  id: string;
+  name: string;
+  type: string;
+  lastMaintenanceDate: string;
+  nextMaintenanceDate: string;
+  status: 'operational' | 'maintenance' | 'broken';
+  companyId: string;
+}
+
+export interface MaintenanceLog {
+  id: string;
+  equipmentId: string;
+  date: string;
+  description: string;
+  technician: string;
+  cost: number;
+  companyId: string;
+}
+
+export interface Shipment {
+  id: string;
+  orderId: string;
+  status: 'pending' | 'in_transit' | 'delivered';
+  deliveryDate: string;
+  temperatureLog: number[]; // For cold chain monitoring
+  companyId: string;
 }
 
 export interface GRNItem {
@@ -126,6 +229,7 @@ export interface GRN {
   receivedAt: string;
   items: GRNItem[];
   notes?: string;
+  companyId: string;
 }
 
 export interface DeliveryNoteItem {
@@ -141,6 +245,7 @@ export interface DeliveryNote {
   shippedAt: string;
   items: DeliveryNoteItem[];
   notes?: string;
+  companyId: string;
 }
 
 export interface Employee {
@@ -152,4 +257,5 @@ export interface Employee {
   salary: number;
   factoryId?: string;
   hireDate: string;
+  companyId: string;
 }

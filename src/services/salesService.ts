@@ -15,7 +15,8 @@ export const createSalesOrder = async (
     outletName: outlet?.name || 'Unknown',
     totalAmount,
     createdBy: profile?.uid,
-    createdAt: new Date(soForm.createdAt).toISOString()
+    createdAt: new Date(soForm.createdAt).toISOString(),
+    companyId: profile?.companyId || ''
   });
 };
 

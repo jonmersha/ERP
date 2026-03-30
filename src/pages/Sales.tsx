@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSalesData } from '../hooks/useSalesData';
 import { createSalesOrder, updateSalesOrder, updateSalesOrderStatus } from '../services/salesService';
 import { SalesOrder, SalesOrderItem } from '../types';
-import { Store, ShoppingBag, CreditCard, Plus, Search, FileText, Loader2, Trash2, CheckCircle, Truck, XCircle } from 'lucide-react';
+import { Store, ShoppingBag, CreditCard, Plus, Search, FileText, Loader2, Trash2, CheckCircle, Truck, XCircle, Calendar } from 'lucide-react';
 import Modal from '../components/Modal';
 import StatsCard from '../components/common/StatsCard';
 import Badge from '../components/common/Badge';
@@ -14,6 +15,7 @@ const Sales: React.FC = () => {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [editingOrder, setEditingOrder] = useState<SalesOrder | null>(null);
 
   const [form, setForm] = useState<{
@@ -31,6 +33,7 @@ const Sales: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setError(null);
     try {
       if (editingOrder) {
         await updateSalesOrder(editingOrder.id, form, outlets);
@@ -45,10 +48,21 @@ const Sales: React.FC = () => {
         status: 'pending',
         createdAt: new Date().toISOString().split('T')[0]
       });
-    } catch (error) {
-      console.error("Error saving sales order:", error);
+    } catch (err: any) {
+      console.error("Error saving sales order:", err);
+      setError(err.message || "Failed to save sales order");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleStatusUpdate = async (orderId: string, status: SalesOrder['status']) => {
+    try {
+      setError(null);
+      await updateSalesOrderStatus(orderId, status);
+    } catch (err: any) {
+      console.error("Error updating status:", err);
+      setError(err.message || "Failed to update status");
     }
   };
 
@@ -83,8 +97,8 @@ const Sales: React.FC = () => {
   };
 
   const filteredOrders = orders.filter(order => 
-    order.outletName.toLowerCase().includes(search.toLowerCase()) ||
-    order.id.toLowerCase().includes(search.toLowerCase())
+    (order.outletName?.toLowerCase() || '').includes(search.toLowerCase()) ||
+    (order.id?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
   const totalSales = orders.reduce((sum, order) => sum + order.totalAmount, 0);
@@ -93,7 +107,7 @@ const Sales: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-[#5A5A40]" size={32} />
+        <Loader2 className="animate-spin text-[var(--color-main)]" size={32} />
       </div>
     );
   }
@@ -102,26 +116,45 @@ const Sales: React.FC = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[#5A5A40]">Sales Management</h2>
-          <p className="text-black/40 mt-1">Manage customer orders and revenue</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Sales Management</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">Manage customer orders and revenue</p>
         </div>
-        <button 
-          onClick={() => {
-            setEditingOrder(null);
-            setForm({
-              outletId: '',
-              items: [{ productId: '', productName: '', quantity: 0, price: 0 }],
-              status: 'pending',
-              createdAt: new Date().toISOString().split('T')[0]
-            });
-            setIsModalOpen(true);
-          }}
-          className="flex items-center space-x-2 bg-[#5A5A40] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[#4A4A34] transition-all"
-        >
-          <Plus size={20} />
-          <span className="font-bold">New Sales Order</span>
-        </button>
+        <div className="flex space-x-4">
+          <Link 
+            to="/planning"
+            className="flex items-center space-x-2 bg-[var(--color-surface)] text-[var(--color-main)] px-6 py-3 rounded-2xl shadow-sm border border-[var(--color-text)]/5 hover:bg-[var(--color-bg)] transition-all"
+          >
+            <Calendar size={20} />
+            <span className="font-bold">Planning</span>
+          </Link>
+          <button 
+            onClick={() => {
+              setEditingOrder(null);
+              setError(null);
+              setForm({
+                outletId: '',
+                items: [{ productId: '', productName: '', quantity: 0, price: 0 }],
+                status: 'pending',
+                createdAt: new Date().toISOString().split('T')[0]
+              });
+              setIsModalOpen(true);
+            }}
+            className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
+          >
+            <Plus size={20} />
+            <span className="font-bold">New Sales Order</span>
+          </button>
+        </div>
       </header>
+
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-2xl border border-red-100 text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+            <XCircle size={16} />
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard 
@@ -144,17 +177,17 @@ const Sales: React.FC = () => {
         />
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-black/5 overflow-hidden">
-        <div className="p-6 border-b border-black/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h3 className="font-serif font-bold text-lg text-black">Sales Orders</h3>
+      <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 overflow-hidden">
+        <div className="p-6 border-b border-[var(--color-text)]/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">Sales Orders</h3>
           <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-black/20" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
             <input 
               type="text"
               placeholder="Search orders..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 text-sm"
+              className="w-full pl-10 pr-4 py-2 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-sm"
             />
           </div>
         </div>
@@ -162,7 +195,7 @@ const Sales: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#F5F5F0]/50 text-[10px] font-bold text-black/40 uppercase tracking-widest">
+              <tr className="bg-[var(--color-bg)]/50 text-[10px] font-bold text-[var(--color-text)]/40 uppercase tracking-widest">
                 <th className="px-6 py-4">Order ID</th>
                 <th className="px-6 py-4">Outlet</th>
                 <th className="px-6 py-4">Date</th>
@@ -171,13 +204,13 @@ const Sales: React.FC = () => {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/5 text-sm">
+            <tbody className="divide-y divide-[var(--color-text)]/5 text-sm">
               {filteredOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-black/[0.02] transition-colors group">
-                  <td className="px-6 py-4 font-mono font-bold text-[#5A5A40]">#{order.id.slice(0, 8)}</td>
-                  <td className="px-6 py-4 font-bold text-black">{order.outletName}</td>
-                  <td className="px-6 py-4 text-black/60">{new Date(order.createdAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 font-bold text-black">${order.totalAmount.toLocaleString()}</td>
+                <tr key={order.id} className="hover:bg-[var(--color-text)]/[0.02] transition-colors group">
+                  <td className="px-6 py-4 font-mono font-bold text-[var(--color-main)]">#{order.id?.slice(0, 8)}</td>
+                  <td className="px-6 py-4 font-bold text-[var(--color-text)]">{order.outletName || 'Unknown'}</td>
+                  <td className="px-6 py-4 text-[var(--color-text)]/60">{new Date(order.createdAt).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 font-bold text-[var(--color-text)]">${order.totalAmount.toLocaleString()}</td>
                   <td className="px-6 py-4">
                     <Badge variant={
                       order.status === 'paid' ? 'success' : 
@@ -192,7 +225,7 @@ const Sales: React.FC = () => {
                       {order.status === 'pending' && (
                         <>
                           <button 
-                            onClick={() => updateSalesOrderStatus(order.id, 'paid')}
+                            onClick={() => handleStatusUpdate(order.id, 'paid')}
                             className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                             title="Mark as Paid"
                           >
@@ -201,6 +234,7 @@ const Sales: React.FC = () => {
                           <button 
                             onClick={() => {
                               setEditingOrder(order);
+                              setError(null);
                               setForm({
                                 outletId: order.outletId,
                                 items: order.items,
@@ -218,7 +252,7 @@ const Sales: React.FC = () => {
                       )}
                       {order.status === 'paid' && (
                         <button 
-                          onClick={() => updateSalesOrderStatus(order.id, 'ready_to_ship')}
+                          onClick={() => handleStatusUpdate(order.id, 'ready_to_ship')}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Ready to Ship"
                         >
@@ -227,7 +261,7 @@ const Sales: React.FC = () => {
                       )}
                       {order.status !== 'cancelled' && order.status !== 'shipped' && (
                         <button 
-                          onClick={() => updateSalesOrderStatus(order.id, 'cancelled')}
+                          onClick={() => handleStatusUpdate(order.id, 'cancelled')}
                           className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                           title="Cancel Order"
                         >
@@ -256,7 +290,7 @@ const Sales: React.FC = () => {
                 required
                 value={form.outletId}
                 onChange={e => setForm({ ...form, outletId: e.target.value })}
-                className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               >
                 <option value="">Select Outlet</option>
                 {outlets.map(o => (
@@ -271,7 +305,7 @@ const Sales: React.FC = () => {
                 required
                 value={form.createdAt}
                 onChange={e => setForm({ ...form, createdAt: e.target.value })}
-                className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               />
             </div>
           </div>
@@ -288,14 +322,14 @@ const Sales: React.FC = () => {
               </button>
             </div>
             {form.items.map((item, index) => (
-              <div key={index} className="grid grid-cols-12 gap-3 items-end bg-black/[0.02] p-3 rounded-2xl border border-black/5">
+              <div key={index} className="grid grid-cols-12 gap-3 items-end bg-[var(--color-text)]/[0.02] p-3 rounded-2xl border border-[var(--color-text)]/5">
                 <div className="col-span-5 space-y-1">
-                  <label className="text-[10px] font-bold text-black/20 uppercase tracking-widest">Product</label>
+                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">Product</label>
                   <select 
                     required
                     value={item.productId}
                     onChange={e => updateItem(index, 'productId', e.target.value)}
-                    className="w-full p-2 bg-white rounded-lg border border-black/5 text-sm"
+                    className="w-full p-2 bg-[var(--color-bg)] rounded-lg border border-[var(--color-text)]/5 text-sm text-[var(--color-text)]"
                   >
                     <option value="">Select Product</option>
                     {products.map(p => (
@@ -304,26 +338,26 @@ const Sales: React.FC = () => {
                   </select>
                 </div>
                 <div className="col-span-3 space-y-1">
-                  <label className="text-[10px] font-bold text-black/20 uppercase tracking-widest">Qty</label>
+                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">Qty</label>
                   <input 
                     type="number"
                     required
                     min="1"
                     value={item.quantity}
-                    onChange={e => updateItem(index, 'quantity', parseInt(e.target.value))}
-                    className="w-full p-2 bg-white rounded-lg border border-black/5 text-sm"
+                    onChange={e => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                    className="w-full p-2 bg-[var(--color-bg)] rounded-lg border border-[var(--color-text)]/5 text-sm text-[var(--color-text)]"
                   />
                 </div>
                 <div className="col-span-3 space-y-1">
-                  <label className="text-[10px] font-bold text-black/20 uppercase tracking-widest">Price</label>
+                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">Price</label>
                   <input 
                     type="number"
                     required
                     min="0"
                     step="0.01"
                     value={item.price}
-                    onChange={e => updateItem(index, 'price', parseFloat(e.target.value))}
-                    className="w-full p-2 bg-white rounded-lg border border-black/5 text-sm"
+                    onChange={e => updateItem(index, 'price', parseFloat(e.target.value) || 0)}
+                    className="w-full p-2 bg-[var(--color-bg)] rounded-lg border border-[var(--color-text)]/5 text-sm text-[var(--color-text)]"
                   />
                 </div>
                 <div className="col-span-1 pb-1">
@@ -339,17 +373,17 @@ const Sales: React.FC = () => {
             ))}
           </div>
 
-          <div className="pt-4 border-t border-black/5 flex justify-between items-center">
+          <div className="pt-4 border-t border-[var(--color-text)]/5 flex justify-between items-center">
             <div className="text-right flex-1 pr-4">
-              <p className="text-xs font-bold text-black/40 uppercase tracking-widest">Total Amount</p>
-              <p className="text-2xl font-serif font-bold text-black">
+              <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Total Amount</p>
+              <p className="text-2xl font-serif font-bold text-[var(--color-text)]">
                 ${form.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()}
               </p>
             </div>
             <button 
               disabled={submitting}
               type="submit"
-              className="bg-[#5A5A40] text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-[#4A4A34] disabled:opacity-50 transition-all"
+              className="bg-[var(--color-main)] text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-[var(--color-main)]/90 disabled:opacity-50 transition-all"
             >
               {submitting ? 'Saving...' : editingOrder ? 'Update Order' : 'Create Order'}
             </button>

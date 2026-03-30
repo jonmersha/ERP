@@ -32,16 +32,16 @@ const DNModal: React.FC<DNModalProps> = ({
       <form onSubmit={onSubmit} className="space-y-6">
         {!selectedSO ? (
           <div className="space-y-1">
-            <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Select Sales Order</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Select Sales Order</label>
             <select 
               required
               value={selectedSO?.id || ''}
               onChange={e => setSelectedSO(pendingSOs.find(so => so.id === e.target.value) || null)}
-              className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+              className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
             >
               <option value="">Select Paid SO</option>
-              {pendingSOs.map(so => (
-                <option key={so.id} value={so.id}>#{so.id.slice(0, 8)} - {so.outletName}</option>
+              {(pendingSOs || []).map(so => (
+                <option key={so.id} value={so.id}>#{so.id?.slice(0, 8)} - {so.outletName || 'Unknown Outlet'}</option>
               ))}
             </select>
           </div>
@@ -54,34 +54,34 @@ const DNModal: React.FC<DNModalProps> = ({
             >
               Change SO
             </button>
-            <p className="text-sm text-indigo-800 font-medium">Dispatching SO #{selectedSO.id.slice(0, 8)}</p>
+            <p className="text-sm text-indigo-800 font-medium">Dispatching SO #{selectedSO.id?.slice(0, 8)}</p>
             <div className="mt-2 space-y-1">
-              {selectedSO.items.map((item, i) => (
-                <p key={i} className="text-xs text-indigo-700">• {item.productName}: <span className="font-bold">{item.quantity}</span></p>
+              {(selectedSO.items || []).map((item, i) => (
+                <p key={i} className="text-xs text-indigo-700">• {item.productName || 'Unknown Product'}: <span className="font-bold">{item.quantity || 0}</span></p>
               ))}
             </div>
           </div>
         )}
         <div className="space-y-1">
-          <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Dispatch From Warehouse</label>
+          <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Dispatch From Warehouse</label>
           <select 
             required
             value={dnForm.warehouseId}
             onChange={e => setDnForm({ ...dnForm, warehouseId: e.target.value })}
-            className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+            className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
           >
             <option value="">Select Warehouse</option>
-            {warehouses.map(w => (
+            {(warehouses || []).map(w => (
               <option key={w.id} value={w.id}>{w.name}</option>
             ))}
           </select>
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Notes</label>
+          <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Notes</label>
           <textarea 
             value={dnForm.notes}
             onChange={e => setDnForm({ ...dnForm, notes: e.target.value })}
-            className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 h-24 resize-none"
+            className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 h-24 resize-none text-[var(--color-text)]"
             placeholder="Shipping details, carrier info, etc..."
           />
         </div>

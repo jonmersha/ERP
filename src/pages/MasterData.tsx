@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Factory, Warehouse, Product, RawMaterial, Category } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { motion } from 'motion/react';
 import { 
   Database, 
@@ -40,21 +41,29 @@ const MasterData: React.FC = () => {
   const [categoryForm, setCategoryForm] = useState({ name: '', description: '' });
 
   useEffect(() => {
-    const unsubFactories = onSnapshot(collection(db, 'factories'), (snap) => {
+    if (!profile?.companyId) return;
+
+    const companyFilter = where('companyId', '==', profile.companyId);
+
+    const unsubFactories = onSnapshot(query(collection(db, 'factories'), companyFilter), (snap) => {
       setFactories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Factory)));
-    });
-    const unsubWarehouses = onSnapshot(collection(db, 'warehouses'), (snap) => {
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'factories'));
+
+    const unsubWarehouses = onSnapshot(query(collection(db, 'warehouses'), companyFilter), (snap) => {
       setWarehouses(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Warehouse)));
-    });
-    const unsubProducts = onSnapshot(collection(db, 'products'), (snap) => {
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'warehouses'));
+
+    const unsubProducts = onSnapshot(query(collection(db, 'products'), companyFilter), (snap) => {
       setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-    });
-    const unsubRaw = onSnapshot(collection(db, 'rawMaterials'), (snap) => {
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'products'));
+
+    const unsubRaw = onSnapshot(query(collection(db, 'rawMaterials'), companyFilter), (snap) => {
       setRawMaterials(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as RawMaterial)));
-    });
-    const unsubCats = onSnapshot(collection(db, 'categories'), (snap) => {
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'rawMaterials'));
+
+    const unsubCats = onSnapshot(query(collection(db, 'categories'), companyFilter), (snap) => {
       setCategories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category)));
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'categories'));
 
     return () => {
       unsubFactories();
@@ -63,43 +72,46 @@ const MasterData: React.FC = () => {
       unsubRaw();
       unsubCats();
     };
-  }, []);
+  }, [profile?.companyId]);
 
   const canManage = isAdmin || profile?.role === 'admin' || profile?.role === 'factory_manager';
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canManage) return;
+    if (!canManage || !profile?.companyId) return;
     setSubmitting(true);
 
-    try {
-      let collectionName = '';
-      let formData = {};
+    let colName = '';
+    let formData = {};
 
+    try {
       switch (activeTab) {
         case 'factories':
-          collectionName = 'factories';
+          colName = 'factories';
           formData = factoryForm;
           break;
         case 'warehouses':
-          collectionName = 'warehouses';
+          colName = 'warehouses';
           formData = warehouseForm;
           break;
         case 'products':
-          collectionName = 'products';
+          colName = 'products';
           formData = { ...productForm, price: Number(productForm.price) };
           break;
         case 'raw':
-          collectionName = 'rawMaterials';
+          colName = 'rawMaterials';
           formData = rawForm;
           break;
         case 'categories':
-          collectionName = 'categories';
+          colName = 'categories';
           formData = categoryForm;
           break;
       }
 
-      await addDoc(collection(db, collectionName), formData);
+      await addDoc(collection(db, colName), {
+        ...formData,
+        companyId: profile.companyId
+      });
       setIsModalOpen(false);
       // Reset forms
       setFactoryForm({ name: '', location: '' });
@@ -108,7 +120,7 @@ const MasterData: React.FC = () => {
       setRawForm({ name: '', unit: 'kg' });
       setCategoryForm({ name: '', description: '' });
     } catch (error) {
-      console.error("Error saving master data:", error);
+      handleFirestoreError(error, OperationType.CREATE, colName);
     } finally {
       setSubmitting(false);
     }
@@ -286,7 +298,7 @@ const MasterData: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Price ($)</label>
-                  <input type="number" required value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5" />
+                  <input type="number" required value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value === '' ? 0 : Number(e.target.value)})} className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

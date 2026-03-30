@@ -1,44 +1,120 @@
 import React, { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { LogIn, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { seedDatabase } from '../utils/seedData';
+import { motion, AnimatePresence } from 'motion/react';
+import { LogIn, ShieldCheck, Building2, Plus, Users, ArrowRight, MapPin, Phone, Mail, Image as ImageIcon } from 'lucide-react';
 
 const Login: React.FC = () => {
+  const { user, profile, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<'login' | 'company-setup'>('login');
+  const [tempUser, setTempUser] = useState<any>(null);
+  const [companyMode, setCompanyMode] = useState<'join' | 'create'>('join');
+  const [companyName, setCompanyName] = useState('');
+  const [companyCode, setCompanyCode] = useState('');
+  const [companyAddress, setCompanyAddress] = useState('');
+  const [companyPhone, setCompanyPhone] = useState('');
+  const [companyEmail, setCompanyEmail] = useState('');
+  const [companyLogo, setCompanyLogo] = useState('');
+  
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    if (!authLoading && user && profile?.companyId) {
+      navigate('/');
+    }
+  }, [user, profile, authLoading, navigate]);
+
   const handleGoogleLogin = async () => {
-    setLoading(true);
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
+      setLoading(true); // Set loading after popup is triggered
       const user = result.user;
 
       // Check if profile exists
       const profileRef = doc(db, 'users', user.uid);
       const profileSnap = await getDoc(profileRef);
 
-      if (!profileSnap.exists()) {
-        // Create default profile for first-time login
-        const isDefaultAdmin = user.email === 'jonmersha@gmail.com';
-        await setDoc(profileRef, {
-          uid: user.uid,
-          email: user.email,
-          name: user.displayName || 'User',
-          role: isDefaultAdmin ? 'admin' : 'sales', // Default role
-          createdAt: new Date().toISOString(),
-        });
+      if (!profileSnap.exists() || !profileSnap.data().companyId) {
+        setTempUser(user);
+        setStep('company-setup');
+      } else {
+        navigate('/');
       }
+    } catch (err: any) {
+      console.error("Login error details:", err);
+      setError(err.message || 'Failed to login. Please check your browser console for details.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompanySetup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tempUser) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      let finalCompanyId = '';
+      let finalRoles = ['sales'];
+
+      if (companyMode === 'create') {
+        // Create new company
+        const companyRef = doc(collection(db, 'companies'));
+        const newCompanyCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        await setDoc(companyRef, {
+          id: companyRef.id,
+          name: companyName,
+          code: newCompanyCode,
+          address: companyAddress,
+          phone: companyPhone,
+          email: companyEmail,
+          logoUrl: companyLogo,
+          ownerId: tempUser.uid,
+          createdAt: new Date().toISOString()
+        });
+
+        // Seed database for new company
+        await seedDatabase(companyRef.id);
+        
+        finalCompanyId = companyRef.id;
+        finalRoles = ['admin']; // Creator is admin
+      } else {
+        // Join existing company
+        const q = query(collection(db, 'companies'), where('code', '==', companyCode.toUpperCase()));
+        const snap = await getDocs(q);
+        
+        if (snap.empty) {
+          throw new Error('Invalid company code');
+        }
+        
+        finalCompanyId = snap.docs[0].id;
+      }
+
+      // Create user profile
+      const profileRef = doc(db, 'users', tempUser.uid);
+      await setDoc(profileRef, {
+        uid: tempUser.uid,
+        email: tempUser.email,
+        name: tempUser.displayName || 'User',
+        roles: finalRoles,
+        companyId: finalCompanyId,
+        createdAt: new Date().toISOString(),
+      });
 
       navigate('/');
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Failed to login');
+      console.error("Company setup error details:", err);
+      setError(err.message || 'Failed to setup company. Please check your browser console for details.');
     } finally {
       setLoading(false);
     }
@@ -46,46 +122,196 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-black/5"
-      >
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-[#5A5A40] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <ShieldCheck className="text-white" size={32} />
-          </div>
-          <h1 className="text-3xl font-serif font-bold text-[#5A5A40]">Cibus ERP</h1>
-          <p className="text-black/40 mt-2">Enterprise Food Complex Management</p>
-        </div>
+      <AnimatePresence mode="wait">
+        {step === 'login' ? (
+          <motion.div
+            key="login"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-black/5"
+          >
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-[#5A5A40] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <ShieldCheck className="text-white" size={32} />
+              </div>
+              <h1 className="text-3xl font-serif font-bold text-[#5A5A40]">Cibus ERP</h1>
+              <p className="text-black/40 mt-2">Enterprise Food Complex Management</p>
+            </div>
 
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm border border-red-100">
-            {error}
-          </div>
+            {error && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm border border-red-100">
+                {error}
+              </div>
+            )}
+
+            <button
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full flex items-center justify-center space-x-3 bg-white border-2 border-black/5 hover:border-[#5A5A40] hover:bg-[#5A5A40]/5 p-4 rounded-2xl transition-all duration-300 group disabled:opacity-50"
+            >
+              {loading ? (
+                <div className="w-6 h-6 border-2 border-[#5A5A40] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+                  <span className="font-semibold text-black/70 group-hover:text-[#5A5A40]">Continue with Google</span>
+                </>
+              )}
+            </button>
+
+            <div className="mt-8 pt-8 border-t border-black/5 text-center">
+              <p className="text-xs text-black/30 uppercase tracking-widest font-medium">
+                Multi-Tenant Enterprise Resource Planning
+              </p>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="company-setup"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-black/5"
+          >
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Building2 className="text-white" size={32} />
+              </div>
+              <h1 className="text-2xl font-serif font-bold text-black">Company Setup</h1>
+              <p className="text-black/40 mt-2">Join an existing organization or create a new one</p>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm border border-red-100">
+                {error}
+              </div>
+            )}
+
+            <div className="flex p-1 bg-black/5 rounded-xl mb-8">
+              <button
+                onClick={() => setCompanyMode('join')}
+                className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg text-sm font-bold transition-all ${companyMode === 'join' ? 'bg-white text-black shadow-sm' : 'text-black/40'}`}
+              >
+                <Users size={16} />
+                <span>Join Company</span>
+              </button>
+              <button
+                onClick={() => setCompanyMode('create')}
+                className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg text-sm font-bold transition-all ${companyMode === 'create' ? 'bg-white text-black shadow-sm' : 'text-black/40'}`}
+              >
+                <Plus size={16} />
+                <span>Create New</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleCompanySetup} className="space-y-6">
+              {companyMode === 'join' ? (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Company Code</label>
+                  <input
+                    required
+                    type="text"
+                    value={companyCode}
+                    onChange={(e) => setCompanyCode(e.target.value)}
+                    placeholder="Enter 6-digit code"
+                    className="w-full p-4 bg-[#F5F5F0] rounded-2xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-mono text-lg tracking-widest text-center uppercase"
+                  />
+                  <p className="text-[10px] text-black/30 mt-2">Ask your administrator for the company join code.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Company Name</label>
+                    <div className="relative">
+                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-black/20" size={20} />
+                      <input
+                        required
+                        type="text"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        placeholder="e.g. Cibus Foods Ltd"
+                        className="w-full pl-12 pr-4 py-4 bg-[#F5F5F0] rounded-2xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Address</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-black/20" size={20} />
+                      <input
+                        required
+                        type="text"
+                        value={companyAddress}
+                        onChange={(e) => setCompanyAddress(e.target.value)}
+                        placeholder="Street, City, Country"
+                        className="w-full pl-12 pr-4 py-4 bg-[#F5F5F0] rounded-2xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Phone</label>
+                      <div className="relative">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-black/20" size={18} />
+                        <input
+                          required
+                          type="tel"
+                          value={companyPhone}
+                          onChange={(e) => setCompanyPhone(e.target.value)}
+                          placeholder="+251..."
+                          className="w-full pl-12 pr-4 py-4 bg-[#F5F5F0] rounded-2xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Email</label>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-black/20" size={18} />
+                        <input
+                          required
+                          type="email"
+                          value={companyEmail}
+                          onChange={(e) => setCompanyEmail(e.target.value)}
+                          placeholder="contact@company.com"
+                          className="w-full pl-12 pr-4 py-4 bg-[#F5F5F0] rounded-2xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Logo URL (Optional)</label>
+                    <div className="relative">
+                      <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-black/20" size={20} />
+                      <input
+                        type="url"
+                        value={companyLogo}
+                        onChange={(e) => setCompanyLogo(e.target.value)}
+                        placeholder="https://..."
+                        className="w-full pl-12 pr-4 py-4 bg-[#F5F5F0] rounded-2xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center space-x-2 bg-black text-white p-4 rounded-2xl font-bold hover:bg-black/80 transition-all disabled:opacity-50"
+              >
+                {loading ? (
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <span>{companyMode === 'join' ? 'Join Organization' : 'Initialize Company'}</span>
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+            </form>
+          </motion.div>
         )}
-
-        <button
-          onClick={handleGoogleLogin}
-          disabled={loading}
-          className="w-full flex items-center justify-center space-x-3 bg-white border-2 border-black/5 hover:border-[#5A5A40] hover:bg-[#5A5A40]/5 p-4 rounded-2xl transition-all duration-300 group disabled:opacity-50"
-        >
-          {loading ? (
-            <div className="w-6 h-6 border-2 border-[#5A5A40] border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <>
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
-              <span className="font-semibold text-black/70 group-hover:text-[#5A5A40]">Continue with Google</span>
-            </>
-          )}
-        </button>
-
-        <div className="mt-8 pt-8 border-t border-black/5 text-center">
-          <p className="text-xs text-black/30 uppercase tracking-widest font-medium">
-            Secure Access for Authorized Personnel Only
-          </p>
-        </div>
-      </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
