@@ -9,10 +9,10 @@ import SalesPlanList from '../components/planning/SalesPlanList';
 
 const Planning: React.FC = () => {
   const { profile } = useAuth();
-  const { factories, products, materials, loading } = useInventoryData();
+  const { factories, products, materials, warehouses, loading } = useInventoryData();
   const [activeTab, setActiveTab] = useState<'production' | 'procurement' | 'sales'>('production');
 
-  if (loading) return <Loader2 className="animate-spin mx-auto" />;
+  if (loading) return <Loader2 className="animate-spin mx-auto text-[var(--color-main)]" />;
 
   return (
     <div className="space-y-8">
@@ -45,8 +45,8 @@ const Planning: React.FC = () => {
 
       <div className="bg-[var(--color-surface)] p-8 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
         {activeTab === 'production' && <ProductionPlanList factories={factories} products={products} materials={materials} />}
-        {activeTab === 'procurement' && <ProcurementPlanList materials={materials} />}
-        {activeTab === 'sales' && <SalesPlanList products={products} />}
+        {activeTab === 'procurement' && <ProcurementPlanList materials={materials} warehouses={warehouses} />}
+        {activeTab === 'sales' && <SalesPlanList products={products} factories={factories} />}
       </div>
     </div>
   );

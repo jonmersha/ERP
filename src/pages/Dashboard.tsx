@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, query, limit, where } from 'firebase/firestore';
+import { collection, onSnapshot, query, limit, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import { motion } from 'motion/react';
 import { seedDatabase } from '../utils/seedData';
@@ -20,6 +20,7 @@ import {
   Settings
 } from 'lucide-react';
 import EditCompanyModal from '../components/EditCompanyModal';
+import { Product, Factory as FactoryType } from '../types';
 
 const StatCard: React.FC<{ title: string; value: string | number; icon: any; trend?: number; color: string }> = ({ title, value, icon: Icon, trend, color }) => (
   <motion.div 
@@ -55,6 +56,7 @@ const Dashboard: React.FC = () => {
     revenue: 0,
     lowStock: 0
   });
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
 
   const handleSeed = async () => {
     if (!profile?.companyId) return;
@@ -86,11 +88,18 @@ const Dashboard: React.FC = () => {
       setStats(prev => ({ ...prev, lowStock: low }));
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'inventory'));
 
+    // Fetch recent orders
+    const unsubRecentOrders = onSnapshot(query(collection(db, 'salesOrders'), companyFilter, orderBy('createdAt', 'desc'), limit(3)), (snap) => {
+      const ordersData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setRecentOrders(ordersData);
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'salesOrders'));
+
     return () => {
       unsubFactories();
       unsubWarehouses();
       unsubOrders();
       unsubInventory();
+      unsubRecentOrders();
     };
   }, [profile?.companyId]);
 
@@ -170,6 +179,21 @@ const Dashboard: React.FC = () => {
                       >
                         {isSeeding ? 'Seeding...' : 'Seed Data'}
                       </button>
+                      <button 
+                        onClick={async () => {
+                          setIsSeeding(true);
+                          const companiesSnap = await getDocs(collection(db, 'companies'));
+                          for (const doc of companiesSnap.docs) {
+                            await seedDatabase(doc.id);
+                          }
+                          setIsSeeding(false);
+                          alert('Seeding complete for all companies!');
+                        }}
+                        disabled={isSeeding}
+                        className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 hover:text-[var(--color-text)] transition-colors ml-4"
+                      >
+                        {isSeeding ? 'Seeding All...' : 'Seed All'}
+                      </button>
                     </>
                   )}
                 </div>
@@ -200,52 +224,57 @@ const Dashboard: React.FC = () => {
           value={stats.factories} 
           icon={Factory} 
           trend={12}
-          color="bg-[#5A5A40]" 
+          color="bg-[var(--color-main)]" 
         />
         <StatCard 
           title="Total Revenue" 
           value={`$${stats.revenue.toLocaleString()}`} 
           icon={TrendingUp} 
           trend={8}
-          color="bg-emerald-600" 
+          color="bg-[var(--color-main)]" 
         />
         <StatCard 
           title="Sales Orders" 
           value={stats.orders} 
           icon={ShoppingCart} 
           trend={-3}
-          color="bg-blue-600" 
+          color="bg-[var(--color-main)]" 
         />
         <StatCard 
           title="Low Stock Items" 
           value={stats.lowStock} 
           icon={AlertTriangle} 
-          color="bg-amber-500" 
+          color="bg-[var(--color-accent)]" 
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
           <div className="flex justify-between items-center mb-8">
-            <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Recent Production Plans</h3>
+            <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Recent Sales Orders</h3>
             <button className="text-sm font-medium text-[var(--color-main)] hover:underline">View All</button>
           </div>
           <div className="space-y-4">
-            {/* Placeholder for list */}
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-[var(--color-bg)]/50 border border-[var(--color-text)]/5">
+            {recentOrders.length === 0 && <p className="text-sm text-[var(--color-text)]/40">No recent sales orders.</p>}
+            {recentOrders.map((order) => (
+              <div key={order.id} className="flex items-center justify-between p-4 rounded-2xl bg-[var(--color-bg)]/50 border border-[var(--color-text)]/5">
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-[var(--color-surface)] rounded-xl flex items-center justify-center shadow-sm">
-                    <Package size={20} className="text-[var(--color-main)]" />
+                    <ShoppingCart size={20} className="text-[var(--color-main)]" />
                   </div>
                   <div>
-                    <p className="font-medium text-[var(--color-text)]">Wheat Flour 25kg</p>
-                    <p className="text-xs text-[var(--color-text)]/40">Factory A • Batch #WF-00{i}</p>
+                    <p className="font-medium text-[var(--color-text)]">{order.outletName || 'Unknown Outlet'}</p>
+                    <p className="text-xs text-[var(--color-text)]/40">{order.items?.length || 0} items • {new Date(order.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-[var(--color-text)]">5,000 Units</p>
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">In Progress</span>
+                  <p className="font-bold text-[var(--color-text)]">${(order.totalAmount || 0).toLocaleString()}</p>
+                  <span className={`text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded-full ${
+                    order.status === 'delivered' ? 'text-emerald-600 bg-emerald-50' : 
+                    order.status === 'shipped' ? 'text-blue-600 bg-blue-50' : 'text-amber-600 bg-amber-50'
+                  }`}>
+                    {order.status.replace('_', ' ')}
+                  </span>
                 </div>
               </div>
             ))}

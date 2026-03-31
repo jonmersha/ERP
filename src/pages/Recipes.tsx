@@ -8,9 +8,10 @@ import Modal from '../components/Modal';
 
 const Recipes: React.FC = () => {
   const { profile } = useAuth();
-  const { products, loading: inventoryLoading } = useInventoryData();
+  const { products, materials, loading: inventoryLoading } = useInventoryData();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newRecipe, setNewRecipe] = useState<Omit<Recipe, 'id'>>({
     productId: '',
@@ -51,7 +52,49 @@ const Recipes: React.FC = () => {
     }
   };
 
-  if (loading || inventoryLoading) return <Loader2 className="animate-spin mx-auto" />;
+  const handleAutoGenerate = async () => {
+    if (!profile?.companyId || materials.length === 0) return;
+    setGenerating(true);
+    try {
+      const existingProductIds = new Set(recipes.map(r => r.productId));
+      const missingProducts = products.filter(p => !existingProductIds.has(p.id));
+
+      for (const product of missingProducts) {
+        // Pick 2 random materials for the BOM
+        const shuffledMaterials = [...materials].sort(() => 0.5 - Math.random());
+        const selectedMaterials = shuffledMaterials.slice(0, Math.min(2, materials.length));
+        
+        const bom = selectedMaterials.map(m => ({
+          materialId: m.id,
+          quantity: Math.floor(Math.random() * 5) + 1,
+          unit: m.unit || 'kg'
+        }));
+
+        await addRecipe({
+          productId: product.id,
+          name: `${product.name} Standard Recipe`,
+          bom,
+          processingSteps: [
+            { order: 1, description: 'Prepare raw materials according to BOM.', durationMinutes: 30 },
+            { order: 2, description: 'Mix ingredients in the main processor.', durationMinutes: 60 },
+            { order: 3, description: 'Quality check and packaging.', durationMinutes: 45 }
+          ],
+          yieldPercentage: 95,
+          companyId: profile.companyId,
+        });
+      }
+
+      // Refresh
+      const updatedRecipes = await getRecipes(profile.companyId);
+      setRecipes(updatedRecipes);
+    } catch (error) {
+      console.error("Error generating recipes:", error);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  if (loading || inventoryLoading) return <Loader2 className="animate-spin mx-auto text-[var(--color-main)]" />;
 
   return (
     <div className="space-y-8">
@@ -63,13 +106,23 @@ const Recipes: React.FC = () => {
       <div className="bg-[var(--color-surface)] p-8 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold text-[var(--color-text)]">Recipes</h3>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-4 py-2 rounded-xl"
-          >
-            <Plus size={16} />
-            <span>New Recipe</span>
-          </button>
+          <div className="flex space-x-3">
+            <button 
+              onClick={handleAutoGenerate}
+              disabled={generating || materials.length === 0}
+              className="flex items-center space-x-2 bg-[var(--color-text)]/10 text-[var(--color-text)] px-4 py-2 rounded-xl hover:bg-[var(--color-text)]/20 disabled:opacity-50"
+            >
+              {generating ? <Loader2 size={16} className="animate-spin" /> : <BookOpen size={16} />}
+              <span>Auto-Generate Missing</span>
+            </button>
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-4 py-2 rounded-xl"
+            >
+              <Plus size={16} />
+              <span>New Recipe</span>
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recipes.map(recipe => (
@@ -109,7 +162,7 @@ const Recipes: React.FC = () => {
             {newRecipe.bom.map((ing, i) => <div key={i} className="text-sm">{ing.materialId}: {ing.quantity}</div>)}
             <div className="flex space-x-2">
               <input type="text" placeholder="Material ID" className="flex-1 p-2 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded" value={newIngredient.materialId} onChange={e => setNewIngredient(prev => ({...prev, materialId: e.target.value}))} />
-              <input type="number" placeholder="Qty" className="w-20 p-2 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded" value={newIngredient.quantity} onChange={e => setNewIngredient(prev => ({...prev, quantity: parseInt(e.target.value)}))} />
+              <input type="number" placeholder="Qty" className="w-20 p-2 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded" value={newIngredient.quantity} onChange={e => setNewIngredient(prev => ({...prev, quantity: parseInt(e.target.value) || 0}))} />
               <button onClick={() => {
                 setNewRecipe(prev => ({...prev, bom: [...prev.bom, newIngredient]}));
                 setNewIngredient({materialId: '', quantity: 0});
@@ -119,11 +172,15 @@ const Recipes: React.FC = () => {
 
           <div className="space-y-2">
             <h4 className="font-bold">Processing Steps</h4>
-            {newRecipe.processingSteps.map((step, i) => <div key={i} className="text-sm">{i+1}. {step}</div>)}
+            {newRecipe.processingSteps.map((step, i) => <div key={i} className="text-sm">{step.order}. {step.description} ({step.durationMinutes} mins)</div>)}
             <div className="flex space-x-2">
               <input type="text" placeholder="Step description" className="flex-1 p-2 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded" value={newStep} onChange={e => setNewStep(e.target.value)} />
               <button onClick={() => {
-                setNewRecipe(prev => ({...prev, processingSteps: [...prev.processingSteps, newStep]}));
+                setNewRecipe(prev => ({...prev, processingSteps: [...prev.processingSteps, {
+                  order: prev.processingSteps.length + 1,
+                  description: newStep,
+                  durationMinutes: 30
+                }]}));
                 setNewStep('');
               }} className="bg-[var(--color-main)] text-white p-2 rounded">+</button>
             </div>

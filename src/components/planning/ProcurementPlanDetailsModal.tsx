@@ -1,32 +1,21 @@
 import React from 'react';
-import { ProductionPlan, Product, Recipe, RawMaterial } from '../../types';
+import { ProcurementPlan, RawMaterial } from '../../types';
 import Modal from '../Modal';
 import { Edit, Trash2 } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  plan: ProductionPlan;
-  product: Product | undefined;
-  recipe: Recipe | undefined;
-  materials: RawMaterial[];
+  plan: ProcurementPlan;
+  material: RawMaterial | undefined;
   onSuccess: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-const ProductionPlanDetailsModal: React.FC<Props> = ({ isOpen, onClose, plan, product, recipe, materials, onSuccess, onEdit, onDelete }) => {
-  const requiredMaterials = recipe?.bom.map(item => {
-    const material = materials.find(m => m.id === item.materialId);
-    return {
-      name: material?.name || 'Unknown Material',
-      quantity: item.quantity * plan.totalQuantity,
-      unit: item.unit
-    };
-  }) || [];
-
+const ProcurementPlanDetailsModal: React.FC<Props> = ({ isOpen, onClose, plan, material, onSuccess, onEdit, onDelete }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Details: ${product?.name || 'Product'}`}>
+    <Modal isOpen={isOpen} onClose={onClose} title={`Details: ${material?.name || 'Material'}`}>
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <p><span className="font-bold">Total Quantity:</span> {(plan.totalQuantity || 0).toLocaleString()}</p>
@@ -47,28 +36,6 @@ const ProductionPlanDetailsModal: React.FC<Props> = ({ isOpen, onClose, plan, pr
           </div>
         ))}
 
-        <h4 className="font-bold text-lg mt-4">Required Raw Materials</h4>
-        {!recipe ? (
-          <p className="text-red-500 text-sm">No recipe found for this product. Raw material requirements cannot be calculated.</p>
-        ) : (
-          <table className="w-full text-left">
-            <thead>
-              <tr className="text-black/40 text-sm border-b border-black/5">
-                <th className="pb-2">Material</th>
-                <th className="pb-2">Quantity</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requiredMaterials.map((item, index) => (
-                <tr key={index} className="border-b border-black/5">
-                  <td className="py-2">{item.name}</td>
-                  <td className="py-2">{(item.quantity || 0).toLocaleString()} {item.unit}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        
         <div className="flex justify-end space-x-3 mt-8 border-t border-black/5 pt-4">
           <button 
             onClick={() => { onEdit(); }}
@@ -92,4 +59,4 @@ const ProductionPlanDetailsModal: React.FC<Props> = ({ isOpen, onClose, plan, pr
   );
 };
 
-export default ProductionPlanDetailsModal;
+export default ProcurementPlanDetailsModal;

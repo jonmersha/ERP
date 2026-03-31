@@ -21,7 +21,8 @@ import {
   Truck,
   ChevronDown,
   Sun,
-  Moon
+  Moon,
+  Shield
 } from 'lucide-react';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -76,6 +77,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       ]
     },
     { 
+      name: 'Admin Panel', 
+      path: '/admin', 
+      icon: Shield, 
+      roles: ['admin'] 
+    },
+    { 
       name: 'Administration', 
       icon: Database, 
       roles: ['admin'],
@@ -94,9 +101,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
       <header className="bg-[var(--color-surface)] border-b border-black/5 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-8">
-            <h1 className="text-xl font-serif font-bold text-[var(--color-main)]">Sheger ERP</h1>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-[var(--color-main)] rounded-lg flex items-center justify-center text-white font-bold text-lg">S</div>
+              <h1 className="text-2xl font-serif font-bold text-[var(--color-text)] tracking-tight">Sheger <span className="text-[var(--color-main)]">ERP</span></h1>
+            </div>
             <nav className="hidden md:flex items-center space-x-1">
               {filteredNavItems.map((item) => (
                 <div key={item.name} className="relative group">

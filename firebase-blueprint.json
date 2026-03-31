@@ -133,17 +133,39 @@
     },
     "ProductionPlan": {
       "title": "ProductionPlan",
-      "description": "Scheduled manufacturing task",
+      "description": "Hierarchical manufacturing plan (Annual -> Quarterly -> Monthly)",
       "type": "object",
       "properties": {
         "factoryId": { "type": "string" },
         "productId": { "type": "string" },
-        "quantity": { "type": "number" },
+        "year": { "type": "number" },
+        "totalQuantity": { "type": "number" },
+        "quarterlyPlans": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "quarter": { "type": "string", "enum": ["Q1", "Q2", "Q3", "Q4"] },
+              "quantity": { "type": "number" },
+              "monthlyPlans": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "month": { "type": "number" },
+                    "quantity": { "type": "number" }
+                  },
+                  "required": ["month", "quantity"]
+                }
+              }
+            },
+            "required": ["quarter", "quantity", "monthlyPlans"]
+          }
+        },
         "status": { "type": "string", "enum": ["planned", "in_progress", "completed"] },
-        "startDate": { "type": "string", "format": "date-time" },
         "companyId": { "type": "string" }
       },
-      "required": ["factoryId", "productId", "quantity", "status", "companyId"]
+      "required": ["factoryId", "productId", "year", "totalQuantity", "quarterlyPlans", "status", "companyId"]
     },
     "SalesOrder": {
       "title": "SalesOrder",
@@ -174,6 +196,47 @@
         "companyId": { "type": "string" }
       },
       "required": ["name", "email", "department", "role", "companyId"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Billing record",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string" },
+        "orderType": { "type": "string", "enum": ["purchase", "sales"] },
+        "amount": { "type": "number" },
+        "dueDate": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["draft", "issued", "paid", "overdue", "cancelled"] },
+        "companyId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["orderId", "orderType", "amount", "dueDate", "status", "companyId", "createdAt"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Payment record",
+      "type": "object",
+      "properties": {
+        "invoiceId": { "type": "string" },
+        "amount": { "type": "number" },
+        "paymentDate": { "type": "string", "format": "date-time" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "bank_transfer", "check", "credit_card"] },
+        "companyId": { "type": "string" }
+      },
+      "required": ["invoiceId", "amount", "paymentDate", "paymentMethod", "companyId"]
+    },
+    "FinancialPlan": {
+      "title": "FinancialPlan",
+      "description": "Yearly financial plan with quarterly targets",
+      "type": "object",
+      "properties": {
+        "year": { "type": "number" },
+        "quarter": { "type": "string", "enum": ["Q1", "Q2", "Q3", "Q4"] },
+        "targetRevenue": { "type": "number" },
+        "targetExpense": { "type": "number" },
+        "companyId": { "type": "string" }
+      },
+      "required": ["year", "quarter", "targetRevenue", "targetExpense", "companyId"]
     }
   },
   "firestore": {
@@ -189,6 +252,9 @@
     "purchaseOrders": { "schema": "PurchaseOrder", "description": "Procurement records" },
     "productionPlans": { "schema": "ProductionPlan", "description": "Manufacturing records" },
     "salesOrders": { "schema": "SalesOrder", "description": "Sales records" },
-    "employees": { "schema": "Employee", "description": "Workforce records" }
+    "employees": { "schema": "Employee", "description": "Workforce records" },
+    "invoices": { "schema": "Invoice", "description": "Billing records" },
+    "payments": { "schema": "Payment", "description": "Payment records" },
+    "financialPlans": { "schema": "FinancialPlan", "description": "Financial plans" }
   }
 }

@@ -129,13 +129,6 @@ const Procurement: React.FC = () => {
           <p className="text-[var(--color-text)]/40 mt-1">Manage suppliers and raw material acquisitions</p>
         </div>
         <div className="flex space-x-4">
-          <Link 
-            to="/planning"
-            className="flex items-center space-x-2 bg-[var(--color-surface)] text-[var(--color-main)] px-6 py-3 rounded-2xl shadow-sm border border-[var(--color-text)]/5 hover:bg-[var(--color-bg)] transition-all"
-          >
-            <Calendar size={20} />
-            <span className="font-bold">Planning</span>
-          </Link>
           <button 
             onClick={() => setIsSupplierModalOpen(true)}
             className="flex items-center space-x-2 bg-[var(--color-surface)] text-[var(--color-main)] px-6 py-3 rounded-2xl shadow-sm border border-[var(--color-text)]/5 hover:bg-[var(--color-bg)] transition-all"
@@ -304,7 +297,7 @@ const Procurement: React.FC = () => {
         <form onSubmit={handleCreatePO} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Supplier</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Supplier</label>
               <select 
                 required
                 value={poForm.supplierId}
@@ -318,7 +311,7 @@ const Procurement: React.FC = () => {
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Order Date</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Order Date</label>
               <input 
                 type="date"
                 required
@@ -331,7 +324,7 @@ const Procurement: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Factory (Optional)</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Factory (Optional)</label>
               <select 
                 value={poForm.factoryId}
                 onChange={e => setPoForm({ ...poForm, factoryId: e.target.value })}
@@ -344,7 +337,7 @@ const Procurement: React.FC = () => {
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Warehouse (Optional)</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Warehouse (Optional)</label>
               <select 
                 value={poForm.warehouseId}
                 onChange={e => setPoForm({ ...poForm, warehouseId: e.target.value })}
@@ -360,7 +353,7 @@ const Procurement: React.FC = () => {
 
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Order Items</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Order Items</label>
               <button 
                 type="button"
                 onClick={addPOItem}
@@ -370,14 +363,14 @@ const Procurement: React.FC = () => {
               </button>
             </div>
             {poForm.items.map((item, index) => (
-              <div key={index} className="grid grid-cols-12 gap-3 items-end bg-black/[0.02] p-3 rounded-2xl border border-black/5">
+              <div key={index} className="grid grid-cols-12 gap-3 items-end bg-[var(--color-text)]/[0.02] p-3 rounded-2xl border border-[var(--color-text)]/5">
                 <div className="col-span-5 space-y-1">
-                  <label className="text-[10px] font-bold text-black/20 uppercase tracking-widest">Material</label>
+                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">Material</label>
                   <select 
                     required
                     value={item.itemId}
                     onChange={e => updatePOItem(index, 'itemId', e.target.value)}
-                    className="w-full p-2 bg-white rounded-lg border border-black/5 text-sm"
+                    className="w-full p-2 bg-[var(--color-surface)] rounded-lg border border-[var(--color-text)]/5 text-sm text-[var(--color-text)]"
                   >
                     <option value="">Select Material</option>
                     {materials.map(m => (
@@ -386,18 +379,18 @@ const Procurement: React.FC = () => {
                   </select>
                 </div>
                 <div className="col-span-3 space-y-1">
-                  <label className="text-[10px] font-bold text-black/20 uppercase tracking-widest">Qty</label>
+                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">Qty</label>
                   <input 
                     type="number"
                     required
                     min="1"
                     value={item.quantity}
                     onChange={e => updatePOItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                    className="w-full p-2 bg-white rounded-lg border border-black/5 text-sm"
+                    className="w-full p-2 bg-[var(--color-surface)] rounded-lg border border-[var(--color-text)]/5 text-sm text-[var(--color-text)]"
                   />
                 </div>
                 <div className="col-span-3 space-y-1">
-                  <label className="text-[10px] font-bold text-black/20 uppercase tracking-widest">Price</label>
+                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">Price</label>
                   <input 
                     type="number"
                     required
@@ -405,7 +398,7 @@ const Procurement: React.FC = () => {
                     step="0.01"
                     value={item.price}
                     onChange={e => updatePOItem(index, 'price', parseFloat(e.target.value) || 0)}
-                    className="w-full p-2 bg-white rounded-lg border border-black/5 text-sm"
+                    className="w-full p-2 bg-[var(--color-surface)] rounded-lg border border-[var(--color-text)]/5 text-sm text-[var(--color-text)]"
                   />
                 </div>
                 <div className="col-span-1 pb-1">
@@ -421,10 +414,10 @@ const Procurement: React.FC = () => {
             ))}
           </div>
 
-          <div className="pt-4 border-t border-black/5 flex justify-between items-center">
+          <div className="pt-4 border-t border-[var(--color-text)]/5 flex justify-between items-center">
             <div className="text-right flex-1 pr-4">
-              <p className="text-xs font-bold text-black/40 uppercase tracking-widest">Total Amount</p>
-              <p className="text-2xl font-serif font-bold text-black">
+              <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Total Amount</p>
+              <p className="text-2xl font-serif font-bold text-[var(--color-text)]">
                 ${poForm.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()}
               </p>
             </div>
@@ -447,7 +440,7 @@ const Procurement: React.FC = () => {
       >
         <form onSubmit={handleCreateSupplier} className="space-y-6">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Supplier Name</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Supplier Name</label>
             <input 
               type="text"
               required
@@ -458,7 +451,7 @@ const Procurement: React.FC = () => {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Contact Person</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Contact Person</label>
             <input 
               type="text"
               required
@@ -469,7 +462,7 @@ const Procurement: React.FC = () => {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Email Address</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Email Address</label>
             <input 
               type="email"
               required

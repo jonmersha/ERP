@@ -15,28 +15,18 @@ import Recipes from './pages/Recipes';
 import Maintenance from './pages/Maintenance';
 import Logistics from './pages/Logistics';
 import MasterData from './pages/MasterData';
+import Admin from './pages/Admin';
 import Users from './pages/Users';
 import Learning from './pages/Learning';
-
-const Finance = () => (
-  <div className="space-y-8">
-    <header>
-      <h2 className="text-4xl font-serif font-bold text-[#5A5A40]">Finance</h2>
-      <p className="text-black/40 mt-1">Financial reports, invoices, and payments</p>
-    </header>
-    <div className="bg-white p-12 rounded-3xl border border-black/5 text-center">
-      <p className="text-black/40 italic">Finance module integration in progress...</p>
-    </div>
-  </div>
-);
+import Finance from './pages/Finance';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, isAdmin } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F0]">
-        <div className="w-12 h-12 border-4 border-[#5A5A40] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
+        <div className="w-12 h-12 border-4 border-[var(--color-main)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -47,6 +37,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!profile?.companyId) {
     return <Navigate to="/login" />;
+  }
+
+  // Admin-only route protection
+  if (window.location.pathname === '/admin' && !isAdmin) {
+    return <Navigate to="/" />;
   }
 
   return <Layout>{children}</Layout>;
@@ -165,6 +160,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <MasterData />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <Admin />
           </ProtectedRoute>
         }
       />

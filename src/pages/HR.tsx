@@ -59,7 +59,7 @@ const HR: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-[#5A5A40]" size={32} />
+        <Loader2 className="animate-spin text-[var(--color-main)]" size={32} />
       </div>
     );
   }
@@ -68,15 +68,15 @@ const HR: React.FC = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[#5A5A40]">Human Resources</h2>
-          <p className="text-black/40 mt-1">Manage workforce across all production units</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Human Resources</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">Manage workforce across all production units</p>
         </div>
         <button 
           onClick={() => {
             setError(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center space-x-2 bg-[#5A5A40] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[#4A4A30] transition-all"
+          className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
         >
           <UserPlus size={20} />
           <span className="font-bold">Add Employee</span>
@@ -84,9 +84,9 @@ const HR: React.FC = () => {
       </header>
 
       {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-2xl border border-red-100 text-sm flex items-center justify-between">
+        <div className="bg-rose-50 text-rose-600 p-4 rounded-2xl border border-rose-100 text-sm flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+          <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-600">
             <XCircle size={16} />
           </button>
         </div>
@@ -113,17 +113,17 @@ const HR: React.FC = () => {
         />
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-black/5 overflow-hidden">
-        <div className="p-6 border-b border-black/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h3 className="font-serif font-bold text-lg text-black">Employee Directory</h3>
+      <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 overflow-hidden">
+        <div className="p-6 border-b border-[var(--color-text)]/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">Employee Directory</h3>
           <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-black/20" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
             <input 
               type="text"
               placeholder="Search employees..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 text-sm"
+              className="w-full pl-10 pr-4 py-2 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-sm text-[var(--color-text)]"
             />
           </div>
         </div>
@@ -133,32 +133,32 @@ const HR: React.FC = () => {
             <motion.div 
               key={emp.id}
               whileHover={{ y: -5 }}
-              className="bg-[#F5F5F0]/50 p-6 rounded-3xl border border-black/5 space-y-4"
+              className="bg-[var(--color-bg)]/50 p-6 rounded-3xl border border-[var(--color-text)]/5 space-y-4"
             >
               <div className="flex justify-between items-start">
-                <div className="w-12 h-12 bg-[#5A5A40] text-white rounded-2xl flex items-center justify-center font-serif text-xl font-bold">
+                <div className="w-12 h-12 bg-[var(--color-main)] text-white rounded-2xl flex items-center justify-center font-serif text-xl font-bold">
                   {emp.name?.[0] || '?'}
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-bold text-black/40 uppercase tracking-widest">{emp.department || 'N/A'}</p>
-                  <p className="font-bold text-black">{emp.role || 'N/A'}</p>
+                  <p className="text-[10px] font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{emp.department || 'N/A'}</p>
+                  <p className="font-bold text-[var(--color-text)]">{emp.role || 'N/A'}</p>
                 </div>
               </div>
               
               <div>
-                <h4 className="font-serif font-bold text-lg text-black">{emp.name || 'Unknown'}</h4>
-                <div className="flex items-center text-xs text-black/40 mt-1">
+                <h4 className="font-serif font-bold text-lg text-[var(--color-text)]">{emp.name || 'Unknown'}</h4>
+                <div className="flex items-center text-xs text-[var(--color-text)]/40 mt-1">
                   <Mail size={12} className="mr-1" />
                   {emp.email || 'No email'}
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-black/5 flex justify-between items-center">
-                <div className="flex items-center text-[#5A5A40] font-bold">
+              <div className="pt-4 border-t border-[var(--color-text)]/5 flex justify-between items-center">
+                <div className="flex items-center text-[var(--color-main)] font-bold">
                   <DollarSign size={14} className="mr-0.5" />
                   {Number(emp.salary || 0).toLocaleString()}
                 </div>
-                <div className="text-[10px] text-black/40">
+                <div className="text-[10px] text-[var(--color-text)]/40">
                   Hired: {emp.hireDate ? new Date(emp.hireDate).toLocaleDateString() : 'N/A'}
                 </div>
               </div>
@@ -176,75 +176,75 @@ const HR: React.FC = () => {
               required
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
-              className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+              className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               placeholder="e.g., Jane Smith"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Role</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Role</label>
               <input 
                 type="text"
                 required
                 value={form.role}
                 onChange={e => setForm({ ...form, role: e.target.value })}
-                className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
                 placeholder="e.g., Quality Manager"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Department</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Department</label>
               <input 
                 type="text"
                 required
                 value={form.department}
                 onChange={e => setForm({ ...form, department: e.target.value })}
-                className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
                 placeholder="e.g., Operations"
               />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Email Address</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Email Address</label>
             <input 
               type="email"
               required
               value={form.email}
               onChange={e => setForm({ ...form, email: e.target.value })}
-              className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+              className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               placeholder="e.g., jane@factory.com"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Monthly Salary</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Monthly Salary</label>
               <input 
                 type="number"
                 required
                 min="0"
                 value={form.salary}
                 onChange={e => setForm({ ...form, salary: parseInt(e.target.value) || 0 })}
-                className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Hire Date</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Hire Date</label>
               <input 
                 type="date"
                 required
                 value={form.hireDate}
                 onChange={e => setForm({ ...form, hireDate: e.target.value })}
-                className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Assigned Factory</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Assigned Factory</label>
             <select 
               required
               value={form.factoryId}
               onChange={e => setForm({ ...form, factoryId: e.target.value })}
-              className="w-full p-3 bg-[#F5F5F0] rounded-xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+              className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
             >
               <option value="">Select Factory</option>
               {factories.map(f => (
@@ -255,7 +255,7 @@ const HR: React.FC = () => {
           <button 
             disabled={submitting}
             type="submit"
-            className="w-full bg-[#5A5A40] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[#4A4A30] disabled:opacity-50 transition-all"
+            className="w-full bg-[var(--color-main)] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[var(--color-main)]/90 disabled:opacity-50 transition-all"
           >
             {submitting ? 'Adding...' : 'Add Employee'}
           </button>

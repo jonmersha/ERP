@@ -128,39 +128,57 @@ export interface SalesOrder {
   companyId: string;
 }
 
+export interface MonthlyPlan {
+  month: number; // 1-12
+  quantity: number;
+}
+
+export interface QuarterlyPlan {
+  quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+  quantity: number;
+  monthlyPlans: MonthlyPlan[];
+}
+
 export interface ProductionPlan {
   id: string;
   factoryId: string;
   productId: string;
-  productType: string;
   year: number;
-  quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4';
-  month?: number; // 1-12
-  day?: number; // 1-31
+  totalQuantity: number;
+  quarterlyPlans: QuarterlyPlan[];
+  status: 'planned' | 'in_progress' | 'completed' | 'approved';
+  companyId: string;
+}
+
+export interface ProductionRun {
+  id: string;
+  factoryId: string;
+  productId: string;
   quantity: number;
-  quantityProduced: number; // Progress tracking
+  quantityProduced: number;
   status: 'planned' | 'in_progress' | 'completed';
+  startDate: string;
   companyId: string;
 }
 
 export interface ProcurementPlan {
   id: string;
+  warehouseId: string;
   materialId: string;
-  quantity: number;
-  status: 'planned' | 'ordered' | 'received';
   year: number;
-  quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4';
-  month?: number; // 1-12
+  totalQuantity: number;
+  quarterlyPlans: QuarterlyPlan[];
+  status: 'planned' | 'ordered' | 'received' | 'approved';
   companyId: string;
 }
 
 export interface SalesPlan {
   id: string;
+  factoryId: string;
   productId: string;
-  targetQuantity: number;
   year: number;
-  quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4';
-  month?: number; // 1-12
+  totalQuantity: number;
+  quarterlyPlans: QuarterlyPlan[];
   status: 'draft' | 'approved';
   companyId: string;
 }
@@ -257,5 +275,34 @@ export interface Employee {
   salary: number;
   factoryId?: string;
   hireDate: string;
+  companyId: string;
+}
+
+export interface Invoice {
+  id: string;
+  orderId: string;
+  orderType: 'purchase' | 'sales';
+  amount: number;
+  dueDate: string;
+  status: 'draft' | 'issued' | 'paid' | 'overdue' | 'cancelled';
+  companyId: string;
+  createdAt: string;
+}
+
+export interface Payment {
+  id: string;
+  invoiceId: string;
+  amount: number;
+  paymentDate: string;
+  paymentMethod: 'cash' | 'bank_transfer' | 'check' | 'credit_card';
+  companyId: string;
+}
+
+export interface FinancialPlan {
+  id: string;
+  year: number;
+  quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+  targetRevenue: number;
+  targetExpense: number;
   companyId: string;
 }

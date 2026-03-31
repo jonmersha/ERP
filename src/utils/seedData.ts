@@ -46,8 +46,8 @@ export const seedDatabase = async (companyId: string) => {
     // 8. Purchase Orders
     await addDoc(collection(db, 'purchaseOrders'), { ...cId, supplierId: supplier1.id, factoryId: factoryA.id, status: 'approved', totalAmount: 25000, createdAt: new Date().toISOString() });
 
-    // 9. Production Plans
-    await addDoc(collection(db, 'productionPlans'), { ...cId, factoryId: factoryA.id, productId: flour25.id, quantity: 2000, status: 'in_progress', startDate: new Date().toISOString() });
+    // 9. Production Runs
+    await addDoc(collection(db, 'productionRuns'), { ...cId, factoryId: factoryA.id, productId: flour25.id, quantity: 2000, status: 'in_progress', startDate: new Date().toISOString() });
 
     // 10. Sales Orders
     await addDoc(collection(db, 'salesOrders'), { ...cId, outletId: outlet1.id, status: 'paid', totalAmount: 1500, createdAt: new Date().toISOString() });

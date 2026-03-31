@@ -78,6 +78,31 @@ service cloud.firestore {
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
 
+    function isValidInvoice(data) {
+      return data.orderId is string && data.orderId.size() < 50 &&
+             data.orderType in ['purchase', 'sales'] &&
+             data.amount is number && data.amount >= 0 &&
+             data.dueDate is string && data.dueDate.size() < 20 &&
+             data.status in ['draft', 'issued', 'paid', 'overdue', 'cancelled'] &&
+             data.companyId is string && data.companyId.size() < 50;
+    }
+
+    function isValidPayment(data) {
+      return data.invoiceId is string && data.invoiceId.size() < 50 &&
+             data.amount is number && data.amount >= 0 &&
+             data.paymentDate is string && data.paymentDate.size() < 20 &&
+             data.paymentMethod in ['cash', 'bank_transfer', 'check', 'credit_card'] &&
+             data.companyId is string && data.companyId.size() < 50;
+    }
+
+    function isValidFinancialPlan(data) {
+      return data.year is number && data.year >= 2020 &&
+             data.quarter in ['Q1', 'Q2', 'Q3', 'Q4'] &&
+             data.targetRevenue is number && data.targetRevenue >= 0 &&
+             data.targetExpense is number && data.targetExpense >= 0 &&
+             data.companyId is string && data.companyId.size() < 50;
+    }
+
     // Companies
     match /companies/{companyId} {
       allow get: if isAuthenticated();
@@ -168,6 +193,20 @@ service cloud.firestore {
     match /deliveryNotes/{id} {
       allow read: if canReadCompanyData(resource.data);
       allow write: if hasRole('store') && belongsToCompany();
+    }
+
+    // Finance
+    match /invoices/{id} {
+      allow read: if canReadCompanyData(resource.data);
+      allow write: if hasAnyRole(['finance', 'admin']) && belongsToCompany() && isValidInvoice(request.resource.data);
+    }
+    match /payments/{id} {
+      allow read: if canReadCompanyData(resource.data);
+      allow write: if hasAnyRole(['finance', 'admin']) && belongsToCompany() && isValidPayment(request.resource.data);
+    }
+    match /financialPlans/{id} {
+      allow read: if canReadCompanyData(resource.data);
+      allow write: if hasAnyRole(['finance', 'admin']) && belongsToCompany() && isValidFinancialPlan(request.resource.data);
     }
 
     // Default Deny

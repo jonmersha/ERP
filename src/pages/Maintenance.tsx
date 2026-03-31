@@ -33,7 +33,7 @@ const Maintenance: React.FC = () => {
     getMaintenanceLogs(profile.companyId).then(setLogs);
   };
 
-  if (loading) return <Loader2 className="animate-spin mx-auto" />;
+  if (loading) return <Loader2 className="animate-spin mx-auto text-[var(--color-main)]" />;
 
   return (
     <div className="space-y-8">

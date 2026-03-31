@@ -1,9 +1,9 @@
 import { collection, addDoc, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { ProductionPlan, UserProfile } from '../types';
+import { UserProfile } from '../types';
 
-export const createProductionPlan = async (form: any, profile: UserProfile | null) => {
-  await addDoc(collection(db, 'productionPlans'), {
+export const createProductionRun = async (form: any, profile: UserProfile | null) => {
+  await addDoc(collection(db, 'productionRuns'), {
     ...form,
     quantity: Number(form.quantity),
     quantityProduced: 0,
@@ -13,6 +13,6 @@ export const createProductionPlan = async (form: any, profile: UserProfile | nul
   });
 };
 
-export const updateProductionProgress = async (planId: string, quantityProduced: number, status: ProductionPlan['status']) => {
-  await updateDoc(doc(db, 'productionPlans', planId), { quantityProduced, status });
+export const updateProductionProgress = async (runId: string, quantityProduced: number, status: string) => {
+  await updateDoc(doc(db, 'productionRuns', runId), { quantityProduced, status });
 };

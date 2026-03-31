@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Factory, Product } from '../../types';
-import { addProductionPlan } from '../../services/planningService';
+import React, { useState, useEffect } from 'react';
+import { Factory, Product, ProductionPlan, QuarterlyPlan } from '../../types';
+import { addProductionPlan, updateProductionPlan } from '../../services/planningService';
 import { useAuth } from '../../context/AuthContext';
 import { X, Loader2 } from 'lucide-react';
 
@@ -10,39 +10,95 @@ interface Props {
   factories: Factory[];
   products: Product[];
   onSuccess: () => void;
+  plan?: ProductionPlan;
 }
 
-const ProductionPlanModal: React.FC<Props> = ({ isOpen, onClose, factories, products, onSuccess }) => {
+const ProductionPlanModal: React.FC<Props> = ({ isOpen, onClose, factories, products, onSuccess, plan }) => {
   const { profile } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<Omit<ProductionPlan, 'id' | 'companyId'>>({
     factoryId: '',
     productId: '',
-    productType: '',
     year: new Date().getFullYear(),
-    quarter: '' as 'Q1' | 'Q2' | 'Q3' | 'Q4' | '',
-    month: '' as number | '',
-    quantity: 0
+    totalQuantity: 0,
+    quarterlyPlans: [
+      { quarter: 'Q1', quantity: 0, monthlyPlans: [{month: 1, quantity: 0}, {month: 2, quantity: 0}, {month: 3, quantity: 0}] },
+      { quarter: 'Q2', quantity: 0, monthlyPlans: [{month: 4, quantity: 0}, {month: 5, quantity: 0}, {month: 6, quantity: 0}] },
+      { quarter: 'Q3', quantity: 0, monthlyPlans: [{month: 7, quantity: 0}, {month: 8, quantity: 0}, {month: 9, quantity: 0}] },
+      { quarter: 'Q4', quantity: 0, monthlyPlans: [{month: 10, quantity: 0}, {month: 11, quantity: 0}, {month: 12, quantity: 0}] },
+    ],
+    status: 'planned',
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      if (plan) {
+        setForm({
+          factoryId: plan.factoryId,
+          productId: plan.productId,
+          year: plan.year || new Date().getFullYear(),
+          totalQuantity: plan.totalQuantity || 0,
+          quarterlyPlans: plan.quarterlyPlans?.length ? plan.quarterlyPlans : [
+            { quarter: 'Q1', quantity: 0, monthlyPlans: [{month: 1, quantity: 0}, {month: 2, quantity: 0}, {month: 3, quantity: 0}] },
+            { quarter: 'Q2', quantity: 0, monthlyPlans: [{month: 4, quantity: 0}, {month: 5, quantity: 0}, {month: 6, quantity: 0}] },
+            { quarter: 'Q3', quantity: 0, monthlyPlans: [{month: 7, quantity: 0}, {month: 8, quantity: 0}, {month: 9, quantity: 0}] },
+            { quarter: 'Q4', quantity: 0, monthlyPlans: [{month: 10, quantity: 0}, {month: 11, quantity: 0}, {month: 12, quantity: 0}] },
+          ],
+          status: plan.status || 'planned',
+        });
+      } else {
+        setForm({
+          factoryId: '',
+          productId: '',
+          year: new Date().getFullYear(),
+          totalQuantity: 0,
+          quarterlyPlans: [
+            { quarter: 'Q1', quantity: 0, monthlyPlans: [{month: 1, quantity: 0}, {month: 2, quantity: 0}, {month: 3, quantity: 0}] },
+            { quarter: 'Q2', quantity: 0, monthlyPlans: [{month: 4, quantity: 0}, {month: 5, quantity: 0}, {month: 6, quantity: 0}] },
+            { quarter: 'Q3', quantity: 0, monthlyPlans: [{month: 7, quantity: 0}, {month: 8, quantity: 0}, {month: 9, quantity: 0}] },
+            { quarter: 'Q4', quantity: 0, monthlyPlans: [{month: 10, quantity: 0}, {month: 11, quantity: 0}, {month: 12, quantity: 0}] },
+          ],
+          status: 'planned',
+        });
+      }
+    }
+  }, [isOpen, plan]);
+
+  const isApproved = plan?.status === 'approved';
+
   if (!isOpen) return null;
+
+  const handleAutoDistribute = (quantity: number) => {
+    const qQuantity = Math.floor(quantity / 4);
+    const mQuantity = Math.floor(qQuantity / 3);
+    setForm({
+      ...form,
+      totalQuantity: quantity,
+      quarterlyPlans: (form.quarterlyPlans || []).map(q => ({
+        ...q,
+        quantity: qQuantity,
+        monthlyPlans: (q.monthlyPlans || []).map(m => ({ ...m, quantity: mQuantity }))
+      }))
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile?.companyId) return;
     setLoading(true);
     try {
-      await addProductionPlan({
-        ...form,
-        quarter: form.quarter || undefined,
-        month: form.month || undefined,
-        status: 'planned',
-        companyId: profile.companyId
-      } as any);
+      if (plan) {
+        await updateProductionPlan(plan.id, form);
+      } else {
+        await addProductionPlan({
+          ...form,
+          companyId: profile.companyId
+        });
+      }
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Error adding plan:", error);
+      console.error("Error saving plan:", error);
     } finally {
       setLoading(false);
     }
@@ -50,34 +106,70 @@ const ProductionPlanModal: React.FC<Props> = ({ isOpen, onClose, factories, prod
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-8 rounded-3xl w-full max-w-lg">
+      <div className="bg-[var(--color-surface)] p-8 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold">New Production Plan</h3>
-          <button onClick={onClose}><X size={24} /></button>
+          <h3 className="text-2xl font-bold text-[var(--color-text)]">{plan ? 'Edit Production Plan' : 'New Production Plan'}</h3>
+          <button onClick={onClose} className="text-[var(--color-text)]"><X size={24} /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <select className="w-full p-3 rounded-xl border" onChange={e => setForm({...form, factoryId: e.target.value})} required>
+          <select className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.factoryId} onChange={e => setForm({...form, factoryId: e.target.value})} required disabled={isApproved}>
             <option value="">Select Factory</option>
             {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
-          <select className="w-full p-3 rounded-xl border" onChange={e => setForm({...form, productId: e.target.value})} required>
+          <select className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.productId} onChange={e => setForm({...form, productId: e.target.value})} required disabled={isApproved}>
             <option value="">Select Product</option>
             {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <input type="text" placeholder="Product Type" className="w-full p-3 rounded-xl border" onChange={e => setForm({...form, productType: e.target.value})} required />
-          <input type="number" placeholder="Year" className="w-full p-3 rounded-xl border" value={form.year} onChange={e => setForm({...form, year: e.target.value === '' ? 0 : parseInt(e.target.value)})} required />
-          <select className="w-full p-3 rounded-xl border" onChange={e => setForm({...form, quarter: e.target.value as any})}>
-            <option value="">Select Quarter (Optional)</option>
-            {['Q1', 'Q2', 'Q3', 'Q4'].map(q => <option key={q} value={q}>{q}</option>)}
+          <input type="number" placeholder="Year" className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.year} onChange={e => setForm({...form, year: parseInt(e.target.value) || 0})} required disabled={isApproved} />
+          <div className="flex space-x-2">
+            <input type="number" placeholder="Total Annual Quantity" className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.totalQuantity} onChange={e => setForm({...form, totalQuantity: parseInt(e.target.value) || 0})} required disabled={isApproved} />
+            {!isApproved && (
+              <button type="button" onClick={() => handleAutoDistribute(form.totalQuantity)} className="bg-[var(--color-text)]/10 px-4 rounded-xl font-medium hover:bg-[var(--color-text)]/20 whitespace-nowrap text-[var(--color-text)]">
+                Auto-Distribute
+              </button>
+            )}
+          </div>
+          <select className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.status} onChange={e => setForm({...form, status: e.target.value as 'planned' | 'in_progress' | 'completed' | 'approved'})} required disabled={isApproved}>
+            <option value="planned">Planned</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="approved">Approved</option>
           </select>
-          <select className="w-full p-3 rounded-xl border" onChange={e => setForm({...form, month: e.target.value ? parseInt(e.target.value) : ''})}>
-            <option value="">Select Month (Optional)</option>
-            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <input type="number" placeholder="Quantity" className="w-full p-3 rounded-xl border" value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value === '' ? 0 : parseInt(e.target.value)})} required />
-          <button type="submit" className="w-full bg-[#5A5A40] text-white p-3 rounded-xl font-bold" disabled={loading}>
-            {loading ? <Loader2 className="animate-spin mx-auto" /> : 'Create Plan'}
-          </button>
+          
+          <div className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mt-4">Quarterly Breakdown</div>
+          {(form.quarterlyPlans || []).map((q, qIdx) => (
+            <div key={q.quarter} className="p-4 bg-[var(--color-bg)] rounded-xl space-y-2">
+              <div className="flex justify-between">
+                <span className="font-bold">{q.quarter}</span>
+                <input type="number" value={q.quantity} onChange={e => {
+                  const newQPlans = (form.quarterlyPlans || []).map((qp, i) => i === qIdx ? { ...qp, quantity: parseInt(e.target.value) || 0 } : qp);
+                  const newTotalQuantity = newQPlans.reduce((sum, q) => sum + q.quantity, 0);
+                  setForm({...form, quarterlyPlans: newQPlans, totalQuantity: newTotalQuantity});
+                }} className="w-20 p-1 rounded border border-[var(--color-text)]/10 bg-[var(--color-surface)]" disabled={isApproved} />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {(q.monthlyPlans || []).map((m, mIdx) => (
+                  <input key={m.month} type="number" value={m.quantity} onChange={e => {
+                    const newQPlans = (form.quarterlyPlans || []).map((qp, i) => {
+                      if (i === qIdx) {
+                        const newMonthlyPlans = (qp.monthlyPlans || []).map((mp, j) => j === mIdx ? { ...mp, quantity: parseInt(e.target.value) || 0 } : mp);
+                        return { ...qp, monthlyPlans: newMonthlyPlans, quantity: newMonthlyPlans.reduce((sum, m) => sum + m.quantity, 0) };
+                      }
+                      return qp;
+                    });
+                    const newTotalQuantity = newQPlans.reduce((sum, q) => sum + q.quantity, 0);
+                    setForm({...form, quarterlyPlans: newQPlans, totalQuantity: newTotalQuantity});
+                  }} className="p-1 rounded border border-[var(--color-text)]/10 bg-[var(--color-surface)]" disabled={isApproved} />
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {!isApproved && (
+            <button type="submit" className="w-full bg-[var(--color-main)] text-white p-3 rounded-xl font-bold" disabled={loading}>
+              {loading ? <Loader2 className="animate-spin mx-auto" /> : (plan ? 'Update Plan' : 'Create Plan')}
+            </button>
+          )}
         </form>
       </div>
     </div>

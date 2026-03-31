@@ -120,13 +120,6 @@ const Sales: React.FC = () => {
           <p className="text-[var(--color-text)]/40 mt-1">Manage customer orders and revenue</p>
         </div>
         <div className="flex space-x-4">
-          <Link 
-            to="/planning"
-            className="flex items-center space-x-2 bg-[var(--color-surface)] text-[var(--color-main)] px-6 py-3 rounded-2xl shadow-sm border border-[var(--color-text)]/5 hover:bg-[var(--color-bg)] transition-all"
-          >
-            <Calendar size={20} />
-            <span className="font-bold">Planning</span>
-          </Link>
           <button 
             onClick={() => {
               setEditingOrder(null);
@@ -285,7 +278,7 @@ const Sales: React.FC = () => {
         <form onSubmit={handleCreate} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Customer Outlet</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Customer Outlet</label>
               <select 
                 required
                 value={form.outletId}
@@ -299,7 +292,7 @@ const Sales: React.FC = () => {
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Order Date</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Order Date</label>
               <input 
                 type="date"
                 required
@@ -312,11 +305,11 @@ const Sales: React.FC = () => {
 
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Order Items</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Order Items</label>
               <button 
                 type="button"
                 onClick={addItem}
-                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center"
+                className="text-xs font-bold text-[var(--color-main)] hover:text-[var(--color-main)]/80 flex items-center"
               >
                 <Plus size={14} className="mr-1" /> Add Item
               </button>

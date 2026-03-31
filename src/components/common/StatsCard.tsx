@@ -11,22 +11,22 @@ interface StatsCardProps {
 
 const StatsCard: React.FC<StatsCardProps> = ({ title, value, icon: Icon, color, subtitle }) => {
   const colors = {
-    emerald: 'bg-emerald-50 text-emerald-600',
-    indigo: 'bg-indigo-50 text-indigo-600',
-    amber: 'bg-amber-50 text-amber-600',
-    rose: 'bg-rose-50 text-rose-600',
-    blue: 'bg-blue-50 text-blue-600'
+    emerald: 'bg-[var(--color-main)]/10 text-[var(--color-main)]',
+    indigo: 'bg-[var(--color-main)]/10 text-[var(--color-main)]',
+    amber: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
+    rose: 'bg-rose-500/10 text-rose-600',
+    blue: 'bg-blue-500/10 text-blue-600'
   };
 
   return (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-black/5 flex items-center space-x-4">
+    <div className="bg-[var(--color-surface)] p-6 rounded-3xl shadow-sm border border-[var(--color-text)]/5 flex items-center space-x-4">
       <div className={`p-4 rounded-2xl ${colors[color]}`}>
         <Icon size={24} />
       </div>
       <div>
-        <p className="text-xs font-bold text-black/40 uppercase tracking-widest">{title}</p>
-        <p className="text-2xl font-serif font-bold text-black">{value}</p>
-        {subtitle && <p className="text-xs text-black/40 mt-1">{subtitle}</p>}
+        <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{title}</p>
+        <p className="text-2xl font-serif font-bold text-[var(--color-text)]">{value}</p>
+        {subtitle && <p className="text-xs text-[var(--color-text)]/40 mt-1">{subtitle}</p>}
       </div>
     </div>
   );

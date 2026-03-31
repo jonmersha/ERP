@@ -121,14 +121,14 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden border border-black/5"
+            className="bg-[var(--color-surface)] rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden border border-[var(--color-text)]/5"
           >
-            <div className="p-8 border-b border-black/5 flex justify-between items-center bg-[#F5F5F0]/30">
+            <div className="p-8 border-b border-[var(--color-text)]/5 flex justify-between items-center bg-[var(--color-bg)]/30">
               <div>
-                <h2 className="text-2xl font-serif font-bold text-black">Edit Company Profile</h2>
-                <p className="text-sm text-black/40">Update your organization's public identity</p>
+                <h2 className="text-2xl font-serif font-bold text-[var(--color-text)]">Edit Company Profile</h2>
+                <p className="text-sm text-[var(--color-text)]/40">Update your organization's public identity</p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors">
+              <button onClick={onClose} className="p-2 hover:bg-[var(--color-text)]/5 rounded-full transition-colors">
                 <X size={24} />
               </button>
             </div>
@@ -137,15 +137,15 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
               {/* Visual Assets */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Company Logo</label>
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Company Logo</label>
                   <div className="relative group">
-                    <div className="w-32 h-32 bg-[#F5F5F0] rounded-3xl flex items-center justify-center border-2 border-dashed border-black/10 overflow-hidden">
+                    <div className="w-32 h-32 bg-[var(--color-bg)] rounded-3xl flex items-center justify-center border-2 border-dashed border-[var(--color-text)]/10 overflow-hidden">
                       {formData.logoUrl ? (
                         <img src={formData.logoUrl} alt="Logo Preview" className="w-full h-full object-cover" />
                       ) : (
-                        <Building2 size={40} className="text-black/20" />
+                        <Building2 size={40} className="text-[var(--color-text)]/20" />
                       )}
-                      <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                      <label className="absolute inset-0 bg-[var(--color-text)]/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                         <Upload className="text-white" size={24} />
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, 'logoUrl')} />
                       </label>
@@ -154,15 +154,15 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
                 </div>
 
                 <div className="space-y-4">
-                  <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Banner Image</label>
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Banner Image</label>
                   <div className="relative group">
-                    <div className="w-full h-32 bg-[#F5F5F0] rounded-3xl flex items-center justify-center border-2 border-dashed border-black/10 overflow-hidden">
+                    <div className="w-full h-32 bg-[var(--color-bg)] rounded-3xl flex items-center justify-center border-2 border-dashed border-[var(--color-text)]/10 overflow-hidden">
                       {formData.bannerUrl ? (
                         <img src={formData.bannerUrl} alt="Banner Preview" className="w-full h-full object-cover" />
                       ) : (
-                        <ImageIcon size={40} className="text-black/20" />
+                        <ImageIcon size={40} className="text-[var(--color-text)]/20" />
                       )}
-                      <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                      <label className="absolute inset-0 bg-[var(--color-text)]/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                         <Upload className="text-white" size={24} />
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, 'bannerUrl')} />
                       </label>
@@ -174,57 +174,57 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
               {/* Basic Info */}
               <div className="space-y-6">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Company Name</label>
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Company Name</label>
                   <div className="relative">
-                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-black/20" size={20} />
+                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={20} />
                     <input
                       required
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full pl-12 pr-4 py-4 bg-[#F5F5F0] rounded-2xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                      className="w-full pl-12 pr-4 py-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Address</label>
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Address</label>
                   <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-black/20" size={20} />
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={20} />
                     <input
                       required
                       type="text"
                       value={formData.address}
                       onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                      className="w-full pl-12 pr-4 py-4 bg-[#F5F5F0] rounded-2xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                      className="w-full pl-12 pr-4 py-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Phone</label>
+                    <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Phone</label>
                     <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-black/20" size={18} />
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
                       <input
                         required
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                        className="w-full pl-12 pr-4 py-4 bg-[#F5F5F0] rounded-2xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                        className="w-full pl-12 pr-4 py-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20"
                       />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Email</label>
+                    <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Email</label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-black/20" size={18} />
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
                       <input
                         required
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        className="w-full pl-12 pr-4 py-4 bg-[#F5F5F0] rounded-2xl border border-black/5 focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20"
+                        className="w-full pl-12 pr-4 py-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20"
                       />
                     </div>
                   </div>
@@ -235,14 +235,14 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 px-6 py-4 rounded-2xl font-bold text-black/60 hover:bg-black/5 transition-colors"
+                  className="flex-1 px-6 py-4 rounded-2xl font-bold text-[var(--color-text)]/60 hover:bg-[var(--color-text)]/5 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-[2] bg-black text-white px-6 py-4 rounded-2xl font-bold hover:bg-black/80 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                  className="flex-[2] bg-[var(--color-main)] text-white px-6 py-4 rounded-2xl font-bold hover:bg-[var(--color-main)]/80 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -88,7 +88,7 @@ const Inventory: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-[#5A5A40]" size={32} />
+        <Loader2 className="animate-spin text-[var(--color-main)]" size={32} />
       </div>
     );
   }
@@ -107,7 +107,7 @@ const Inventory: React.FC = () => {
               setGrnForm({ warehouseId: '', notes: '' });
               setIsGRNModalOpen(true);
             }}
-            className="flex items-center space-x-2 bg-emerald-600 text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-emerald-700 transition-all"
+            className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
           >
             <ArrowDownLeft size={20} />
             <span className="font-bold">New GRN</span>
@@ -118,7 +118,7 @@ const Inventory: React.FC = () => {
               setDnForm({ warehouseId: '', notes: '' });
               setIsDNModalOpen(true);
             }}
-            className="flex items-center space-x-2 bg-indigo-600 text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-indigo-700 transition-all"
+            className="flex items-center space-x-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[var(--color-accent)]/90 transition-all"
           >
             <ArrowUpRight size={20} />
             <span className="font-bold">New Delivery Note</span>
