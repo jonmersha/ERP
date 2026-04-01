@@ -167,6 +167,24 @@
       },
       "required": ["factoryId", "productId", "year", "totalQuantity", "quarterlyPlans", "status", "companyId"]
     },
+    "ProductionRun": {
+      "title": "ProductionRun",
+      "description": "Actual manufacturing execution record",
+      "type": "object",
+      "properties": {
+        "factoryId": { "type": "string" },
+        "productId": { "type": "string" },
+        "recipeId": { "type": "string" },
+        "quantity": { "type": "number" },
+        "quantityProduced": { "type": "number" },
+        "status": { "type": "string", "enum": ["planned", "in_progress", "completed"] },
+        "startDate": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "companyId": { "type": "string" }
+      },
+      "required": ["factoryId", "productId", "quantity", "status", "startDate", "companyId"]
+    },
     "SalesOrder": {
       "title": "SalesOrder",
       "description": "Customer order for products",
@@ -251,6 +269,7 @@
     "inventory": { "schema": "Inventory", "description": "Stock records" },
     "purchaseOrders": { "schema": "PurchaseOrder", "description": "Procurement records" },
     "productionPlans": { "schema": "ProductionPlan", "description": "Manufacturing records" },
+    "productionRuns": { "schema": "ProductionRun", "description": "Actual manufacturing execution records" },
     "salesOrders": { "schema": "SalesOrder", "description": "Sales records" },
     "employees": { "schema": "Employee", "description": "Workforce records" },
     "invoices": { "schema": "Invoice", "description": "Billing records" },

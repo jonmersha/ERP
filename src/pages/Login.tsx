@@ -135,7 +135,7 @@ const Login: React.FC = () => {
               <div className="w-16 h-16 bg-[var(--color-main)] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <ShieldCheck className="text-white" size={32} />
               </div>
-              <h1 className="text-3xl font-serif font-bold text-[var(--color-main)]">Cibus ERP</h1>
+              <h1 className="text-3xl font-serif font-bold text-[var(--color-main)]">Sheger ERP</h1>
               <p className="text-[var(--color-text)]/40 mt-2">Enterprise Food Complex Management</p>
             </div>
 

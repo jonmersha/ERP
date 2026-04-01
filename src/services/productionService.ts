@@ -9,10 +9,16 @@ export const createProductionRun = async (form: any, profile: UserProfile | null
     quantityProduced: 0,
     startDate: new Date(form.startDate).toISOString(),
     status: 'planned',
-    companyId: profile?.companyId || ''
+    companyId: profile?.companyId || '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   });
 };
 
 export const updateProductionProgress = async (runId: string, quantityProduced: number, status: string) => {
-  await updateDoc(doc(db, 'productionRuns', runId), { quantityProduced, status });
+  await updateDoc(doc(db, 'productionRuns', runId), { 
+    quantityProduced, 
+    status,
+    updatedAt: new Date().toISOString()
+  });
 };

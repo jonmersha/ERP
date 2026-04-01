@@ -154,10 +154,12 @@ export interface ProductionRun {
   id: string;
   factoryId: string;
   productId: string;
+  recipeId?: string;
   quantity: number;
   quantityProduced: number;
   status: 'planned' | 'in_progress' | 'completed';
   startDate: string;
+  updatedAt?: string;
   companyId: string;
 }
 

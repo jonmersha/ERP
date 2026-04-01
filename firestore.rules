@@ -180,6 +180,10 @@ service cloud.firestore {
       allow read: if canReadCompanyData(resource.data);
       allow write: if hasAnyRole(['sales', 'finance', 'store']) && belongsToCompany();
     }
+    match /productionRuns/{id} {
+      allow read: if canReadCompanyData(resource.data);
+      allow write: if hasAnyRole(['admin', 'factory_manager']) && belongsToCompany();
+    }
     match /employees/{id} {
       allow read: if canReadCompanyData(resource.data);
       allow write: if isAdmin() && belongsToCompany();
