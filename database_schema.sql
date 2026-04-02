@@ -63,7 +63,15 @@ CREATE TABLE suppliers (
 CREATE TABLE raw_materials (
     id VARCHAR(36) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    unit VARCHAR(20) NOT NULL CHECK (unit IN ('kg', 'liter', 'unit', 'bag')),
+    unit VARCHAR(20) NOT NULL,
+    company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
+);
+
+-- Categories
+CREATE TABLE categories (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
     company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
 );
 
@@ -83,7 +91,7 @@ CREATE TABLE inventory (
     id VARCHAR(36) PRIMARY KEY,
     unit_id VARCHAR(36) NOT NULL, -- Can be factory, warehouse, or outlet
     item_id VARCHAR(36) NOT NULL, -- Can be raw_material or product
-    item_type VARCHAR(10) NOT NULL CHECK (item_type IN ('raw', 'product')),
+    item_type VARCHAR(10) NOT NULL,
     quantity DECIMAL(12, 3) NOT NULL DEFAULT 0,
     batch_number VARCHAR(100),
     expiry_date TIMESTAMP WITH TIME ZONE,
@@ -95,8 +103,10 @@ CREATE TABLE purchase_orders (
     id VARCHAR(36) PRIMARY KEY,
     supplier_id VARCHAR(36) NOT NULL REFERENCES suppliers(id),
     factory_id VARCHAR(36) NOT NULL REFERENCES factories(id),
-    status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'approved', 'shipped', 'received', 'cancelled')),
+    status VARCHAR(20) NOT NULL,
+    items JSONB NOT NULL,
     total_amount DECIMAL(12, 2) NOT NULL,
+    created_by VARCHAR(36) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
 );
@@ -108,24 +118,9 @@ CREATE TABLE production_plans (
     product_id VARCHAR(36) NOT NULL REFERENCES products(id),
     year INTEGER NOT NULL,
     total_quantity DECIMAL(12, 2) NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('planned', 'in_progress', 'completed')),
+    quarterly_plans JSONB NOT NULL,
+    status VARCHAR(20) NOT NULL,
     company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
-);
-
--- Quarterly Production Plans (Normalized from ProductionPlan)
-CREATE TABLE quarterly_production_plans (
-    id SERIAL PRIMARY KEY,
-    plan_id VARCHAR(36) NOT NULL REFERENCES production_plans(id) ON DELETE CASCADE,
-    quarter VARCHAR(2) NOT NULL CHECK (quarter IN ('Q1', 'Q2', 'Q3', 'Q4')),
-    quantity DECIMAL(12, 2) NOT NULL
-);
-
--- Monthly Production Plans (Normalized from ProductionPlan)
-CREATE TABLE monthly_production_plans (
-    id SERIAL PRIMARY KEY,
-    quarterly_plan_id INTEGER NOT NULL REFERENCES quarterly_production_plans(id) ON DELETE CASCADE,
-    month INTEGER NOT NULL CHECK (month BETWEEN 1 AND 12),
-    quantity DECIMAL(12, 2) NOT NULL
 );
 
 -- Production Runs (Execution)
@@ -136,10 +131,100 @@ CREATE TABLE production_runs (
     recipe_id VARCHAR(36),
     quantity DECIMAL(12, 2) NOT NULL,
     quantity_produced DECIMAL(12, 2) DEFAULT 0,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('planned', 'in_progress', 'completed')),
+    status VARCHAR(20) NOT NULL,
     start_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
+);
+
+-- Procurement Plans
+CREATE TABLE procurement_plans (
+    id VARCHAR(36) PRIMARY KEY,
+    warehouse_id VARCHAR(36) NOT NULL REFERENCES warehouses(id),
+    material_id VARCHAR(36) NOT NULL REFERENCES raw_materials(id),
+    year INTEGER NOT NULL,
+    total_quantity DECIMAL(12, 2) NOT NULL,
+    quarterly_plans JSONB NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
+);
+
+-- Sales Plans
+CREATE TABLE sales_plans (
+    id VARCHAR(36) PRIMARY KEY,
+    factory_id VARCHAR(36) NOT NULL REFERENCES factories(id),
+    product_id VARCHAR(36) NOT NULL REFERENCES products(id),
+    year INTEGER NOT NULL,
+    total_quantity DECIMAL(12, 2) NOT NULL,
+    quarterly_plans JSONB NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
+);
+
+-- Recipes
+CREATE TABLE recipes (
+    id VARCHAR(36) PRIMARY KEY,
+    product_id VARCHAR(36) NOT NULL REFERENCES products(id),
+    name VARCHAR(255) NOT NULL,
+    bom JSONB NOT NULL,
+    processing_steps JSONB NOT NULL,
+    yield_percentage DECIMAL(5, 2) NOT NULL,
+    company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
+);
+
+-- Equipment
+CREATE TABLE equipment (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(100) NOT NULL,
+    last_maintenance_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    next_maintenance_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
+);
+
+-- Maintenance Logs
+CREATE TABLE maintenance_logs (
+    id VARCHAR(36) PRIMARY KEY,
+    equipment_id VARCHAR(36) NOT NULL REFERENCES equipment(id),
+    date TIMESTAMP WITH TIME ZONE NOT NULL,
+    description TEXT NOT NULL,
+    technician VARCHAR(255) NOT NULL,
+    cost DECIMAL(12, 2) NOT NULL,
+    company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
+);
+
+-- Shipments
+CREATE TABLE shipments (
+    id VARCHAR(36) PRIMARY KEY,
+    order_id VARCHAR(36) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    delivery_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    temperature_log JSONB NOT NULL,
+    company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
+);
+
+-- GRN
+CREATE TABLE grn (
+    id VARCHAR(36) PRIMARY KEY,
+    purchase_order_id VARCHAR(36) NOT NULL REFERENCES purchase_orders(id),
+    warehouse_id VARCHAR(36) NOT NULL REFERENCES warehouses(id),
+    received_by VARCHAR(255) NOT NULL,
+    received_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    items JSONB NOT NULL,
+    notes TEXT,
+    company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
+);
+
+-- Delivery Note
+CREATE TABLE delivery_notes (
+    id VARCHAR(36) PRIMARY KEY,
+    sales_order_id VARCHAR(36) NOT NULL REFERENCES sales_orders(id),
+    warehouse_id VARCHAR(36) NOT NULL REFERENCES warehouses(id),
+    shipped_by VARCHAR(255) NOT NULL,
+    shipped_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    items JSONB NOT NULL,
+    notes TEXT,
     company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
 );
 
@@ -148,8 +233,10 @@ CREATE TABLE sales_orders (
     id VARCHAR(36) PRIMARY KEY,
     customer_id VARCHAR(36),
     outlet_id VARCHAR(36) NOT NULL REFERENCES sales_outlets(id),
-    status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'paid', 'ready_to_ship', 'shipped', 'delivered', 'cancelled')),
+    status VARCHAR(20) NOT NULL,
+    items JSONB NOT NULL,
     total_amount DECIMAL(12, 2) NOT NULL,
+    created_by VARCHAR(36) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
 );
@@ -170,11 +257,11 @@ CREATE TABLE employees (
 -- Invoices
 CREATE TABLE invoices (
     id VARCHAR(36) PRIMARY KEY,
-    order_id VARCHAR(36) NOT NULL, -- Can be purchase_order or sales_order
-    order_type VARCHAR(10) NOT NULL CHECK (order_type IN ('purchase', 'sales')),
+    order_id VARCHAR(36) NOT NULL,
+    order_type VARCHAR(10) NOT NULL,
     amount DECIMAL(12, 2) NOT NULL,
     due_date DATE NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('draft', 'issued', 'paid', 'overdue', 'cancelled')),
+    status VARCHAR(20) NOT NULL,
     company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -185,7 +272,7 @@ CREATE TABLE payments (
     invoice_id VARCHAR(36) NOT NULL REFERENCES invoices(id),
     amount DECIMAL(12, 2) NOT NULL,
     payment_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('cash', 'bank_transfer', 'check', 'credit_card')),
+    payment_method VARCHAR(20) NOT NULL,
     company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
 );
 
@@ -193,7 +280,7 @@ CREATE TABLE payments (
 CREATE TABLE financial_plans (
     id VARCHAR(36) PRIMARY KEY,
     year INTEGER NOT NULL,
-    quarter VARCHAR(2) NOT NULL CHECK (quarter IN ('Q1', 'Q2', 'Q3', 'Q4')),
+    quarter VARCHAR(2) NOT NULL,
     target_revenue DECIMAL(15, 2) NOT NULL,
     target_expense DECIMAL(15, 2) NOT NULL,
     company_id VARCHAR(36) NOT NULL REFERENCES companies(id) ON DELETE CASCADE
