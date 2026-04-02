@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
-import { db } from '../firebase';
 import { InventoryItem, Factory, Warehouse, RawMaterial, Product, PurchaseOrder, SalesOrder, GRN, DeliveryNote } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { apiFetch } from '../utils/api';
 
 export const useInventoryData = () => {
   const { profile } = useAuth();
@@ -21,79 +19,55 @@ export const useInventoryData = () => {
   useEffect(() => {
     if (!profile?.companyId) return;
 
-    const companyFilter = where('companyId', '==', profile.companyId);
+    const fetchData = async () => {
+      try {
+        const [
+          invData, 
+          factoriesData, 
+          warehousesData, 
+          materialsData, 
+          productsData, 
+          poData, 
+          soData, 
+          grnsData, 
+          dnsData
+        ] = await Promise.all([
+          apiFetch('/api/inventory'),
+          apiFetch('/api/core/factories'),
+          apiFetch('/api/core/warehouses'),
+          apiFetch('/api/products/raw-materials'),
+          apiFetch('/api/products'),
+          apiFetch('/api/procurement/orders'),
+          apiFetch('/api/sales/orders'),
+          apiFetch('/api/inventory/grns'),
+          apiFetch('/api/inventory/delivery-notes')
+        ]);
 
-    let loadedCount = 0;
-    const totalCollections = 9;
-    const checkLoaded = () => {
-      loadedCount++;
-      if (loadedCount === totalCollections) {
+        if (Array.isArray(invData)) setInventory(invData);
+        if (Array.isArray(factoriesData)) setFactories(factoriesData);
+        if (Array.isArray(warehousesData)) setWarehouses(warehousesData);
+        if (Array.isArray(materialsData)) setMaterials(materialsData);
+        if (Array.isArray(productsData)) setProducts(productsData);
+        if (Array.isArray(poData)) {
+          setPendingPOs(poData.filter((po: any) => ['approved', 'shipped'].includes(po.status)));
+        }
+        if (Array.isArray(soData)) {
+          setPendingSOs(soData.filter((so: any) => ['paid', 'ready_to_ship'].includes(so.status)));
+        }
+        if (Array.isArray(grnsData)) setGrns(grnsData);
+        if (Array.isArray(dnsData)) setDeliveryNotes(dnsData);
+
+      } catch (error) {
+        console.error("Error fetching inventory data:", error);
+      } finally {
         setLoading(false);
       }
     };
 
-    const unsubInv = onSnapshot(query(collection(db, 'inventory'), companyFilter), (snap) => {
-      setInventory(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem)));
-      checkLoaded();
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'inventory'));
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Poll every 30 seconds
 
-    const unsubFactories = onSnapshot(query(collection(db, 'factories'), companyFilter), (snap) => {
-      setFactories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Factory)));
-      checkLoaded();
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'factories'));
-
-    const unsubWarehouses = onSnapshot(query(collection(db, 'warehouses'), companyFilter), (snap) => {
-      setWarehouses(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Warehouse)));
-      checkLoaded();
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'warehouses'));
-
-    const unsubMaterials = onSnapshot(query(collection(db, 'rawMaterials'), companyFilter), (snap) => {
-      setMaterials(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as RawMaterial)));
-      checkLoaded();
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'rawMaterials'));
-
-    const unsubProducts = onSnapshot(query(collection(db, 'products'), companyFilter), (snap) => {
-      setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-      checkLoaded();
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'products'));
-    
-    const unsubPOs = onSnapshot(
-      query(collection(db, 'purchaseOrders'), companyFilter, where('status', 'in', ['approved', 'shipped'])),
-      (snap) => {
-        setPendingPOs(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PurchaseOrder)));
-        checkLoaded();
-      }, (error) => handleFirestoreError(error, OperationType.LIST, 'purchaseOrders')
-    );
-
-    const unsubSOs = onSnapshot(
-      query(collection(db, 'salesOrders'), companyFilter, where('status', 'in', ['paid', 'ready_to_ship'])),
-      (snap) => {
-        setPendingSOs(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SalesOrder)));
-        checkLoaded();
-      }, (error) => handleFirestoreError(error, OperationType.LIST, 'salesOrders')
-    );
-
-    const unsubGrns = onSnapshot(query(collection(db, 'grns'), companyFilter, orderBy('receivedAt', 'desc')), (snap) => {
-      setGrns(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as GRN)));
-      checkLoaded();
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'grns'));
-
-    const unsubDns = onSnapshot(query(collection(db, 'deliveryNotes'), companyFilter, orderBy('shippedAt', 'desc')), (snap) => {
-      setDeliveryNotes(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as DeliveryNote)));
-      checkLoaded();
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'deliveryNotes'));
-
-    return () => {
-      unsubInv();
-      unsubFactories();
-      unsubWarehouses();
-      unsubMaterials();
-      unsubProducts();
-      unsubPOs();
-      unsubSOs();
-      unsubGrns();
-      unsubDns();
-    };
+    return () => clearInterval(interval);
   }, [profile?.companyId]);
 
   return {

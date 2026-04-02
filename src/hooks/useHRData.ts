@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
-import { db } from '../firebase';
 import { Employee, Factory } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { apiFetch } from '../utils/api';
 
 export const useHRData = () => {
   const { profile } = useAuth();
@@ -14,21 +12,25 @@ export const useHRData = () => {
   useEffect(() => {
     if (!profile?.companyId) return;
 
-    const companyFilter = where('companyId', '==', profile.companyId);
+    const fetchData = async () => {
+      try {
+        const [employeesData, factoriesData] = await Promise.all([
+          apiFetch('/api/hr/employees?orderBy=name&orderDir=asc'),
+          apiFetch('/api/core/factories')
+        ]);
 
-    const unsubEmployees = onSnapshot(query(collection(db, 'employees'), companyFilter, orderBy('name', 'asc')), (snap) => {
-      setEmployees(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'employees'));
-
-    const unsubFactories = onSnapshot(query(collection(db, 'factories'), companyFilter), (snap) => {
-      setFactories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Factory)));
-      setLoading(false);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'factories'));
-
-    return () => {
-      unsubEmployees();
-      unsubFactories();
+        if (Array.isArray(employeesData)) setEmployees(employeesData);
+        if (Array.isArray(factoriesData)) setFactories(factoriesData);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching HR data:", error);
+      }
     };
+
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, [profile?.companyId]);
 
   return {

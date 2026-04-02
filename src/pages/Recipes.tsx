@@ -25,11 +25,24 @@ const Recipes: React.FC = () => {
   const [newStep, setNewStep] = useState('');
 
   useEffect(() => {
-    if (profile?.companyId) {
-      getRecipes(profile.companyId).then(setRecipes).finally(() => setLoading(false));
-      setNewRecipe(prev => ({ ...prev, companyId: profile.companyId }));
-    }
-  }, [profile]);
+    if (!profile?.companyId) return;
+
+    const fetchData = async () => {
+      try {
+        const data = await getRecipes();
+        setRecipes(data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching recipes:", error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    setNewRecipe(prev => ({ ...prev, companyId: profile.companyId }));
+    
+    return () => clearInterval(interval);
+  }, [profile?.companyId]);
 
   const handleAddRecipe = async () => {
     if (!profile?.companyId) return;
@@ -45,7 +58,7 @@ const Recipes: React.FC = () => {
         companyId: profile.companyId,
       });
       // Refresh
-      const updatedRecipes = await getRecipes(profile.companyId);
+      const updatedRecipes = await getRecipes();
       setRecipes(updatedRecipes);
     } catch (error) {
       console.error("Error adding recipe:", error);
@@ -85,7 +98,7 @@ const Recipes: React.FC = () => {
       }
 
       // Refresh
-      const updatedRecipes = await getRecipes(profile.companyId);
+      const updatedRecipes = await getRecipes();
       setRecipes(updatedRecipes);
     } catch (error) {
       console.error("Error generating recipes:", error);

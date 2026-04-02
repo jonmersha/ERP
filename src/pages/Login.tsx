@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { seedDatabase } from '../utils/seedData';
 import { motion, AnimatePresence } from 'motion/react';
 import { LogIn, ShieldCheck, Building2, Plus, Users, ArrowRight, MapPin, Phone, Mail, Image as ImageIcon } from 'lucide-react';
+import { apiFetch } from '../utils/api';
 
 const Login: React.FC = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -35,18 +34,22 @@ const Login: React.FC = () => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      setLoading(true); // Set loading after popup is triggered
+      setLoading(true);
       const user = result.user;
 
-      // Check if profile exists
-      const profileRef = doc(db, 'users', user.uid);
-      const profileSnap = await getDoc(profileRef);
-
-      if (!profileSnap.exists() || !profileSnap.data().companyId) {
+      // Check if profile exists via API
+      try {
+        const profileData = await apiFetch('/api/users/profile');
+        if (profileData && profileData.companyId) {
+          navigate('/');
+        } else {
+          setTempUser(user);
+          setStep('company-setup');
+        }
+      } catch (err) {
+        // Profile not found or other error, proceed to setup
         setTempUser(user);
         setStep('company-setup');
-      } else {
-        navigate('/');
       }
     } catch (err: any) {
       console.error("Login error details:", err);
@@ -67,48 +70,38 @@ const Login: React.FC = () => {
       let finalRoles = ['sales'];
 
       if (companyMode === 'create') {
-        // Create new company
-        const companyRef = doc(collection(db, 'companies'));
-        const newCompanyCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-        
-        await setDoc(companyRef, {
-          id: companyRef.id,
-          name: companyName,
-          code: newCompanyCode,
-          address: companyAddress,
-          phone: companyPhone,
-          email: companyEmail,
-          logoUrl: companyLogo,
-          ownerId: tempUser.uid,
-          createdAt: new Date().toISOString()
+        // Create new company via API
+        const companyData = await apiFetch('/api/users/company', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: companyName,
+            address: companyAddress,
+            phone: companyPhone,
+            email: companyEmail,
+            logoUrl: companyLogo
+          })
         });
 
-        // Seed database for new company
-        await seedDatabase(companyRef.id);
-        
-        finalCompanyId = companyRef.id;
+        finalCompanyId = companyData.id;
         finalRoles = ['admin']; // Creator is admin
       } else {
-        // Join existing company
-        const q = query(collection(db, 'companies'), where('code', '==', companyCode.toUpperCase()));
-        const snap = await getDocs(q);
-        
-        if (snap.empty) {
+        // Join existing company via API
+        const companyData = await apiFetch(`/api/users/company/code/${companyCode.toUpperCase()}`);
+        if (!companyData || companyData.error) {
           throw new Error('Invalid company code');
         }
-        
-        finalCompanyId = snap.docs[0].id;
+        finalCompanyId = companyData.id;
       }
 
-      // Create user profile
-      const profileRef = doc(db, 'users', tempUser.uid);
-      await setDoc(profileRef, {
-        uid: tempUser.uid,
-        email: tempUser.email,
-        name: tempUser.displayName || 'User',
-        roles: finalRoles,
-        companyId: finalCompanyId,
-        createdAt: new Date().toISOString(),
+      // Create user profile via API
+      await apiFetch('/api/users/profile', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: tempUser.email,
+          name: tempUser.displayName || 'User',
+          roles: finalRoles,
+          companyId: finalCompanyId
+        })
       });
 
       navigate('/');

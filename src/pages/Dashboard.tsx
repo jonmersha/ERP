@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, query, limit, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '../firebase';
 import { motion } from 'motion/react';
-import { seedDatabase } from '../utils/seedData';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { apiFetch } from '../utils/api';
 import { 
   Factory as FactoryIcon,
   Warehouse, 
@@ -38,6 +35,9 @@ import {
 } from 'recharts';
 import EditCompanyModal from '../components/EditCompanyModal';
 import { Product, Factory as FactoryType } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import Modal from '../components/Modal';
 
 const StatCard: React.FC<{ title: string; value: string | number; icon: any; trend?: number; color: string; onClick?: () => void }> = ({ title, value, icon: Icon, trend, color, onClick }) => (
   <motion.div 
@@ -60,10 +60,6 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: any; tre
     <p className="text-3xl font-serif font-bold text-[var(--color-text)] mt-1">{value}</p>
   </motion.div>
 );
-
-import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import Modal from '../components/Modal';
 
 const Dashboard: React.FC = () => {
   const { isAdmin, profile, company } = useAuth();
@@ -104,105 +100,101 @@ const Dashboard: React.FC = () => {
   const handleSeed = async () => {
     if (!profile?.companyId) return;
     setIsSeeding(true);
-    await seedDatabase(profile.companyId);
-    setIsSeeding(false);
+    try {
+      await apiFetch(`/api/users/company/${profile.companyId}/seed`, { method: 'POST' });
+      // Refresh page to show new data
+      window.location.reload();
+    } catch (error) {
+      console.error("Error seeding data:", error);
+    } finally {
+      setIsSeeding(false);
+    }
   };
 
   useEffect(() => {
-    if (!profile?.companyId) return;
-
-    const companyFilter = where('companyId', '==', profile.companyId);
-
-    const unsubFactories = onSnapshot(query(collection(db, 'factories'), companyFilter), (snap) => {
-      setStats(prev => ({ ...prev, factories: snap.size }));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'factories'));
-
-    const unsubWarehouses = onSnapshot(query(collection(db, 'warehouses'), companyFilter), (snap) => {
-      setStats(prev => ({ ...prev, warehouses: snap.size }));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'warehouses'));
-
-    const unsubOrders = onSnapshot(query(collection(db, 'salesOrders'), companyFilter), (snap) => {
-      const total = snap.docs.reduce((acc, doc) => acc + (doc.data().totalAmount || 0), 0);
-      setStats(prev => ({ ...prev, orders: snap.size, revenue: total }));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'salesOrders'));
-
-    const unsubInventory = onSnapshot(query(collection(db, 'inventory'), companyFilter), (snap) => {
-      const low = snap.docs.filter(doc => doc.data().quantity < 100).length;
-      setStats(prev => ({ ...prev, lowStock: low }));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'inventory'));
-
-    const unsubProducts = onSnapshot(query(collection(db, 'products'), companyFilter), (snap) => {
-      const productsData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-      setProducts(productsData);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'products'));
-
-    // Fetch recent orders
-    const unsubRecentOrders = onSnapshot(query(collection(db, 'salesOrders'), companyFilter, orderBy('createdAt', 'desc'), limit(3)), (snap) => {
-      const ordersData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setRecentOrders(ordersData);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'salesOrders'));
-
-    // Fetch recent production runs
-    const unsubRecentRuns = onSnapshot(query(collection(db, 'productionRuns'), companyFilter, orderBy('startDate', 'desc'), limit(3)), (snap) => {
-      const runsData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setRecentRuns(runsData);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'productionRuns'));
-
-    // Fetch Production Data for Charts
-    const unsubProduction = onSnapshot(query(collection(db, 'productionRuns'), companyFilter), (snap) => {
-      const runsData = snap.docs.map(doc => doc.data());
-      setAllRuns(runsData);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'productionRuns'));
-
-    // Fetch Procurement Data for Charts
-    const unsubProcurement = onSnapshot(query(collection(db, 'procurementPlans'), companyFilter), (snap) => {
-      const plans = snap.docs.map(doc => doc.data());
-      const statusCounts = {
-        pending: 0,
-        ordered: 0,
-        received: 0
-      };
+    const fetchData = async () => {
+      if (!profile?.companyId) return;
       
-      plans.forEach(plan => {
-        const status = (plan.status || 'pending').toLowerCase();
-        if (status in statusCounts) {
-          statusCounts[status as keyof typeof statusCounts]++;
+      try {
+        // Fetch all data in parallel
+        const [
+          factoriesData,
+          warehousesData,
+          ordersData,
+          inventoryData,
+          productsData,
+          recentOrdersData,
+          recentRunsData,
+          allRunsData,
+          procurementPlansData,
+          productionPlansData
+        ] = await Promise.all([
+          apiFetch('/api/core/factories'),
+          apiFetch('/api/core/warehouses'),
+          apiFetch('/api/core/sales-orders'),
+          apiFetch('/api/inventory'),
+          apiFetch('/api/products'),
+          apiFetch('/api/core/sales-orders?limit=3&orderBy=createdAt&orderDir=desc'),
+          apiFetch('/api/production/runs?limit=3&orderBy=startDate&orderDir=desc'),
+          apiFetch('/api/production/runs'),
+          apiFetch('/api/plans/procurement'),
+          apiFetch('/api/plans/production')
+        ]);
+
+        // Update stats
+        const totalRevenue = Array.isArray(ordersData) ? ordersData.reduce((acc: number, doc: any) => acc + (doc.totalAmount || 0), 0) : 0;
+        const lowStockCount = Array.isArray(inventoryData) ? inventoryData.filter((doc: any) => doc.quantity < 100).length : 0;
+        
+        setStats({
+          factories: Array.isArray(factoriesData) ? factoriesData.length : 0,
+          warehouses: Array.isArray(warehousesData) ? warehousesData.length : 0,
+          orders: Array.isArray(ordersData) ? ordersData.length : 0,
+          revenue: totalRevenue,
+          lowStock: lowStockCount
+        });
+
+        setProducts(Array.isArray(productsData) ? productsData : []);
+        setRecentOrders(Array.isArray(recentOrdersData) ? recentOrdersData : []);
+        setRecentRuns(Array.isArray(recentRunsData) ? recentRunsData : []);
+        setAllRuns(Array.isArray(allRunsData) ? allRunsData : []);
+
+        // Process Procurement Stats
+        const procurementStatusCounts = { pending: 0, ordered: 0, received: 0 };
+        if (Array.isArray(procurementPlansData)) {
+          procurementPlansData.forEach((plan: any) => {
+            const status = (plan.status || 'pending').toLowerCase();
+            if (status in procurementStatusCounts) {
+              procurementStatusCounts[status as keyof typeof procurementStatusCounts]++;
+            }
+          });
         }
-      });
+        setProcurementStats([
+          { name: 'Pending', value: procurementStatusCounts.pending, color: '#f59e0b' },
+          { name: 'Ordered', value: procurementStatusCounts.ordered, color: '#3b82f6' },
+          { name: 'Received', value: procurementStatusCounts.received, color: '#10b981' }
+        ]);
 
-      setProcurementStats([
-        { name: 'Pending', value: statusCounts.pending, color: '#f59e0b' },
-        { name: 'Ordered', value: statusCounts.ordered, color: '#3b82f6' },
-        { name: 'Received', value: statusCounts.received, color: '#10b981' }
-      ]);
-    });
+        // Process Planning Stats
+        const monthlyData: Record<string, number> = {};
+        if (Array.isArray(productionPlansData)) {
+          productionPlansData.forEach((plan: any) => {
+            const date = new Date(plan.startDate || plan.createdAt);
+            const month = date.toLocaleString('default', { month: 'short' });
+            monthlyData[month] = (monthlyData[month] || 0) + (plan.targetQuantity || 0);
+          });
+        }
+        setPlanningStats(Object.entries(monthlyData).map(([name, value]) => ({ name, value })));
 
-    // Fetch Planning Data
-    const unsubPlanning = onSnapshot(query(collection(db, 'productionPlans'), companyFilter), (snap) => {
-      const plans = snap.docs.map(doc => doc.data());
-      const monthlyData: Record<string, number> = {};
-      
-      plans.forEach(plan => {
-        const date = new Date(plan.startDate);
-        const month = date.toLocaleString('default', { month: 'short' });
-        monthlyData[month] = (monthlyData[month] || 0) + (plan.targetQuantity || 0);
-      });
-
-      setPlanningStats(Object.entries(monthlyData).map(([name, value]) => ({ name, value })));
-    });
-
-    return () => {
-      unsubFactories();
-      unsubWarehouses();
-      unsubOrders();
-      unsubInventory();
-      unsubProducts();
-      unsubRecentOrders();
-      unsubRecentRuns();
-      unsubProduction();
-      unsubProcurement();
-      unsubPlanning();
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      }
     };
+
+    fetchData();
+    
+    // Set up polling for "real-time" updates (every 30 seconds)
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, [profile?.companyId]);
 
   return (
@@ -280,21 +272,6 @@ const Dashboard: React.FC = () => {
                         className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-main)] hover:text-[var(--color-text)] transition-colors"
                       >
                         {isSeeding ? 'Seeding...' : 'Seed Data'}
-                      </button>
-                      <button 
-                        onClick={async () => {
-                          setIsSeeding(true);
-                          const companiesSnap = await getDocs(collection(db, 'companies'));
-                          for (const doc of companiesSnap.docs) {
-                            await seedDatabase(doc.id);
-                          }
-                          setIsSeeding(false);
-                          alert('Seeding complete for all companies!');
-                        }}
-                        disabled={isSeeding}
-                        className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 hover:text-[var(--color-text)] transition-colors ml-4"
-                      >
-                        {isSeeding ? 'Seeding All...' : 'Seed All'}
                       </button>
                     </>
                   )}

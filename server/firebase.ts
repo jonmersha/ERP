@@ -13,13 +13,20 @@ if (fs.existsSync(configPath)) {
 }
 
 // Initialize Firebase Admin SDK
-// Note: In this environment, we use the default credentials if possible,
-// but for now we'll just initialize it.
 if (!getApps().length) {
-  initializeApp({
-    projectId: firebaseConfig.projectId,
-  });
+  try {
+    console.log("Initializing Firebase Admin with project:", firebaseConfig.projectId);
+    initializeApp({
+      projectId: firebaseConfig.projectId,
+    });
+    console.log("Firebase Admin initialized successfully");
+  } catch (error) {
+    console.error("Error initializing Firebase Admin:", error);
+  }
 }
 
-export const db = getFirestore();
+export const db = firebaseConfig.firestoreDatabaseId 
+  ? getFirestore(firebaseConfig.firestoreDatabaseId)
+  : getFirestore();
+console.log("Firestore initialized with database:", firebaseConfig.firestoreDatabaseId || "(default)");
 export const auth = getAuth();

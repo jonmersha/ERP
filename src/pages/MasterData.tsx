@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import { Factory, Warehouse, Product, RawMaterial, Category } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { apiFetch } from '../utils/api';
 import { motion } from 'motion/react';
 import { 
   Database, 
@@ -45,35 +43,27 @@ const MasterData: React.FC = () => {
   useEffect(() => {
     if (!profile?.companyId) return;
 
-    const companyFilter = where('companyId', '==', profile.companyId);
+    const fetchData = async () => {
+      try {
+        const [factoriesData, warehousesData, productsData, rawData, catsData] = await Promise.all([
+          apiFetch('/api/core/factories'),
+          apiFetch('/api/core/warehouses'),
+          apiFetch('/api/products'),
+          apiFetch('/api/products/raw-materials'),
+          apiFetch('/api/products/categories')
+        ]);
 
-    const unsubFactories = onSnapshot(query(collection(db, 'factories'), companyFilter), (snap) => {
-      setFactories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Factory)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'factories'));
-
-    const unsubWarehouses = onSnapshot(query(collection(db, 'warehouses'), companyFilter), (snap) => {
-      setWarehouses(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Warehouse)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'warehouses'));
-
-    const unsubProducts = onSnapshot(query(collection(db, 'products'), companyFilter), (snap) => {
-      setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'products'));
-
-    const unsubRaw = onSnapshot(query(collection(db, 'rawMaterials'), companyFilter), (snap) => {
-      setRawMaterials(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as RawMaterial)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'rawMaterials'));
-
-    const unsubCats = onSnapshot(query(collection(db, 'categories'), companyFilter), (snap) => {
-      setCategories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'categories'));
-
-    return () => {
-      unsubFactories();
-      unsubWarehouses();
-      unsubProducts();
-      unsubRaw();
-      unsubCats();
+        if (Array.isArray(factoriesData)) setFactories(factoriesData);
+        if (Array.isArray(warehousesData)) setWarehouses(warehousesData);
+        if (Array.isArray(productsData)) setProducts(productsData);
+        if (Array.isArray(rawData)) setRawMaterials(rawData);
+        if (Array.isArray(catsData)) setCategories(catsData);
+      } catch (error) {
+        console.error("Error fetching master data:", error);
+      }
     };
+
+    fetchData();
   }, [profile?.companyId]);
 
   const canManage = isAdmin || profile?.role === 'admin' || profile?.role === 'factory_manager';
@@ -95,24 +85,56 @@ const MasterData: React.FC = () => {
     if (!canManage || !profile?.companyId) return;
     setSubmitting(true);
 
-    let colName = '';
+    let url = '';
+    let method = editingItem ? 'PUT' : 'POST';
     let formData: any = {};
 
     try {
       switch (activeTab) {
-        case 'factories': colName = 'factories'; formData = factoryForm; break;
-        case 'warehouses': colName = 'warehouses'; formData = warehouseForm; break;
-        case 'products': colName = 'products'; formData = { ...productForm, price: Number(productForm.price) }; break;
-        case 'raw': colName = 'rawMaterials'; formData = rawForm; break;
-        case 'categories': colName = 'categories'; formData = categoryForm; break;
+        case 'factories': 
+          url = '/api/core/factories'; 
+          formData = factoryForm; 
+          break;
+        case 'warehouses': 
+          url = '/api/core/warehouses'; 
+          formData = warehouseForm; 
+          break;
+        case 'products': 
+          url = '/api/products'; 
+          formData = { ...productForm, price: Number(productForm.price) }; 
+          break;
+        case 'raw': 
+          url = '/api/products/raw-materials'; 
+          formData = rawForm; 
+          break;
+        case 'categories': 
+          url = '/api/products/categories'; 
+          formData = categoryForm; 
+          break;
       }
 
       if (editingItem) {
-        await updateDoc(doc(db, colName, editingItem.id), formData);
-      } else {
-        await addDoc(collection(db, colName), { ...formData, companyId: profile.companyId });
+        url += `/${editingItem.id}`;
       }
+
+      const responseData = await apiFetch(url, {
+        method,
+        body: JSON.stringify({ ...formData, companyId: profile.companyId }),
+      });
+
+      // Refresh data
+      const refreshData = await apiFetch(url.split('/').slice(0, -1).join('/') || url);
       
+      if (Array.isArray(refreshData)) {
+        switch (activeTab) {
+          case 'factories': setFactories(refreshData); break;
+          case 'warehouses': setWarehouses(refreshData); break;
+          case 'products': setProducts(refreshData); break;
+          case 'raw': setRawMaterials(refreshData); break;
+          case 'categories': setCategories(refreshData); break;
+        }
+      }
+
       setIsModalOpen(false);
       setEditingItem(null);
       // Reset forms
@@ -122,17 +144,39 @@ const MasterData: React.FC = () => {
       setRawForm({ name: '', unit: 'kg' });
       setCategoryForm({ name: '', description: '' });
     } catch (error) {
-      handleFirestoreError(error, editingItem ? OperationType.UPDATE : OperationType.CREATE, colName);
+      console.error("Error saving item:", error);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: string, collectionName: string) => {
-    if (!canManage) return;
+  const handleDelete = async (id: string, tab: string) => {
+    if (!canManage || !profile?.companyId) return;
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-        await deleteDoc(doc(db, collectionName, id));
+        let url = '';
+        switch (tab) {
+          case 'factories': url = `/api/core/factories/${id}`; break;
+          case 'warehouses': url = `/api/core/warehouses/${id}`; break;
+          case 'products': url = `/api/products/${id}`; break;
+          case 'raw': url = `/api/products/raw-materials/${id}`; break;
+          case 'categories': url = `/api/products/categories/${id}`; break;
+        }
+
+        await apiFetch(url, { method: 'DELETE' });
+
+        // Refresh data
+        const refreshData = await apiFetch(url.split('/').slice(0, -1).join('/'));
+        
+        if (Array.isArray(refreshData)) {
+          switch (tab) {
+            case 'factories': setFactories(refreshData); break;
+            case 'warehouses': setWarehouses(refreshData); break;
+            case 'products': setProducts(refreshData); break;
+            case 'raw': setRawMaterials(refreshData); break;
+            case 'categories': setCategories(refreshData); break;
+          }
+        }
       } catch (error) {
         console.error("Error deleting item:", error);
       }

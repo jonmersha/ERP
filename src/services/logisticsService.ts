@@ -1,15 +1,28 @@
-import { collection, addDoc, query, where, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import { Shipment } from '../types';
+import { apiFetch } from '../utils/api';
 
-const COLLECTION = 'shipments';
+const API_BASE = '/api/logistics';
 
-export const getShipments = async (companyId: string): Promise<Shipment[]> => {
-  const q = query(collection(db, COLLECTION), where('companyId', '==', companyId));
-  const snap = await getDocs(q);
-  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Shipment));
+export const getShipments = async (): Promise<Shipment[]> => {
+  return await apiFetch(`${API_BASE}/shipments`);
 };
 
-export const addShipment = (shipment: Omit<Shipment, 'id'>) => addDoc(collection(db, COLLECTION), shipment);
-export const updateShipment = (id: string, shipment: Partial<Shipment>) => updateDoc(doc(db, COLLECTION, id), shipment);
-export const deleteShipment = (id: string) => deleteDoc(doc(db, COLLECTION, id));
+export const addShipment = async (shipment: Omit<Shipment, 'id'>) => {
+  return await apiFetch(`${API_BASE}/shipments`, {
+    method: 'POST',
+    body: JSON.stringify(shipment),
+  });
+};
+
+export const updateShipment = async (id: string, shipment: Partial<Shipment>) => {
+  return await apiFetch(`${API_BASE}/shipments/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(shipment),
+  });
+};
+
+export const deleteShipment = async (id: string) => {
+  return await apiFetch(`${API_BASE}/shipments/${id}`, {
+    method: 'DELETE',
+  });
+};

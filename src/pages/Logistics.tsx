@@ -19,17 +19,30 @@ const Logistics: React.FC = () => {
   });
 
   useEffect(() => {
-    if (profile?.companyId) {
-      getShipments(profile.companyId).then(setShipments).finally(() => setLoading(false));
-      setNewShipment(prev => ({ ...prev, companyId: profile.companyId }));
-    }
-  }, [profile]);
+    if (!profile?.companyId) return;
+
+    const fetchData = async () => {
+      try {
+        const data = await getShipments();
+        setShipments(data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching shipments:", error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    setNewShipment(prev => ({ ...prev, companyId: profile.companyId }));
+    
+    return () => clearInterval(interval);
+  }, [profile?.companyId]);
 
   const handleAddShipment = async () => {
     if (!profile?.companyId) return;
     await addShipment(newShipment);
     setIsModalOpen(false);
-    getShipments(profile.companyId).then(setShipments);
+    getShipments().then(setShipments);
   };
 
   if (loading) return <Loader2 className="animate-spin mx-auto" />;

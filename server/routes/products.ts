@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../firebase.js";
+import { prisma } from "../db";
 
 export const productRouter = Router();
 
@@ -11,11 +11,9 @@ productRouter.get("/", async (req, res) => {
       return res.status(400).json({ error: "companyId is required" });
     }
 
-    const snapshot = await db.collection("products")
-      .where("companyId", "==", companyId)
-      .get();
-
-    const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const products = await prisma.product.findMany({
+      where: { companyId }
+    });
     res.json(products);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -25,11 +23,11 @@ productRouter.get("/", async (req, res) => {
 // Get a single product
 productRouter.get("/:id", async (req, res) => {
   try {
-    const doc = await db.collection("products").doc(req.params.id).get();
-    if (!doc.exists) {
+    const product = await prisma.product.findUnique({ where: { id: req.params.id } });
+    if (!product) {
       return res.status(404).json({ error: "Product not found" });
     }
-    res.json({ id: doc.id, ...doc.data() });
+    res.json(product);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -39,11 +37,137 @@ productRouter.get("/:id", async (req, res) => {
 productRouter.post("/", async (req, res) => {
   try {
     const productData = req.body;
-    const docRef = await db.collection("products").add({
-      ...productData,
-      createdAt: new Date().toISOString(),
+    const product = await prisma.product.create({
+      data: {
+        ...productData,
+      }
     });
-    res.status(201).json({ id: docRef.id, ...productData });
+    res.status(201).json(product);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+productRouter.put("/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = req.body;
+    const product = await prisma.product.update({
+      where: { id },
+      data: { ...data }
+    });
+    res.json(product);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+productRouter.delete("/:id", async (req, res) => {
+  try {
+    await prisma.product.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all raw materials
+productRouter.get("/raw-materials", async (req, res) => {
+  try {
+    const companyId = req.query.companyId as string;
+    if (!companyId) {
+      return res.status(400).json({ error: "companyId is required" });
+    }
+
+    const materials = await prisma.rawMaterial.findMany({
+      where: { companyId }
+    });
+    res.json(materials);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+productRouter.post("/raw-materials", async (req, res) => {
+  try {
+    const data = req.body;
+    const material = await prisma.rawMaterial.create({
+      data: { ...data }
+    });
+    res.status(201).json(material);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+productRouter.put("/raw-materials/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = req.body;
+    const material = await prisma.rawMaterial.update({
+      where: { id },
+      data: { ...data }
+    });
+    res.json(material);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+productRouter.delete("/raw-materials/:id", async (req, res) => {
+  try {
+    await prisma.rawMaterial.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Categories
+productRouter.get("/categories", async (req, res) => {
+  try {
+    const companyId = req.query.companyId as string;
+    if (!companyId) return res.status(400).json({ error: "companyId is required" });
+
+    const categories = await prisma.category.findMany({
+      where: { companyId }
+    });
+    res.json(categories);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+productRouter.post("/categories", async (req, res) => {
+  try {
+    const data = req.body;
+    const category = await prisma.category.create({
+      data: { ...data }
+    });
+    res.status(201).json(category);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+productRouter.put("/categories/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = req.body;
+    const category = await prisma.category.update({
+      where: { id },
+      data: { ...data }
+    });
+    res.json(category);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+productRouter.delete("/categories/:id", async (req, res) => {
+  try {
+    await prisma.category.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { apiFetch } from '../utils/api';
 import { Company } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, Building2, MapPin, Phone, Mail, Image as ImageIcon } from 'lucide-react';
@@ -100,14 +99,13 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
     e.preventDefault();
     setLoading(true);
     try {
-      const companyRef = doc(db, 'companies', company.id);
-      await updateDoc(companyRef, {
-        ...formData,
-        updatedAt: new Date().toISOString(),
+      await apiFetch(`/api/users/company/${company.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(formData),
       });
       onClose();
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `companies/${company.id}`);
+      console.error('Error updating company profile:', error);
     } finally {
       setLoading(false);
     }

@@ -1,15 +1,28 @@
-import { collection, addDoc, query, where, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import { Recipe } from '../types';
+import { apiFetch } from '../utils/api';
 
-const COLLECTION = 'recipes';
+const API_BASE = '/api/production/recipes';
 
-export const getRecipes = async (companyId: string): Promise<Recipe[]> => {
-  const q = query(collection(db, COLLECTION), where('companyId', '==', companyId));
-  const snap = await getDocs(q);
-  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
+export const getRecipes = async (): Promise<Recipe[]> => {
+  return await apiFetch(`${API_BASE}`);
 };
 
-export const addRecipe = (recipe: Omit<Recipe, 'id'>) => addDoc(collection(db, COLLECTION), recipe);
-export const updateRecipe = (id: string, recipe: Partial<Recipe>) => updateDoc(doc(db, COLLECTION, id), recipe);
-export const deleteRecipe = (id: string) => deleteDoc(doc(db, COLLECTION, id));
+export const addRecipe = async (recipe: Omit<Recipe, 'id'>) => {
+  return await apiFetch(API_BASE, {
+    method: 'POST',
+    body: JSON.stringify(recipe),
+  });
+};
+
+export const updateRecipe = async (id: string, recipe: Partial<Recipe>) => {
+  return await apiFetch(`${API_BASE}/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(recipe),
+  });
+};
+
+export const deleteRecipe = async (id: string) => {
+  return await apiFetch(`${API_BASE}/${id}`, {
+    method: 'DELETE',
+  });
+};

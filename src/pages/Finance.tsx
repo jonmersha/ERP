@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
-import { db } from '../firebase';
 import { Invoice, Payment, FinancialPlan } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { CreditCard, FileText, Loader2, TrendingUp } from 'lucide-react';
+import { getInvoices, getPayments, getFinancialPlans } from '../services/financeService';
 
 const Finance: React.FC = () => {
   const { profile } = useAuth();
@@ -14,28 +12,26 @@ const Finance: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!profile?.companyId) return;
-
-    const companyFilter = where('companyId', '==', profile.companyId);
-
-    const unsubInvoices = onSnapshot(query(collection(db, 'invoices'), companyFilter), (snap) => {
-      setInvoices(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice)));
-      setLoading(false);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'invoices'));
-
-    const unsubPayments = onSnapshot(query(collection(db, 'payments'), companyFilter), (snap) => {
-      setPayments(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Payment)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'payments'));
-
-    const unsubPlans = onSnapshot(query(collection(db, 'financialPlans'), companyFilter), (snap) => {
-      setPlans(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as FinancialPlan)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'financialPlans'));
-
-    return () => {
-      unsubInvoices();
-      unsubPayments();
-      unsubPlans();
+    const fetchData = async () => {
+      if (!profile?.companyId) return;
+      setLoading(true);
+      try {
+        const [invData, payData, planData] = await Promise.all([
+          getInvoices(),
+          getPayments(),
+          getFinancialPlans()
+        ]);
+        setInvoices(invData);
+        setPayments(payData);
+        setPlans(planData);
+      } catch (error) {
+        console.error('Error fetching finance data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
+
+    fetchData();
   }, [profile?.companyId]);
 
   if (loading) {

@@ -20,17 +20,30 @@ const Maintenance: React.FC = () => {
   });
 
   useEffect(() => {
-    if (profile?.companyId) {
-      getMaintenanceLogs(profile.companyId).then(setLogs).finally(() => setLoading(false));
-      setNewLog(prev => ({ ...prev, companyId: profile.companyId }));
-    }
-  }, [profile]);
+    if (!profile?.companyId) return;
+
+    const fetchData = async () => {
+      try {
+        const data = await getMaintenanceLogs();
+        setLogs(data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching maintenance logs:", error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    setNewLog(prev => ({ ...prev, companyId: profile.companyId }));
+    
+    return () => clearInterval(interval);
+  }, [profile?.companyId]);
 
   const handleAddLog = async () => {
     if (!profile?.companyId) return;
     await addMaintenanceLog(newLog);
     setIsModalOpen(false);
-    getMaintenanceLogs(profile.companyId).then(setLogs);
+    getMaintenanceLogs().then(setLogs);
   };
 
   if (loading) return <Loader2 className="animate-spin mx-auto text-[var(--color-main)]" />;

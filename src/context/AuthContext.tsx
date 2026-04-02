@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { auth } from '../firebase';
 import { UserProfile, Company } from '../types';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { apiFetch } from '../utils/api';
 
 interface AuthContextType {
   user: User | null;
@@ -32,56 +31,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let unsubProfile: (() => void) | null = null;
-    let unsubCompany: (() => void) | null = null;
+    const fetchAuthData = async () => {
+      try {
+        const profileData = await apiFetch('/api/users/profile');
+        if (profileData && !profileData.error) {
+          setProfile(profileData);
+          if (profileData.companyId) {
+            const companyData = await apiFetch(`/api/users/company/${profileData.companyId}`);
+            if (companyData && !companyData.error) {
+              setCompany(companyData);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching auth data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
-      
-      // Cleanup previous listeners
-      if (unsubProfile) {
-        unsubProfile();
-        unsubProfile = null;
-      }
-      if (unsubCompany) {
-        unsubCompany();
-        unsubCompany = null;
-      }
-
       if (user) {
-        const profileRef = doc(db, 'users', user.uid);
-        unsubProfile = onSnapshot(profileRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const profileData = docSnap.data() as UserProfile;
-            setProfile(profileData);
-
-            // Fetch company data
-            if (profileData.companyId) {
-              const companyRef = doc(db, 'companies', profileData.companyId);
-              unsubCompany = onSnapshot(companyRef, (companySnap) => {
-                if (companySnap.exists()) {
-                  setCompany(companySnap.data() as Company);
-                } else {
-                  setCompany(null);
-                }
-                setLoading(false);
-              }, (error) => {
-                handleFirestoreError(error, OperationType.GET, `companies/${profileData.companyId}`);
-                setLoading(false);
-              });
-            } else {
-              setCompany(null);
-              setLoading(false);
-            }
-          } else {
-            setProfile(null);
-            setCompany(null);
-            setLoading(false);
-          }
-        }, (error) => {
-          handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
-          setLoading(false);
-        });
+        fetchAuthData();
       } else {
         setProfile(null);
         setCompany(null);
@@ -89,10 +61,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
+    const interval = setInterval(() => {
+      if (auth.currentUser) fetchAuthData();
+    }, 60000); // Poll every 60 seconds
+
     return () => {
       unsubscribe();
-      if (unsubProfile) unsubProfile();
-      if (unsubCompany) unsubCompany();
+      clearInterval(interval);
     };
   }, []);
 

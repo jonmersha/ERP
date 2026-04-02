@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc, query, orderBy, where, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import { UserProfile, UserRole, Company } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { motion } from 'motion/react';
 import { Users as UsersIcon, Shield, Mail, Search, Loader2, CheckCircle, XCircle, Building2, Copy } from 'lucide-react';
 import Modal from '../components/Modal';
+import { apiFetch } from '../utils/api';
 
 const Users: React.FC = () => {
   const { isAdmin, profile } = useAuth();
@@ -23,23 +21,25 @@ const Users: React.FC = () => {
   useEffect(() => {
     if (!profile?.companyId) return;
 
-    const fetchCompany = async () => {
-      const snap = await getDoc(doc(db, 'companies', profile.companyId));
-      if (snap.exists()) {
-        setCompany({ id: snap.id, ...snap.data() } as Company);
+    const fetchData = async () => {
+      try {
+        const [usersData, companyData] = await Promise.all([
+          apiFetch('/api/users'),
+          apiFetch(`/api/users/company/${profile.companyId}`)
+        ]);
+
+        if (Array.isArray(usersData)) setUsers(usersData);
+        if (companyData && !companyData.error) setCompany(companyData);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
     };
-    fetchCompany();
 
-    const unsub = onSnapshot(query(
-      collection(db, 'users'), 
-      where('companyId', '==', profile.companyId),
-      orderBy('name', 'asc')
-    ), (snap) => {
-      setUsers(snap.docs.map(doc => ({ uid: doc.id, ...doc.data() } as UserProfile)));
-      setLoading(false);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'users'));
-    return () => unsub();
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, [profile?.companyId]);
 
   const handleUpdateRoles = async (e: React.FormEvent) => {
@@ -47,9 +47,11 @@ const Users: React.FC = () => {
     if (!selectedUser) return;
     setSubmitting(true);
     try {
-      await updateDoc(doc(db, 'users', selectedUser.uid), {
-        roles: selectedUser.roles
+      await apiFetch(`/api/users/${selectedUser.uid}/roles`, {
+        method: 'PATCH',
+        body: JSON.stringify({ roles: selectedUser.roles })
       });
+      
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error updating roles:", error);

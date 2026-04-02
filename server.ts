@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import { apiRouter } from "./server/routes/index.js";
+import { authenticate } from "./server/middleware/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +16,7 @@ async function startServer() {
   app.use(express.json());
 
   // API routes
-  app.use("/api", apiRouter);
+  app.use("/api", authenticate, apiRouter);
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
