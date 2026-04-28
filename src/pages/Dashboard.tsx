@@ -41,23 +41,24 @@ import { Product, Factory as FactoryType } from '../types';
 
 const StatCard: React.FC<{ title: string; value: string | number; icon: any; trend?: number; color: string; onClick?: () => void }> = ({ title, value, icon: Icon, trend, color, onClick }) => (
   <motion.div 
-    whileHover={{ y: -5 }}
+    whileHover={{ scale: 1.02 }}
     onClick={onClick}
-    className={`bg-[var(--color-surface)] p-6 rounded-3xl shadow-sm border border-[var(--color-text)]/5 ${onClick ? 'cursor-pointer' : ''}`}
+    className={`bg-white dark:bg-[var(--color-surface)] p-4 h-40 flex flex-col justify-between shadow-sm border-b-[3px] border-b-[var(--color-border)] hover:border-b-[var(--color-main)] transition-colors ${onClick ? 'cursor-pointer' : ''}`}
   >
-    <div className="flex justify-between items-start mb-4">
-      <div className={`p-3 rounded-2xl ${color}`}>
-        <Icon size={24} className="text-white" />
-      </div>
+    <div className="flex justify-between items-start">
+      <h3 className="text-[var(--color-text)] text-sm font-normal text-left max-w-[70%]">{title}</h3>
+      <Icon size={20} className="text-[var(--color-main)] opacity-80" />
+    </div>
+    
+    <div>
+      <p className="text-3xl font-light text-[var(--color-text)] mt-1">{value}</p>
       {trend !== undefined && (
-        <div className={`flex items-center space-x-1 text-sm font-medium ${trend >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-          <span>{trend >= 0 ? '+' : ''}{trend}%</span>
-          {trend >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+        <div className={`flex items-center space-x-1 text-xs font-medium mt-1 ${trend >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+          {trend >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+          <span>{Math.abs(trend)}% vs last month</span>
         </div>
       )}
     </div>
-    <h3 className="text-[var(--color-text)]/40 text-sm font-medium uppercase tracking-wider">{title}</h3>
-    <p className="text-3xl font-serif font-bold text-[var(--color-text)] mt-1">{value}</p>
   </motion.div>
 );
 
@@ -197,102 +198,64 @@ const Dashboard: React.FC = () => {
   }, [profile?.companyId]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Company Banner */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden bg-[var(--color-surface)] rounded-[2rem] border border-[var(--color-text)]/5 shadow-sm min-h-[200px]"
+        className="bg-white dark:bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm px-8 py-6 flex flex-col md:flex-row items-center justify-between"
       >
-        {company?.bannerUrl ? (
-          <div className="absolute inset-0">
-            <img src={company.bannerUrl} alt="Banner" className="w-full h-full object-cover opacity-20" referrerPolicy="no-referrer" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-surface)] via-[var(--color-surface)]/80 to-transparent" />
-          </div>
-        ) : (
-          <>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-main)]/5 rounded-full -mr-32 -mt-32 blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-600/5 rounded-full -ml-24 -mb-24 blur-3xl" />
-          </>
-        )}
-        
-        <div className="relative p-8 md:p-10 flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
-          <div className="w-24 h-24 md:w-32 md:h-32 bg-[var(--color-surface)] rounded-3xl flex items-center justify-center shadow-sm overflow-hidden border border-[var(--color-text)]/5 shrink-0">
+        <div className="flex items-center space-x-6">
+          <div className="w-16 h-16 bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center shrink-0">
             {company?.logoUrl ? (
               <img src={company.logoUrl} alt={company.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             ) : (
-              <Building2 size={48} className="text-[var(--color-main)]/40" />
+              <Building2 size={24} className="text-[var(--color-main)]/60" />
             )}
           </div>
           
-          <div className="flex-1 text-center md:text-left">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-serif font-bold text-[var(--color-text)]">{company?.name || 'Your Organization'}</h1>
-                <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-3 text-sm text-[var(--color-text)]/60">
-                  {company?.address && (
-                    <div className="flex items-center space-x-1.5">
-                      <MapPin size={16} className="text-[var(--color-main)]" />
-                      <span>{company.address}</span>
-                    </div>
-                  )}
-                  {company?.phone && (
-                    <div className="flex items-center space-x-1.5">
-                      <Phone size={16} className="text-[var(--color-main)]" />
-                      <span>{company.phone}</span>
-                    </div>
-                  )}
-                  {company?.email && (
-                    <div className="flex items-center space-x-1.5">
-                      <Mail size={16} className="text-[var(--color-main)]" />
-                      <span>{company.email}</span>
-                    </div>
-                  )}
+          <div>
+            <h1 className="text-2xl font-normal text-[var(--color-text)]">{company?.name || 'Your Organization'}</h1>
+            <div className="flex items-center space-x-4 mt-2 text-sm text-[var(--color-text)]/70">
+              {company?.address && (
+                <div className="flex items-center space-x-1">
+                  <MapPin size={14} />
+                  <span>{company.address}</span>
                 </div>
-              </div>
-              
-              <div className="flex flex-col items-center md:items-end space-y-3">
-                <div className="px-4 py-1.5 bg-[var(--color-main)]/10 rounded-full text-[var(--color-main)] text-xs font-bold uppercase tracking-widest">
-                  Code: {company?.code}
+              )}
+              {company?.phone && (
+                <div className="flex items-center space-x-1">
+                  <Phone size={14} />
+                  <span>{company.phone}</span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  {isAdmin && (
-                    <>
-                      <button 
-                        onClick={() => setIsEditModalOpen(true)}
-                        className="p-2 bg-[var(--color-text)]/5 hover:bg-[var(--color-text)]/10 rounded-xl transition-all text-[var(--color-text)]/60"
-                        title="Edit Company"
-                      >
-                        <Settings size={18} />
-                      </button>
-                      <button 
-                        onClick={handleSeed}
-                        disabled={isSeeding}
-                        className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-main)] hover:text-[var(--color-text)] transition-colors"
-                      >
-                        {isSeeding ? 'Seeding...' : 'Seed Data'}
-                      </button>
-                      <button 
-                        onClick={async () => {
-                          setIsSeeding(true);
-                          const companiesSnap = await getDocs(collection(db, 'companies'));
-                          for (const doc of companiesSnap.docs) {
-                            await seedDatabase(doc.id);
-                          }
-                          setIsSeeding(false);
-                          alert('Seeding complete for all companies!');
-                        }}
-                        disabled={isSeeding}
-                        className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 hover:text-[var(--color-text)] transition-colors ml-4"
-                      >
-                        {isSeeding ? 'Seeding All...' : 'Seed All'}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
+              )}
             </div>
           </div>
+        </div>
+
+        <div className="flex flex-col items-end space-y-3 mt-4 md:mt-0">
+          <div className="px-3 py-1 bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] text-xs font-bold uppercase">
+            Org: {company?.code}
+          </div>
+          
+          {isAdmin && (
+            <div className="flex items-center space-x-3">
+              <button 
+                onClick={handleSeed}
+                disabled={isSeeding}
+                className="text-xs text-[var(--color-main)] hover:underline"
+              >
+                {isSeeding ? 'Seeding...' : 'Seed Data'}
+              </button>
+              <button 
+                onClick={() => setIsEditModalOpen(true)}
+                className="text-xs text-[var(--color-main)] hover:underline flex items-center space-x-1"
+              >
+                <Settings size={14} />
+                <span>Settings</span>
+              </button>
+            </div>
+          )}
         </div>
       </motion.div>
 

@@ -1,29 +1,57 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans: "72", "72full", Arial, Helvetica, sans-serif;
+  --font-serif: "72", "72full", Arial, Helvetica, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 :root {
-  --color-main: #166534;
-  --color-accent: #d97706;
-  --color-bg: #F5F5F0;
-  --color-text: #000000;
-  --color-surface: #ffffff;
+  /* SAP Fiori Horizon / Quartz style */
+  --color-main: #0A6ED1;
+  --color-accent: #E9730C;
+  --color-bg: #F4F5F6;
+  --color-text: #1D2D3E;
+  --color-surface: #FFFFFF;
+  --color-shell: #354A5F;
+  --color-shell-text: #FFFFFF;
+  --color-shell-hover: rgba(255, 255, 255, 0.1);
+  --color-border: #D9D9D9;
 }
 
 [data-theme='dark'] {
-  --color-main: #4ade80;
-  --color-accent: #fbbf24;
-  --color-bg: #18181b;
-  --color-text: #ffffff;
-  --color-surface: #27272a;
+  --color-main: #2B7CFF;
+  --color-accent: #FF8B1F;
+  --color-bg: #1C2228;
+  --color-text: #FAFAFA;
+  --color-surface: #29313A;
+  --color-shell: #141A21;
+  --color-shell-text: #FAFAFA;
+  --color-shell-hover: rgba(255, 255, 255, 0.1);
+  --color-border: #4A535B;
 }
 
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
+  font-family: var(--font-sans);
   transition: background-color 0.3s, color 0.3s;
 }
+
+/* Base styles to flatten rounded corners globally avoiding playful look */
+* {
+  border-radius: 0;
+}
+.rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-\[2rem\] {
+  border-radius: 0.25rem !important;
+}
+.rounded-lg {
+  border-radius: 0.25rem !important;
+}
+.rounded-full {
+  border-radius: 9999px !important; /* Keep circles circular (avatars, badges) */
+}
+.shadow-sm, .shadow-lg {
+  box-shadow: 0 0 0 1px var(--color-border), 0 2px 4px rgba(0,0,0,0.05) !important;
+}
+

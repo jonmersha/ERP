@@ -100,49 +100,48 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
-      <header className="bg-[var(--color-surface)] border-b border-black/5 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center space-x-8">
+      <header className="bg-[var(--color-shell)] text-[var(--color-shell-text)] border-b border-black/10 sticky top-0 z-50 shadow-sm">
+        <div className="w-full px-4 h-12 flex items-center justify-between">
+          <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-[var(--color-main)] rounded-lg flex items-center justify-center text-white font-bold text-lg">S</div>
-              <h1 className="text-2xl font-serif font-bold text-[var(--color-text)] tracking-tight">Sheger <span className="text-[var(--color-main)]">ERP</span></h1>
+              <span className="text-xl font-bold tracking-tight">SAP Fiori Hub <span className="text-white/60 text-sm font-normal ml-1">| Sheger ERP</span></span>
             </div>
-            <nav className="hidden md:flex items-center space-x-1">
+            <nav className="hidden md:flex items-center space-x-1 h-12">
               {filteredNavItems.map((item) => (
-                <div key={item.name} className="relative group">
+                <div key={item.name} className="relative group h-full flex items-center">
                   {item.submenu ? (
                     <button
                       onClick={() => setOpenSubmenu(openSubmenu === item.name ? null : item.name)}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        openSubmenu === item.name ? 'bg-black/5 text-[var(--color-main)]' : 'text-[var(--color-text)]/60 hover:text-[var(--color-main)]'
+                      className={`flex items-center space-x-2 px-3 h-full text-sm transition-colors ${
+                        openSubmenu === item.name ? 'bg-[var(--color-shell-hover)] text-white font-bold border-b-2 border-white' : 'text-white/80 hover:bg-[var(--color-shell-hover)] hover:text-white'
                       }`}
                     >
-                      <item.icon size={18} />
+                      <item.icon size={16} />
                       <span>{item.name}</span>
                       <ChevronDown size={14} />
                     </button>
                   ) : (
                     <Link
                       to={item.path!}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        location.pathname === item.path ? 'bg-[var(--color-main)] text-white' : 'text-[var(--color-text)]/60 hover:text-[var(--color-main)]'
+                      className={`flex items-center space-x-2 px-3 h-full text-sm transition-colors ${
+                        location.pathname === item.path ? 'bg-[var(--color-shell-hover)] text-white font-bold border-b-2 border-white' : 'text-white/80 hover:bg-[var(--color-shell-hover)] hover:text-white'
                       }`}
                     >
-                      <item.icon size={18} />
+                      <item.icon size={16} />
                       <span>{item.name}</span>
                     </Link>
                   )}
                   
                   {item.submenu && openSubmenu === item.name && (
-                    <div className="absolute top-full left-0 mt-1 w-48 bg-[var(--color-surface)] rounded-xl shadow-lg border border-black/5 py-2 z-50">
+                    <div className="absolute top-full left-0 mt-0 w-48 bg-[var(--color-surface)] shadow-lg border border-[var(--color-border)] py-1 z-50">
                       {item.submenu.map(sub => (
                         <Link
                           key={sub.path}
                           to={sub.path}
                           onClick={() => setOpenSubmenu(null)}
-                          className="flex items-center space-x-2 px-4 py-2 text-sm text-[var(--color-text)]/60 hover:bg-black/5 hover:text-[var(--color-main)]"
+                          className="flex items-center space-x-2 px-4 py-2.5 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]"
                         >
-                          <sub.icon size={16} />
+                          <sub.icon size={16} className="text-[var(--color-main)]" />
                           <span>{sub.name}</span>
                         </Link>
                       ))}
@@ -153,24 +152,23 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </nav>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <button onClick={toggleTheme} className="p-2 text-[var(--color-text)]/40 hover:text-[var(--color-main)]">
-              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          <div className="flex items-center space-x-2">
+            <button onClick={toggleTheme} className="p-2 text-white/80 hover:bg-[var(--color-shell-hover)] rounded-full transition-colors" title="Toggle Theme">
+              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
-            <div className="flex items-center space-x-2 px-3 py-1.5 bg-[var(--color-main)]/10 rounded-full">
-              <div className="w-6 h-6 rounded-full bg-[var(--color-main)] flex items-center justify-center text-white text-xs font-bold">
+            <div className="flex items-center space-x-2 px-3 py-1 cursor-pointer hover:bg-[var(--color-shell-hover)] rounded-full transition-colors" title={profile?.name}>
+              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-bold border border-white/30">
                 {profile?.name?.[0] || 'U'}
               </div>
-              <span className="text-sm font-medium text-[var(--color-main)]">{profile?.name}</span>
             </div>
-            <button onClick={handleSignOut} className="text-[var(--color-text)]/40 hover:text-red-600">
-              <LogOut size={20} />
+            <button onClick={handleSignOut} className="p-2 text-white/80 hover:bg-red-500/80 hover:text-white rounded-full transition-colors" title="Sign Out">
+              <LogOut size={16} />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-4 md:p-8">
+      <main className="w-full px-4 md:px-8 py-6">
         {children}
       </main>
     </div>

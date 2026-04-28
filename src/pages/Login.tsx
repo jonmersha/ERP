@@ -160,18 +160,18 @@ const Login: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="max-w-md w-full bg-[var(--color-surface)] rounded-3xl shadow-xl p-8 border border-[var(--color-text)]/5"
+            className="max-w-md w-full bg-white dark:bg-[var(--color-surface)] rounded-sm shadow-md p-10 border border-[var(--color-border)]"
           >
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-[var(--color-main)] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <div className="w-16 h-16 bg-[var(--color-main)] rounded-sm flex items-center justify-center mx-auto mb-4 border border-[var(--color-border)]">
                 <ShieldCheck className="text-white" size={32} />
               </div>
-              <h1 className="text-3xl font-serif font-bold text-[var(--color-main)]">Sheger ERP</h1>
-              <p className="text-[var(--color-text)]/40 mt-2">Enterprise Food Complex Management</p>
+              <h1 className="text-3xl font-light text-[var(--color-text)]">Sheger ERP</h1>
+              <p className="text-[var(--color-text)]/60 mt-2 text-sm">Enterprise Identity Provider</p>
             </div>
 
             {error && (
-              <div className="bg-red-500/10 text-red-500 p-4 rounded-xl mb-6 text-sm border border-red-500/20">
+              <div className="bg-red-50 text-red-700 p-4 rounded-sm mb-6 text-sm border border-red-200">
                 {error}
               </div>
             )}
@@ -179,21 +179,21 @@ const Login: React.FC = () => {
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full flex items-center justify-center space-x-3 bg-[var(--color-surface)] border-2 border-[var(--color-text)]/5 hover:border-[var(--color-main)] hover:bg-[var(--color-main)]/5 p-4 rounded-2xl transition-all duration-300 group disabled:opacity-50"
+              className="w-full flex items-center justify-center space-x-3 bg-white dark:bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-[var(--color-bg)] p-3 rounded-sm transition-colors duration-200 group disabled:opacity-50"
             >
               {loading ? (
-                <div className="w-6 h-6 border-2 border-[var(--color-main)] border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-[var(--color-main)] border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
-                  <span className="font-semibold text-[var(--color-text)]/70 group-hover:text-[var(--color-main)]">Continue with Google</span>
+                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+                  <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-main)]">Sign in with Google</span>
                 </>
               )}
             </button>
 
-            <div className="mt-8 pt-8 border-t border-[var(--color-text)]/5 text-center">
-              <p className="text-xs text-[var(--color-text)]/30 uppercase tracking-widest font-medium">
-                Multi-Tenant Enterprise Resource Planning
+            <div className="mt-10 pt-6 border-t border-[var(--color-border)] text-center">
+              <p className="text-xs text-[var(--color-text)]/40 uppercase tracking-widest font-normal">
+                SAP Fiori Experience
               </p>
             </div>
           </motion.div>
@@ -202,123 +202,123 @@ const Login: React.FC = () => {
             key="company-setup"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-md w-full bg-[var(--color-surface)] rounded-3xl shadow-xl p-8 border border-[var(--color-text)]/5"
+            className="max-w-md w-full bg-white dark:bg-[var(--color-surface)] rounded-sm shadow-md p-10 border border-[var(--color-border)]"
           >
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-[var(--color-main)] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <div className="w-16 h-16 bg-[var(--color-main)] rounded-sm flex items-center justify-center mx-auto mb-4 border border-[var(--color-border)]">
                 <Building2 className="text-white" size={32} />
               </div>
-              <h1 className="text-2xl font-serif font-bold text-[var(--color-text)]">Company Setup</h1>
-              <p className="text-[var(--color-text)]/40 mt-2">Join an existing organization or create a new one</p>
+              <h1 className="text-2xl font-light text-[var(--color-text)]">System Configuration</h1>
+              <p className="text-[var(--color-text)]/60 mt-2 text-sm">Connect to an existing workspace or initialize a new one</p>
             </div>
 
             {error && (
-              <div className="bg-red-500/10 text-red-500 p-4 rounded-xl mb-6 text-sm border border-red-500/20">
+              <div className="bg-red-50 text-red-700 p-4 rounded-sm mb-6 text-sm border border-red-200">
                 {error}
               </div>
             )}
 
-            <div className="flex p-1 bg-[var(--color-text)]/5 rounded-xl mb-8">
+            <div className="flex p-1 bg-[var(--color-bg)] rounded-sm mb-8 border border-[var(--color-border)]">
               <button
                 onClick={() => { setCompanyMode('join'); setError(null); }}
-                className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg text-sm font-bold transition-all ${companyMode === 'join' ? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm' : 'text-[var(--color-text)]/40'}`}
+                className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-sm text-sm transition-colors ${companyMode === 'join' ? 'bg-white dark:bg-[var(--color-surface)] text-[var(--color-main)] font-medium shadow-sm border border-[var(--color-border)]' : 'text-[var(--color-text)]/60 hover:text-[var(--color-text)] cursor-pointer'}`}
               >
                 <Users size={16} />
-                <span>Join Company</span>
+                <span>Join Workspace</span>
               </button>
               <button
                 onClick={() => { setCompanyMode('create'); setError(null); }}
-                className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg text-sm font-bold transition-all ${companyMode === 'create' ? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm' : 'text-[var(--color-text)]/40'}`}
+                className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-sm text-sm transition-colors ${companyMode === 'create' ? 'bg-white dark:bg-[var(--color-surface)] text-[var(--color-main)] font-medium shadow-sm border border-[var(--color-border)]' : 'text-[var(--color-text)]/60 hover:text-[var(--color-text)] cursor-pointer'}`}
               >
                 <Plus size={16} />
-                <span>Create New</span>
+                <span>Initialize Target</span>
               </button>
             </div>
 
             <form onSubmit={handleCompanySetup} className="space-y-6">
               {companyMode === 'join' ? (
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Company Code</label>
+                  <label className="text-xs font-semibold text-[var(--color-text)]/60 uppercase">Workspace ID</label>
                   <input
                     required
                     type="text"
                     value={companyCode}
                     onChange={(e) => setCompanyCode(e.target.value)}
-                    placeholder="Enter 6-digit code"
-                    className="w-full p-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 font-mono text-lg tracking-widest text-center uppercase text-[var(--color-text)]"
+                    placeholder="e.g. A1B2C3"
+                    className="w-full p-3 bg-white dark:bg-[var(--color-bg)] rounded-sm border border-[var(--color-border)] focus:border-[var(--color-main)] focus:outline-none focus:ring-1 focus:ring-[var(--color-main)] font-mono text-center uppercase text-[var(--color-text)]"
                   />
-                  <p className="text-[10px] text-[var(--color-text)]/30 mt-2">Ask your administrator for the company join code.</p>
+                  <p className="text-xs text-[var(--color-text)]/50 mt-1">Contact your system administrator for the ID.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Company Name</label>
+                    <label className="text-xs font-semibold text-[var(--color-text)]/60 uppercase">Organization Name</label>
                     <div className="relative">
-                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={20} />
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text)]/40" size={16} />
                       <input
                         required
                         type="text"
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="e.g. Cibus Foods Ltd"
-                        className="w-full pl-12 pr-4 py-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
+                        placeholder="e.g. Global Foods"
+                        className="w-full pl-10 pr-3 py-2 bg-white dark:bg-[var(--color-bg)] rounded-sm border border-[var(--color-border)] focus:border-[var(--color-main)] focus:outline-none focus:ring-1 focus:ring-[var(--color-main)] text-sm text-[var(--color-text)]"
                       />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Address</label>
+                    <label className="text-xs font-semibold text-[var(--color-text)]/60 uppercase">System Address</label>
                     <div className="relative">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={20} />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text)]/40" size={16} />
                       <input
                         required
                         type="text"
                         value={companyAddress}
                         onChange={(e) => setCompanyAddress(e.target.value)}
-                        placeholder="Street, City, Country"
-                        className="w-full pl-12 pr-4 py-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
+                        placeholder="Location"
+                        className="w-full pl-10 pr-3 py-2 bg-white dark:bg-[var(--color-bg)] rounded-sm border border-[var(--color-border)] focus:border-[var(--color-main)] focus:outline-none focus:ring-1 focus:ring-[var(--color-main)] text-sm text-[var(--color-text)]"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Phone</label>
+                      <label className="text-xs font-semibold text-[var(--color-text)]/60 uppercase">Phone</label>
                       <div className="relative">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text)]/40" size={16} />
                         <input
                           required
                           type="tel"
                           value={companyPhone}
                           onChange={(e) => setCompanyPhone(e.target.value)}
-                          placeholder="+251..."
-                          className="w-full pl-12 pr-4 py-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
+                          placeholder="+..."
+                          className="w-full pl-10 pr-3 py-2 bg-white dark:bg-[var(--color-bg)] rounded-sm border border-[var(--color-border)] focus:border-[var(--color-main)] focus:outline-none focus:ring-1 focus:ring-[var(--color-main)] text-sm text-[var(--color-text)]"
                         />
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Email</label>
+                      <label className="text-xs font-semibold text-[var(--color-text)]/60 uppercase">Email</label>
                       <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text)]/40" size={16} />
                         <input
                           required
                           type="email"
                           value={companyEmail}
                           onChange={(e) => setCompanyEmail(e.target.value)}
-                          placeholder="contact@company.com"
-                          className="w-full pl-12 pr-4 py-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
+                          placeholder="..."
+                          className="w-full pl-10 pr-3 py-2 bg-white dark:bg-[var(--color-bg)] rounded-sm border border-[var(--color-border)] focus:border-[var(--color-main)] focus:outline-none focus:ring-1 focus:ring-[var(--color-main)] text-sm text-[var(--color-text)]"
                         />
                       </div>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Logo URL (Optional)</label>
+                    <label className="text-xs font-semibold text-[var(--color-text)]/60 uppercase">Logo URI (Optional)</label>
                     <div className="relative">
-                      <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={20} />
+                      <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text)]/40" size={16} />
                       <input
                         type="url"
                         value={companyLogo}
                         onChange={(e) => setCompanyLogo(e.target.value)}
                         placeholder="https://..."
-                        className="w-full pl-12 pr-4 py-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
+                        className="w-full pl-10 pr-3 py-2 bg-white dark:bg-[var(--color-bg)] rounded-sm border border-[var(--color-border)] focus:border-[var(--color-main)] focus:outline-none focus:ring-1 focus:ring-[var(--color-main)] text-sm text-[var(--color-text)]"
                       />
                     </div>
                   </div>
@@ -328,27 +328,27 @@ const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center space-x-2 bg-[var(--color-text)] text-[var(--color-bg)] p-4 rounded-2xl font-bold hover:bg-[var(--color-text)]/80 transition-all disabled:opacity-50"
+                className="w-full flex items-center justify-center space-x-2 bg-[var(--color-main)] hover:bg-[var(--color-main)]/90 text-white p-3 rounded-sm text-sm font-medium transition-colors disabled:opacity-50"
               >
                 {loading ? (
-                  <div className="w-6 h-6 border-2 border-[var(--color-bg)] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>{companyMode === 'join' ? 'Join Organization' : 'Initialize Company'}</span>
-                    <ArrowRight size={18} />
+                    <span>{companyMode === 'join' ? 'Connect Target' : 'Deploy Target'}</span>
+                    <ArrowRight size={16} />
                   </>
                 )}
               </button>
             </form>
 
-            <div className="mt-6 text-center">
+            <div className="mt-6 pt-4 border-t border-[var(--color-border)] text-center">
               <button
                 type="button"
                 onClick={handleSignOut}
                 disabled={loading}
-                className="text-sm font-medium text-[var(--color-text)]/40 hover:text-[var(--color-text)] transition-colors disabled:opacity-50"
+                className="text-xs font-medium text-[var(--color-text)]/60 hover:text-[var(--color-main)] transition-colors disabled:opacity-50 inline-flex items-center space-x-1"
               >
-                Sign out & Use a different account
+                <span>Change Authorization Identity</span>
               </button>
             </div>
           </motion.div>
