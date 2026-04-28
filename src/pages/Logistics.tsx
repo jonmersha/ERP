@@ -23,7 +23,7 @@ const Logistics: React.FC = () => {
 
     const fetchData = async () => {
       try {
-        const data = await getShipments();
+        const data = await getShipments(profile.companyId);
         setShipments(data);
         setLoading(false);
       } catch (error) {
@@ -42,7 +42,7 @@ const Logistics: React.FC = () => {
     if (!profile?.companyId) return;
     await addShipment(newShipment);
     setIsModalOpen(false);
-    getShipments().then(setShipments);
+    getShipments(profile.companyId).then(setShipments);
   };
 
   if (loading) return <Loader2 className="animate-spin mx-auto" />;

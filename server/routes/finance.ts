@@ -1,92 +1,77 @@
-import { Router, Response } from "express";
-import { prisma } from "../db";
-import { AuthRequest } from "../middleware/auth.js";
+import { Router } from "express";
+import { db } from "../firebase.js";
 
 export const financeRouter = Router();
 
 // Invoices
-financeRouter.get("/invoices", async (req: AuthRequest, res: Response) => {
+financeRouter.get("/invoices", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
+    const companyId = req.query.companyId as string;
+    if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const invoices = await prisma.invoice.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("invoices")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const invoices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(invoices);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-financeRouter.post("/invoices", async (req: AuthRequest, res: Response) => {
+financeRouter.post("/invoices", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
-
     const invoiceData = req.body;
-    const invoice = await prisma.invoice.create({
-      data: {
-        ...invoiceData,
-        companyId
-      }
+    const docRef = await db.collection("invoices").add({
+      ...invoiceData,
+      createdAt: new Date().toISOString(),
     });
-    res.status(201).json(invoice);
+    res.status(201).json({ id: docRef.id, ...invoiceData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-financeRouter.put("/invoices/:id", async (req: AuthRequest, res: Response) => {
+financeRouter.put("/invoices/:id", async (req, res) => {
   try {
     const invoiceId = req.params.id;
     const updateData = req.body;
-    
-    const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
-    
-    if (!invoice) return res.status(404).json({ error: "Invoice not found" });
-    if (invoice.companyId !== req.user?.companyId) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const updatedInvoice = await prisma.invoice.update({
-      where: { id: invoiceId },
-      data: { ...updateData }
+    await db.collection("invoices").doc(invoiceId).update({
+      ...updateData,
+      updatedAt: new Date().toISOString(),
     });
-    res.json(updatedInvoice);
+    res.json({ id: invoiceId, ...updateData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Payments
-financeRouter.get("/payments", async (req: AuthRequest, res: Response) => {
+financeRouter.get("/payments", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
+    const companyId = req.query.companyId as string;
+    if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const payments = await prisma.payment.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("payments")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const payments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(payments);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-financeRouter.post("/payments", async (req: AuthRequest, res: Response) => {
+financeRouter.post("/payments", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
-
     const paymentData = req.body;
-    const payment = await prisma.payment.create({
-      data: {
-        ...paymentData,
-        companyId
-      }
+    const docRef = await db.collection("payments").add({
+      ...paymentData,
+      createdAt: new Date().toISOString(),
     });
-    res.status(201).json(payment);
+    res.status(201).json({ id: docRef.id, ...paymentData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

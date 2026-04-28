@@ -1,52 +1,67 @@
 import { Invoice, Payment, FinancialPlan } from '../types';
-import { apiFetch } from '../utils/api';
 
 const FINANCE_API = '/api/finance';
 const PLANS_API = '/api/plans/financial';
 
-export const getInvoices = async (): Promise<Invoice[]> => {
-  return await apiFetch(`${FINANCE_API}/invoices`);
+export const getInvoices = async (companyId: string): Promise<Invoice[]> => {
+  const response = await fetch(`${FINANCE_API}/invoices?companyId=${companyId}`);
+  if (!response.ok) throw new Error('Failed to fetch invoices');
+  return await response.json();
 };
 
 export const addInvoice = async (invoice: Omit<Invoice, 'id'>) => {
-  return await apiFetch(`${FINANCE_API}/invoices`, {
+  const response = await fetch(`${FINANCE_API}/invoices`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(invoice),
   });
+  return await response.json();
 };
 
 export const updateInvoice = async (id: string, invoice: Partial<Invoice>) => {
-  return await apiFetch(`${FINANCE_API}/invoices/${id}`, {
+  const response = await fetch(`${FINANCE_API}/invoices/${id}`, {
     method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(invoice),
   });
+  return await response.json();
 };
 
-export const getPayments = async (): Promise<Payment[]> => {
-  return await apiFetch(`${FINANCE_API}/payments`);
+export const getPayments = async (companyId: string): Promise<Payment[]> => {
+  const response = await fetch(`${FINANCE_API}/payments?companyId=${companyId}`);
+  if (!response.ok) throw new Error('Failed to fetch payments');
+  return await response.json();
 };
 
 export const addPayment = async (payment: Omit<Payment, 'id'>) => {
-  return await apiFetch(`${FINANCE_API}/payments`, {
+  const response = await fetch(`${FINANCE_API}/payments`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payment),
   });
+  return await response.json();
 };
 
-export const getFinancialPlans = async (): Promise<FinancialPlan[]> => {
-  return await apiFetch(PLANS_API);
+export const getFinancialPlans = async (companyId: string): Promise<FinancialPlan[]> => {
+  const response = await fetch(`${PLANS_API}?companyId=${companyId}`);
+  if (!response.ok) throw new Error('Failed to fetch financial plans');
+  return await response.json();
 };
 
 export const addFinancialPlan = async (plan: Omit<FinancialPlan, 'id'>) => {
-  return await apiFetch(PLANS_API, {
+  const response = await fetch(PLANS_API, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(plan),
   });
+  return await response.json();
 };
 
 export const updateFinancialPlan = async (id: string, plan: Partial<FinancialPlan>) => {
-  return await apiFetch(`${PLANS_API}/${id}`, {
+  const response = await fetch(`${PLANS_API}/${id}`, {
     method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(plan),
   });
+  return await response.json();
 };

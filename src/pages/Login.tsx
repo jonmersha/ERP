@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../firebase';
+import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { auth, db } from '../firebase';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { seedDatabase } from '../utils/seedData';
 import { motion, AnimatePresence } from 'motion/react';
 import { LogIn, ShieldCheck, Building2, Plus, Users, ArrowRight, MapPin, Phone, Mail, Image as ImageIcon } from 'lucide-react';
-import { apiFetch } from '../utils/api';
 
 const Login: React.FC = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -24,38 +25,56 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    if (!authLoading && user && profile?.companyId) {
-      navigate('/');
+    if (!authLoading) {
+      if (user && profile?.companyId) {
+        navigate('/');
+      } else if (user && !profile?.companyId) {
+        setTempUser(user);
+        setStep('company-setup');
+      }
     }
   }, [user, profile, authLoading, navigate]);
 
   const handleGoogleLogin = async () => {
     setError(null);
+    setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      setLoading(true);
       const user = result.user;
 
-      // Check if profile exists via API
-      try {
-        const profileData = await apiFetch('/api/users/profile');
-        if (profileData && profileData.companyId) {
-          navigate('/');
-        } else {
-          setTempUser(user);
-          setStep('company-setup');
-        }
-      } catch (err) {
-        // Profile not found or other error, proceed to setup
+      // Check if profile exists
+      const profileRef = doc(db, 'users', user.uid);
+      const profileSnap = await getDoc(profileRef);
+
+      if (!profileSnap.exists() || !profileSnap.data()?.companyId) {
         setTempUser(user);
         setStep('company-setup');
+      } else {
+        navigate('/');
       }
     } catch (err: any) {
       console.error("Login error details:", err);
-      setError(err.message || 'Failed to login. Please check your browser console for details.');
+      if (err.code === 'auth/popup-closed-by-user') {
+        // Do not show an aggressive error for closing popup
+        setError(null);
+      } else {
+        setError(err.message || 'Failed to login. Please check your browser console for details.');
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      setTempUser(null);
+      setStep('login');
+      setError(null);
+    } catch (err: any) {
+      console.error("Sign out error:", err);
+      setError("Failed to sign out.");
     }
   };
 
@@ -68,41 +87,60 @@ const Login: React.FC = () => {
     try {
       let finalCompanyId = '';
       let finalRoles = ['sales'];
+      let isNewCompany = false;
 
       if (companyMode === 'create') {
-        // Create new company via API
-        const companyData = await apiFetch('/api/users/company', {
-          method: 'POST',
-          body: JSON.stringify({
-            name: companyName,
-            address: companyAddress,
-            phone: companyPhone,
-            email: companyEmail,
-            logoUrl: companyLogo
-          })
+        // Create new company
+        const companyRef = doc(collection(db, 'companies'));
+        const newCompanyCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        await setDoc(companyRef, {
+          id: companyRef.id,
+          name: companyName,
+          code: newCompanyCode,
+          address: companyAddress,
+          phone: companyPhone,
+          email: companyEmail,
+          logoUrl: companyLogo,
+          ownerId: tempUser.uid,
+          createdAt: new Date().toISOString()
         });
-
-        finalCompanyId = companyData.id;
+        
+        finalCompanyId = companyRef.id;
         finalRoles = ['admin']; // Creator is admin
+        isNewCompany = true;
       } else {
-        // Join existing company via API
-        const companyData = await apiFetch(`/api/users/company/code/${companyCode.toUpperCase()}`);
-        if (!companyData || companyData.error) {
-          throw new Error('Invalid company code');
+        // Join existing company
+        const q = query(collection(db, 'companies'), where('code', '==', companyCode.toUpperCase()));
+        const snap = await getDocs(q);
+        
+        if (snap.empty) {
+          throw new Error('Invalid company code. Please ask your administrator for the correct code.');
         }
-        finalCompanyId = companyData.id;
+        
+        finalCompanyId = snap.docs[0].id;
       }
 
-      // Create user profile via API
-      await apiFetch('/api/users/profile', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: tempUser.email,
-          name: tempUser.displayName || 'User',
-          roles: finalRoles,
-          companyId: finalCompanyId
-        })
+      // Create user profile BEFORE seeding database so security rules pass
+      const profileRef = doc(db, 'users', tempUser.uid);
+      await setDoc(profileRef, {
+        uid: tempUser.uid,
+        email: tempUser.email,
+        name: tempUser.displayName || 'User',
+        roles: finalRoles,
+        companyId: finalCompanyId,
+        createdAt: new Date().toISOString(),
       });
+
+      // Seed database for new company after user profile is created
+      if (isNewCompany) {
+        try {
+          await seedDatabase(finalCompanyId);
+        } catch (seedError) {
+          console.error("Failed to seed database, but company was created", seedError);
+          // We don't throw here to avoid blocking login, but log the error
+        }
+      }
 
       navigate('/');
     } catch (err: any) {
@@ -182,14 +220,14 @@ const Login: React.FC = () => {
 
             <div className="flex p-1 bg-[var(--color-text)]/5 rounded-xl mb-8">
               <button
-                onClick={() => setCompanyMode('join')}
+                onClick={() => { setCompanyMode('join'); setError(null); }}
                 className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg text-sm font-bold transition-all ${companyMode === 'join' ? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm' : 'text-[var(--color-text)]/40'}`}
               >
                 <Users size={16} />
                 <span>Join Company</span>
               </button>
               <button
-                onClick={() => setCompanyMode('create')}
+                onClick={() => { setCompanyMode('create'); setError(null); }}
                 className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg text-sm font-bold transition-all ${companyMode === 'create' ? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm' : 'text-[var(--color-text)]/40'}`}
               >
                 <Plus size={16} />
@@ -302,6 +340,17 @@ const Login: React.FC = () => {
                 )}
               </button>
             </form>
+
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={handleSignOut}
+                disabled={loading}
+                className="text-sm font-medium text-[var(--color-text)]/40 hover:text-[var(--color-text)] transition-colors disabled:opacity-50"
+              >
+                Sign out & Use a different account
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

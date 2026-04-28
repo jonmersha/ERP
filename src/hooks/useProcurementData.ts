@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
+import { db } from '../firebase';
 import { Supplier, PurchaseOrder, RawMaterial, Factory, Warehouse } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { apiFetch } from '../utils/api';
+import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 
 export const useProcurementData = () => {
   const { profile } = useAuth();
@@ -17,12 +19,21 @@ export const useProcurementData = () => {
 
     const fetchData = async () => {
       try {
+        const companyId = profile.companyId;
+        const [suppliersRes, ordersRes, materialsRes, factoriesRes, warehousesRes] = await Promise.all([
+          fetch(`/api/procurement/suppliers?companyId=${companyId}`),
+          fetch(`/api/procurement/purchase-orders?companyId=${companyId}&orderBy=createdAt&orderDir=desc`),
+          fetch(`/api/products/raw-materials?companyId=${companyId}`),
+          fetch(`/api/core/factories?companyId=${companyId}`),
+          fetch(`/api/core/warehouses?companyId=${companyId}`)
+        ]);
+
         const [suppliersData, ordersData, materialsData, factoriesData, warehousesData] = await Promise.all([
-          apiFetch('/api/procurement/suppliers'),
-          apiFetch('/api/procurement/orders?orderBy=createdAt&orderDir=desc'),
-          apiFetch('/api/products/raw-materials'),
-          apiFetch('/api/core/factories'),
-          apiFetch('/api/core/warehouses')
+          suppliersRes.json(),
+          ordersRes.json(),
+          materialsRes.json(),
+          factoriesRes.json(),
+          warehousesRes.json()
         ]);
 
         if (Array.isArray(suppliersData)) setSuppliers(suppliersData);

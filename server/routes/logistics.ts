@@ -1,76 +1,53 @@
-import { Router, Response } from "express";
-import { prisma } from "../db";
-import { AuthRequest } from "../middleware/auth.js";
+import { Router } from "express";
+import { db } from "../firebase.js";
 
 export const logisticsRouter = Router();
 
 // Shipments
-logisticsRouter.get("/shipments", async (req: AuthRequest, res: Response) => {
+logisticsRouter.get("/shipments", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
+    const companyId = req.query.companyId as string;
+    if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const shipments = await prisma.shipment.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("shipments")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const shipments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(shipments);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-logisticsRouter.post("/shipments", async (req: AuthRequest, res: Response) => {
+logisticsRouter.post("/shipments", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
-
     const shipmentData = req.body;
-    const shipment = await prisma.shipment.create({
-      data: {
-        ...shipmentData,
-        companyId
-      }
+    const docRef = await db.collection("shipments").add({
+      ...shipmentData,
+      createdAt: new Date().toISOString()
     });
-    res.status(201).json(shipment);
+    res.status(201).json({ id: docRef.id, ...shipmentData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-logisticsRouter.put("/shipments/:id", async (req: AuthRequest, res: Response) => {
+logisticsRouter.put("/shipments/:id", async (req, res) => {
   try {
     const shipmentId = req.params.id;
     const updateData = req.body;
-    
-    const shipment = await prisma.shipment.findUnique({ where: { id: shipmentId } });
-    
-    if (!shipment) return res.status(404).json({ error: "Shipment not found" });
-    if (shipment.companyId !== req.user?.companyId) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const updatedShipment = await prisma.shipment.update({
-      where: { id: shipmentId },
-      data: { ...updateData }
-    });
-    res.json(updatedShipment);
+    await db.collection("shipments").doc(shipmentId).update(updateData);
+    res.json({ id: shipmentId, ...updateData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-logisticsRouter.delete("/shipments/:id", async (req: AuthRequest, res: Response) => {
+logisticsRouter.delete("/shipments/:id", async (req, res) => {
   try {
     const shipmentId = req.params.id;
-    
-    const shipment = await prisma.shipment.findUnique({ where: { id: shipmentId } });
-    
-    if (!shipment) return res.status(404).json({ error: "Shipment not found" });
-    if (shipment.companyId !== req.user?.companyId) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    await prisma.shipment.delete({ where: { id: shipmentId } });
+    await db.collection("shipments").doc(shipmentId).delete();
     res.json({ id: shipmentId, deleted: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

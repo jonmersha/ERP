@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { InventoryItem, Factory, Warehouse, RawMaterial, Product, PurchaseOrder, SalesOrder, GRN, DeliveryNote } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { apiFetch } from '../utils/api';
 
 export const useInventoryData = () => {
   const { profile } = useAuth();
@@ -21,6 +20,30 @@ export const useInventoryData = () => {
 
     const fetchData = async () => {
       try {
+        const companyId = profile.companyId;
+        
+        const [
+          invRes, 
+          factoriesRes, 
+          warehousesRes, 
+          materialsRes, 
+          productsRes, 
+          poRes, 
+          soRes, 
+          grnsRes, 
+          dnsRes
+        ] = await Promise.all([
+          fetch(`/api/inventory?companyId=${companyId}`),
+          fetch(`/api/core/factories?companyId=${companyId}`),
+          fetch(`/api/core/warehouses?companyId=${companyId}`),
+          fetch(`/api/products/raw-materials?companyId=${companyId}`),
+          fetch(`/api/products?companyId=${companyId}`),
+          fetch(`/api/procurement/orders?companyId=${companyId}`),
+          fetch(`/api/sales/orders?companyId=${companyId}`),
+          fetch(`/api/inventory/grns?companyId=${companyId}`),
+          fetch(`/api/inventory/delivery-notes?companyId=${companyId}`)
+        ]);
+
         const [
           invData, 
           factoriesData, 
@@ -32,15 +55,15 @@ export const useInventoryData = () => {
           grnsData, 
           dnsData
         ] = await Promise.all([
-          apiFetch('/api/inventory'),
-          apiFetch('/api/core/factories'),
-          apiFetch('/api/core/warehouses'),
-          apiFetch('/api/products/raw-materials'),
-          apiFetch('/api/products'),
-          apiFetch('/api/procurement/orders'),
-          apiFetch('/api/sales/orders'),
-          apiFetch('/api/inventory/grns'),
-          apiFetch('/api/inventory/delivery-notes')
+          invRes.json(),
+          factoriesRes.json(),
+          warehousesRes.json(),
+          materialsRes.json(),
+          productsRes.json(),
+          poRes.json(),
+          soRes.json(),
+          grnsRes.json(),
+          dnsRes.json()
         ]);
 
         if (Array.isArray(invData)) setInventory(invData);

@@ -1,26 +1,30 @@
-import { Router, Response } from "express";
-import { prisma } from "../db";
-import { AuthRequest } from "../middleware/auth.js";
+import { Router } from "express";
+import { db } from "../firebase.js";
 
 export const productionRouter = Router();
 
 // Get all production runs
-productionRouter.get("/runs", async (req: AuthRequest, res: Response) => {
+productionRouter.get("/runs", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
+    const companyId = req.query.companyId as string;
     if (!companyId) {
-      return res.status(400).json({ error: "User companyId not found" });
+      return res.status(400).json({ error: "companyId is required" });
     }
 
     const limit = parseInt(req.query.limit as string) || 100;
     const orderByField = req.query.orderBy as string;
     const orderDir = (req.query.orderDir as string || "desc") as "asc" | "desc";
 
-    const runs = await prisma.productionRun.findMany({
-      where: { companyId },
-      orderBy: orderByField ? { [orderByField]: orderDir } : undefined,
-      take: limit
-    });
+    let query = db.collection("productionRuns")
+      .where("companyId", "==", companyId);
+
+    if (orderByField) {
+      query = query.orderBy(orderByField, orderDir);
+    }
+
+    const snapshot = await query.limit(limit).get();
+
+    const runs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(runs);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -28,77 +32,59 @@ productionRouter.get("/runs", async (req: AuthRequest, res: Response) => {
 });
 
 // Get a single production run
-productionRouter.get("/runs/:id", async (req: AuthRequest, res: Response) => {
+productionRouter.get("/runs/:id", async (req, res) => {
   try {
-    const run = await prisma.productionRun.findUnique({ where: { id: req.params.id } });
-    if (!run) {
+    const doc = await db.collection("productionRuns").doc(req.params.id).get();
+    if (!doc.exists) {
       return res.status(404).json({ error: "Production run not found" });
     }
-    
-    if (run.companyId !== req.user?.companyId) {
-      return res.status(403).json({ error: "Forbidden: Access to this record is denied" });
-    }
-
-    res.json(run);
+    res.json({ id: doc.id, ...doc.data() });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Create a production run
-productionRouter.post("/runs", async (req: AuthRequest, res: Response) => {
+productionRouter.post("/runs", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
-
     const runData = req.body;
-    const run = await prisma.productionRun.create({
-      data: {
-        ...runData,
-        companyId
-      }
+    const docRef = await db.collection("productionRuns").add({
+      ...runData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
-    res.status(201).json(run);
+    res.status(201).json({ id: docRef.id, ...runData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Update a production run
-productionRouter.put("/runs/:id", async (req: AuthRequest, res: Response) => {
+productionRouter.put("/runs/:id", async (req, res) => {
   try {
     const runId = req.params.id;
     const updateData = req.body;
-    
-    const run = await prisma.productionRun.findUnique({ where: { id: runId } });
-    
-    if (!run) {
-      return res.status(404).json({ error: "Production run not found" });
-    }
-    
-    if (run.companyId !== req.user?.companyId) {
-      return res.status(403).json({ error: "Forbidden: Access to this record is denied" });
-    }
-
-    const updatedRun = await prisma.productionRun.update({
-      where: { id: runId },
-      data: { ...updateData }
+    await db.collection("productionRuns").doc(runId).update({
+      ...updateData,
+      updatedAt: new Date().toISOString(),
     });
-    res.json(updatedRun);
+    res.json({ id: runId, ...updateData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Recipes
-productionRouter.get("/recipes", async (req: AuthRequest, res: Response) => {
+productionRouter.get("/recipes", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
+    const companyId = req.query.companyId as string;
+    if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const recipes = await prisma.recipe.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("recipes")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const recipes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(recipes);
   } catch (error: any) {
     console.error("Error fetching recipes:", error);
@@ -106,58 +92,37 @@ productionRouter.get("/recipes", async (req: AuthRequest, res: Response) => {
   }
 });
 
-productionRouter.post("/recipes", async (req: AuthRequest, res: Response) => {
+productionRouter.post("/recipes", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
-
     const recipeData = req.body;
-    const recipe = await prisma.recipe.create({
-      data: {
-        ...recipeData,
-        companyId
-      }
+    const docRef = await db.collection("recipes").add({
+      ...recipeData,
+      createdAt: new Date().toISOString(),
     });
-    res.status(201).json(recipe);
+    res.status(201).json({ id: docRef.id, ...recipeData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-productionRouter.put("/recipes/:id", async (req: AuthRequest, res: Response) => {
+productionRouter.put("/recipes/:id", async (req, res) => {
   try {
     const recipeId = req.params.id;
     const updateData = req.body;
-    
-    const recipe = await prisma.recipe.findUnique({ where: { id: recipeId } });
-    
-    if (!recipe) return res.status(404).json({ error: "Recipe not found" });
-    if (recipe.companyId !== req.user?.companyId) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const updatedRecipe = await prisma.recipe.update({
-      where: { id: recipeId },
-      data: { ...updateData }
+    await db.collection("recipes").doc(recipeId).update({
+      ...updateData,
+      updatedAt: new Date().toISOString(),
     });
-    res.json(updatedRecipe);
+    res.json({ id: recipeId, ...updateData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-productionRouter.delete("/recipes/:id", async (req: AuthRequest, res: Response) => {
+productionRouter.delete("/recipes/:id", async (req, res) => {
   try {
     const recipeId = req.params.id;
-    
-    const recipe = await prisma.recipe.findUnique({ where: { id: recipeId } });
-    
-    if (!recipe) return res.status(404).json({ error: "Recipe not found" });
-    if (recipe.companyId !== req.user?.companyId) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    await prisma.recipe.delete({ where: { id: recipeId } });
+    await db.collection("recipes").doc(recipeId).delete();
     res.json({ id: recipeId, deleted: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

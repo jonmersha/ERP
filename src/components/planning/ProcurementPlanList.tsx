@@ -22,7 +22,7 @@ const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials }) => {
   const fetchPlans = () => {
     if (profile?.companyId) {
       setLoading(true);
-      getProcurementPlans()
+      getProcurementPlans(profile.companyId)
         .then(setPlans)
         .finally(() => setLoading(false));
     }

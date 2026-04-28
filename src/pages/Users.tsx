@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { collection, onSnapshot, doc, updateDoc, query, orderBy, where, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { UserProfile, UserRole, Company } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { motion } from 'motion/react';
 import { Users as UsersIcon, Shield, Mail, Search, Loader2, CheckCircle, XCircle, Building2, Copy } from 'lucide-react';
 import Modal from '../components/Modal';
-import { apiFetch } from '../utils/api';
 
 const Users: React.FC = () => {
   const { isAdmin, profile } = useAuth();
@@ -23,9 +25,15 @@ const Users: React.FC = () => {
 
     const fetchData = async () => {
       try {
+        const companyId = profile.companyId;
+        const [usersRes, companyRes] = await Promise.all([
+          fetch(`/api/users?companyId=${companyId}`),
+          fetch(`/api/users/company/${companyId}`)
+        ]);
+
         const [usersData, companyData] = await Promise.all([
-          apiFetch('/api/users'),
-          apiFetch(`/api/users/company/${profile.companyId}`)
+          usersRes.json(),
+          companyRes.json()
         ]);
 
         if (Array.isArray(usersData)) setUsers(usersData);
@@ -47,10 +55,13 @@ const Users: React.FC = () => {
     if (!selectedUser) return;
     setSubmitting(true);
     try {
-      await apiFetch(`/api/users/${selectedUser.uid}/roles`, {
+      const response = await fetch(`/api/users/${selectedUser.uid}/roles`, {
         method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roles: selectedUser.roles })
       });
+      
+      if (!response.ok) throw new Error('Failed to update roles');
       
       setIsModalOpen(false);
     } catch (error) {

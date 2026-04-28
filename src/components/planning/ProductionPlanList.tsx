@@ -26,8 +26,8 @@ const ProductionPlanList: React.FC<Props> = ({ factories, products, materials })
     if (profile?.companyId) {
       setLoading(true);
       Promise.all([
-        getProductionPlans(),
-        getRecipes()
+        getProductionPlans(profile.companyId),
+        getRecipes(profile.companyId)
       ]).then(async ([fetchedPlans, fetchedRecipes]) => {
         setPlans(fetchedPlans);
         

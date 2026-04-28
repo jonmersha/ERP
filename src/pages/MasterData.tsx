@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Factory, Warehouse, Product, RawMaterial, Category } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { apiFetch } from '../utils/api';
+import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { motion } from 'motion/react';
 import { 
   Database, 
@@ -45,12 +45,21 @@ const MasterData: React.FC = () => {
 
     const fetchData = async () => {
       try {
+        const companyId = profile.companyId;
+        const [factoriesRes, warehousesRes, productsRes, rawRes, catsRes] = await Promise.all([
+          fetch(`/api/core/factories?companyId=${companyId}`),
+          fetch(`/api/core/warehouses?companyId=${companyId}`),
+          fetch(`/api/products?companyId=${companyId}`),
+          fetch(`/api/products/raw-materials?companyId=${companyId}`),
+          fetch(`/api/products/categories?companyId=${companyId}`)
+        ]);
+
         const [factoriesData, warehousesData, productsData, rawData, catsData] = await Promise.all([
-          apiFetch('/api/core/factories'),
-          apiFetch('/api/core/warehouses'),
-          apiFetch('/api/products'),
-          apiFetch('/api/products/raw-materials'),
-          apiFetch('/api/products/categories')
+          factoriesRes.json(),
+          warehousesRes.json(),
+          productsRes.json(),
+          rawRes.json(),
+          catsRes.json()
         ]);
 
         if (Array.isArray(factoriesData)) setFactories(factoriesData);
@@ -117,13 +126,18 @@ const MasterData: React.FC = () => {
         url += `/${editingItem.id}`;
       }
 
-      const responseData = await apiFetch(url, {
+      const response = await fetch(url, {
         method,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, companyId: profile.companyId }),
       });
 
+      if (!response.ok) throw new Error('Failed to save item');
+      
       // Refresh data
-      const refreshData = await apiFetch(url.split('/').slice(0, -1).join('/') || url);
+      const companyId = profile.companyId;
+      const refreshRes = await fetch(`${url.split('/').slice(0, -1).join('/') || url}?companyId=${companyId}`);
+      const refreshData = await refreshRes.json();
       
       if (Array.isArray(refreshData)) {
         switch (activeTab) {
@@ -163,10 +177,13 @@ const MasterData: React.FC = () => {
           case 'categories': url = `/api/products/categories/${id}`; break;
         }
 
-        await apiFetch(url, { method: 'DELETE' });
+        const response = await fetch(url, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Failed to delete item');
 
         // Refresh data
-        const refreshData = await apiFetch(url.split('/').slice(0, -1).join('/'));
+        const companyId = profile.companyId;
+        const refreshRes = await fetch(`${url.split('/').slice(0, -1).join('/')}?companyId=${companyId}`);
+        const refreshData = await refreshRes.json();
         
         if (Array.isArray(refreshData)) {
           switch (tab) {

@@ -17,9 +17,9 @@ const Finance: React.FC = () => {
       setLoading(true);
       try {
         const [invData, payData, planData] = await Promise.all([
-          getInvoices(),
-          getPayments(),
-          getFinancialPlans()
+          getInvoices(profile.companyId),
+          getPayments(profile.companyId),
+          getFinancialPlans(profile.companyId)
         ]);
         setInvoices(invData);
         setPayments(payData);

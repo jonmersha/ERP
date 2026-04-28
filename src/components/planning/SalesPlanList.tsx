@@ -22,7 +22,7 @@ const SalesPlanList: React.FC<Props> = ({ products, factories }) => {
   const fetchPlans = () => {
     if (profile?.companyId) {
       setLoading(true);
-      getSalesPlans()
+      getSalesPlans(profile.companyId)
         .then(setPlans)
         .finally(() => setLoading(false));
     }

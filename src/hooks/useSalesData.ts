@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
+import { db } from '../firebase';
 import { SalesOrder, Product, SalesOutlet } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { apiFetch } from '../utils/api';
+import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 
 export const useSalesData = () => {
   const { profile } = useAuth();
@@ -13,27 +15,26 @@ export const useSalesData = () => {
   useEffect(() => {
     if (!profile?.companyId) return;
 
-    const fetchData = async () => {
-      try {
-        const [ordersData, productsData, outletsData] = await Promise.all([
-          apiFetch('/api/sales/orders?orderBy=createdAt&orderDir=desc'),
-          apiFetch('/api/products'),
-          apiFetch('/api/sales/outlets')
-        ]);
+    const companyFilter = where('companyId', '==', profile.companyId);
 
-        if (Array.isArray(ordersData)) setOrders(ordersData);
-        if (Array.isArray(productsData)) setProducts(productsData);
-        if (Array.isArray(outletsData)) setOutlets(outletsData);
-        
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching sales data:", error);
-      }
+    const unsubOrders = onSnapshot(query(collection(db, 'salesOrders'), companyFilter, orderBy('createdAt', 'desc')), (snap) => {
+      setOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SalesOrder)));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'salesOrders'));
+
+    const unsubProducts = onSnapshot(query(collection(db, 'products'), companyFilter), (snap) => {
+      setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'products'));
+
+    const unsubOutlets = onSnapshot(query(collection(db, 'outlets'), companyFilter), (snap) => {
+      setOutlets(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SalesOutlet)));
+      setLoading(false);
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'outlets'));
+
+    return () => {
+      unsubOrders();
+      unsubProducts();
+      unsubOutlets();
     };
-
-    fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
   }, [profile?.companyId]);
 
   return {

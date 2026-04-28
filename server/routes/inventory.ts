@@ -1,20 +1,21 @@
-import { Router, Response } from "express";
-import { prisma } from "../db";
-import { AuthRequest } from "../middleware/auth.js";
+import { Router } from "express";
+import { db } from "../firebase.js";
 
 export const inventoryRouter = Router();
 
 // Get all inventory items
-inventoryRouter.get("/", async (req: AuthRequest, res: Response) => {
+inventoryRouter.get("/", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
+    const companyId = req.query.companyId as string;
     if (!companyId) {
-      return res.status(400).json({ error: "User companyId not found" });
+      return res.status(400).json({ error: "companyId is required" });
     }
 
-    const inventory = await prisma.inventoryItem.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("inventory")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const inventory = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(inventory);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -22,15 +23,13 @@ inventoryRouter.get("/", async (req: AuthRequest, res: Response) => {
 });
 
 // Get inventory for a specific unit
-inventoryRouter.get("/unit/:unitId", async (req: AuthRequest, res: Response) => {
+inventoryRouter.get("/unit/:unitId", async (req, res) => {
   try {
-    const inventory = await prisma.inventoryItem.findMany({
-      where: { 
-        unitId: req.params.unitId,
-        companyId: req.user?.companyId
-      }
-    });
-    
+    const snapshot = await db.collection("inventory")
+      .where("unitId", "==", req.params.unitId)
+      .get();
+
+    const inventory = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(inventory);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -38,131 +37,108 @@ inventoryRouter.get("/unit/:unitId", async (req: AuthRequest, res: Response) => 
 });
 
 // Update inventory quantity
-inventoryRouter.put("/:id", async (req: AuthRequest, res: Response) => {
+inventoryRouter.put("/:id", async (req, res) => {
   try {
     const inventoryId = req.params.id;
     const updateData = req.body;
-    
-    const item = await prisma.inventoryItem.findUnique({ where: { id: inventoryId } });
-    
-    if (!item) return res.status(404).json({ error: "Inventory item not found" });
-    if (item.companyId !== req.user?.companyId) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const updatedItem = await prisma.inventoryItem.update({
-      where: { id: inventoryId },
-      data: { ...updateData }
+    await db.collection("inventory").doc(inventoryId).update({
+      ...updateData,
+      updatedAt: new Date().toISOString(),
     });
-    res.json(updatedItem);
+    res.json({ id: inventoryId, ...updateData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Receive Purchase Order
-inventoryRouter.post("/receive-po", async (req: AuthRequest, res: Response) => {
+inventoryRouter.post("/receive-po", async (req, res) => {
   try {
-    const { selectedPO, warehouseId, notes } = req.body;
-    const companyId = req.user?.companyId;
-    const uid = req.user?.uid;
+    const { selectedPO, warehouseId, notes, profile } = req.body;
+    const batch = db.batch();
+    const grnRef = db.collection("grns").doc();
     
-    if (!companyId || !uid) return res.status(400).json({ error: "User info missing" });
+    const grnData = {
+      id: grnRef.id,
+      purchaseOrderId: selectedPO.id,
+      warehouseId: warehouseId,
+      receivedBy: profile?.uid || '',
+      receivedAt: new Date().toISOString(),
+      items: (selectedPO.items || []).map((item: any) => ({
+        itemId: item.itemId,
+        quantityReceived: item.quantity
+      })),
+      notes: notes,
+      companyId: profile?.companyId || ''
+    };
+    batch.set(grnRef, grnData);
 
-    const result = await prisma.$transaction(async (tx) => {
-      const grn = await tx.gRN.create({
-        data: {
-          purchaseOrderId: selectedPO.id,
-          warehouseId: warehouseId,
-          receivedBy: uid,
-          receivedAt: new Date(),
-          items: (selectedPO.items || []).map((item: any) => ({
-            itemId: item.itemId,
-            quantityReceived: item.quantity
-          })),
-          notes: notes,
-          companyId: companyId
-        }
-      });
+    const items = selectedPO.items || [];
+    for (const item of items) {
+      const inventorySnap = await db.collection("inventory")
+        .where("companyId", "==", profile?.companyId)
+        .where("unitId", "==", warehouseId)
+        .where("itemId", "==", item.itemId)
+        .where("itemType", "==", "raw")
+        .get();
 
-      const items = selectedPO.items || [];
-      for (const item of items) {
-        const inventoryItem = await tx.inventoryItem.findFirst({
-          where: {
-            companyId,
-            unitId: warehouseId,
-            itemId: item.itemId,
-            itemType: "raw"
-          }
+      if (!inventorySnap.empty) {
+        const invDoc = inventorySnap.docs[0];
+        batch.update(invDoc.ref, {
+          quantity: invDoc.data().quantity + item.quantity
         });
-
-        if (inventoryItem) {
-          await tx.inventoryItem.update({
-            where: { id: inventoryItem.id },
-            data: { quantity: inventoryItem.quantity + item.quantity }
-          });
-        } else {
-          await tx.inventoryItem.create({
-            data: {
-              unitId: warehouseId,
-              itemId: item.itemId,
-              itemType: "raw",
-              quantity: item.quantity,
-              companyId: companyId
-            }
-          });
-        }
+      } else {
+        const newInvRef = db.collection("inventory").doc();
+        batch.set(newInvRef, {
+          unitId: warehouseId,
+          itemId: item.itemId,
+          itemType: "raw",
+          quantity: item.quantity,
+          createdAt: new Date().toISOString(),
+          companyId: profile?.companyId || ''
+        });
       }
+    }
 
-      await tx.purchaseOrder.update({
-        where: { id: selectedPO.id },
-        data: { status: "received" }
-      });
-      
-      return grn;
-    });
-
-    res.json({ success: true, grnId: result.id });
+    batch.update(db.collection("purchaseOrders").doc(selectedPO.id), { status: "received" });
+    await batch.commit();
+    res.json({ success: true, grnId: grnRef.id });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Transfer Production to Warehouse
-inventoryRouter.post("/transfer-production", async (req: AuthRequest, res: Response) => {
+inventoryRouter.post("/transfer-production", async (req, res) => {
   try {
-    const { productId, quantity, warehouseId } = req.body;
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
+    const { productId, quantity, warehouseId, profile } = req.body;
+    const batch = db.batch();
+    
+    const inventorySnap = await db.collection("inventory")
+      .where("companyId", "==", profile?.companyId)
+      .where("unitId", "==", warehouseId)
+      .where("itemId", "==", productId)
+      .where("itemType", "==", "product")
+      .get();
 
-    await prisma.$transaction(async (tx) => {
-      const inventoryItem = await tx.inventoryItem.findFirst({
-        where: {
-          companyId,
-          unitId: warehouseId,
-          itemId: productId,
-          itemType: "product"
-        }
+    if (!inventorySnap.empty) {
+      const invDoc = inventorySnap.docs[0];
+      batch.update(invDoc.ref, {
+        quantity: invDoc.data().quantity + quantity
       });
+    } else {
+      const newInvRef = db.collection("inventory").doc();
+      batch.set(newInvRef, {
+        unitId: warehouseId,
+        itemId: productId,
+        itemType: "product",
+        quantity: quantity,
+        createdAt: new Date().toISOString(),
+        companyId: profile?.companyId || ''
+      });
+    }
 
-      if (inventoryItem) {
-        await tx.inventoryItem.update({
-          where: { id: inventoryItem.id },
-          data: { quantity: inventoryItem.quantity + quantity }
-        });
-      } else {
-        await tx.inventoryItem.create({
-          data: {
-            unitId: warehouseId,
-            itemId: productId,
-            itemType: "product",
-            quantity: quantity,
-            companyId: companyId
-          }
-        });
-      }
-    });
-
+    await batch.commit();
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -170,78 +146,70 @@ inventoryRouter.post("/transfer-production", async (req: AuthRequest, res: Respo
 });
 
 // Ship Sales Order
-inventoryRouter.post("/ship-order", async (req: AuthRequest, res: Response) => {
+inventoryRouter.post("/ship-order", async (req, res) => {
   try {
-    const { selectedSO, warehouseId, notes } = req.body;
-    const companyId = req.user?.companyId;
-    const uid = req.user?.uid;
+    const { selectedSO, warehouseId, notes, profile } = req.body;
+    const batch = db.batch();
+    const dnRef = db.collection("deliveryNotes").doc();
     
-    if (!companyId || !uid) return res.status(400).json({ error: "User info missing" });
+    const dnData = {
+      id: dnRef.id,
+      salesOrderId: selectedSO.id,
+      warehouseId: warehouseId,
+      shippedBy: profile?.uid || '',
+      shippedAt: new Date().toISOString(),
+      items: (selectedSO.items || []).map((item: any) => ({
+        productId: item.productId,
+        quantityShipped: item.quantity
+      })),
+      notes: notes,
+      companyId: profile?.companyId || ''
+    };
+    batch.set(dnRef, dnData);
 
-    const result = await prisma.$transaction(async (tx) => {
-      const dn = await tx.deliveryNote.create({
-        data: {
-          salesOrderId: selectedSO.id,
-          warehouseId: warehouseId,
-          shippedBy: uid,
-          shippedAt: new Date(),
-          items: (selectedSO.items || []).map((item: any) => ({
-            productId: item.productId,
-            quantityShipped: item.quantity
-          })),
-          notes: notes,
-          companyId: companyId
+    const items = selectedSO.items || [];
+    for (const item of items) {
+      const inventorySnap = await db.collection("inventory")
+        .where("companyId", "==", profile?.companyId)
+        .where("unitId", "==", warehouseId)
+        .where("itemId", "==", item.productId)
+        .where("itemType", "==", "product")
+        .get();
+
+      if (!inventorySnap.empty) {
+        const invDoc = inventorySnap.docs[0];
+        const currentQty = invDoc.data().quantity;
+        if (currentQty < item.quantity) {
+           throw new Error(`Insufficient stock for ${item.productName}`);
         }
-      });
-
-      const items = selectedSO.items || [];
-      for (const item of items) {
-        const inventoryItem = await tx.inventoryItem.findFirst({
-          where: {
-            companyId,
-            unitId: warehouseId,
-            itemId: item.productId,
-            itemType: "product"
-          }
+        batch.update(invDoc.ref, {
+          quantity: currentQty - item.quantity
         });
-
-        if (inventoryItem) {
-          if (inventoryItem.quantity < item.quantity) {
-             throw new Error(`Insufficient stock for ${item.productName}`);
-          }
-          await tx.inventoryItem.update({
-            where: { id: inventoryItem.id },
-            data: { quantity: inventoryItem.quantity - item.quantity }
-          });
-        } else {
-          throw new Error(`No stock found for ${item.productName} in the selected warehouse.`);
-        }
+      } else {
+        throw new Error(`No stock found for ${item.productName} in the selected warehouse.`);
       }
+    }
 
-      await tx.salesOrder.update({
-        where: { id: selectedSO.id },
-        data: { status: "shipped" }
-      });
-      
-      return dn;
-    });
-
-    res.json({ success: true, dnId: result.id });
+    batch.update(db.collection("salesOrders").doc(selectedSO.id), { status: "shipped" });
+    await batch.commit();
+    res.json({ success: true, dnId: dnRef.id });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Get all GRNs
-inventoryRouter.get("/grns", async (req: AuthRequest, res: Response) => {
+inventoryRouter.get("/grns", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
+    const companyId = req.query.companyId as string;
+    if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const grns = await prisma.gRN.findMany({
-      where: { companyId },
-      orderBy: { receivedAt: 'desc' }
-    });
+    const snapshot = await db.collection("grns")
+      .where("companyId", "==", companyId)
+      .orderBy("receivedAt", "desc")
+      .get();
+
+    const grns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(grns);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -249,15 +217,17 @@ inventoryRouter.get("/grns", async (req: AuthRequest, res: Response) => {
 });
 
 // Get all Delivery Notes
-inventoryRouter.get("/delivery-notes", async (req: AuthRequest, res: Response) => {
+inventoryRouter.get("/delivery-notes", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
+    const companyId = req.query.companyId as string;
+    if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const dns = await prisma.deliveryNote.findMany({
-      where: { companyId },
-      orderBy: { shippedAt: 'desc' }
-    });
+    const snapshot = await db.collection("deliveryNotes")
+      .where("companyId", "==", companyId)
+      .orderBy("shippedAt", "desc")
+      .get();
+
+    const dns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(dns);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

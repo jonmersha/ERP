@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { prisma } from "../db";
+import { db } from "../firebase.js";
 
 export const productRouter = Router();
 
@@ -11,9 +11,11 @@ productRouter.get("/", async (req, res) => {
       return res.status(400).json({ error: "companyId is required" });
     }
 
-    const products = await prisma.product.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("products")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(products);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -23,11 +25,11 @@ productRouter.get("/", async (req, res) => {
 // Get a single product
 productRouter.get("/:id", async (req, res) => {
   try {
-    const product = await prisma.product.findUnique({ where: { id: req.params.id } });
-    if (!product) {
+    const doc = await db.collection("products").doc(req.params.id).get();
+    if (!doc.exists) {
       return res.status(404).json({ error: "Product not found" });
     }
-    res.json(product);
+    res.json({ id: doc.id, ...doc.data() });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -37,12 +39,11 @@ productRouter.get("/:id", async (req, res) => {
 productRouter.post("/", async (req, res) => {
   try {
     const productData = req.body;
-    const product = await prisma.product.create({
-      data: {
-        ...productData,
-      }
+    const docRef = await db.collection("products").add({
+      ...productData,
+      createdAt: new Date().toISOString(),
     });
-    res.status(201).json(product);
+    res.status(201).json({ id: docRef.id, ...productData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -52,11 +53,8 @@ productRouter.put("/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const data = req.body;
-    const product = await prisma.product.update({
-      where: { id },
-      data: { ...data }
-    });
-    res.json(product);
+    await db.collection("products").doc(id).update(data);
+    res.json({ id, ...data });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -64,7 +62,7 @@ productRouter.put("/:id", async (req, res) => {
 
 productRouter.delete("/:id", async (req, res) => {
   try {
-    await prisma.product.delete({ where: { id: req.params.id } });
+    await db.collection("products").doc(req.params.id).delete();
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -79,9 +77,11 @@ productRouter.get("/raw-materials", async (req, res) => {
       return res.status(400).json({ error: "companyId is required" });
     }
 
-    const materials = await prisma.rawMaterial.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("rawMaterials")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const materials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(materials);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -91,10 +91,8 @@ productRouter.get("/raw-materials", async (req, res) => {
 productRouter.post("/raw-materials", async (req, res) => {
   try {
     const data = req.body;
-    const material = await prisma.rawMaterial.create({
-      data: { ...data }
-    });
-    res.status(201).json(material);
+    const docRef = await db.collection("rawMaterials").add(data);
+    res.status(201).json({ id: docRef.id, ...data });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -104,11 +102,8 @@ productRouter.put("/raw-materials/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const data = req.body;
-    const material = await prisma.rawMaterial.update({
-      where: { id },
-      data: { ...data }
-    });
-    res.json(material);
+    await db.collection("rawMaterials").doc(id).update(data);
+    res.json({ id, ...data });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -116,7 +111,7 @@ productRouter.put("/raw-materials/:id", async (req, res) => {
 
 productRouter.delete("/raw-materials/:id", async (req, res) => {
   try {
-    await prisma.rawMaterial.delete({ where: { id: req.params.id } });
+    await db.collection("rawMaterials").doc(req.params.id).delete();
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -129,9 +124,11 @@ productRouter.get("/categories", async (req, res) => {
     const companyId = req.query.companyId as string;
     if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const categories = await prisma.category.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("categories")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(categories);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -141,10 +138,8 @@ productRouter.get("/categories", async (req, res) => {
 productRouter.post("/categories", async (req, res) => {
   try {
     const data = req.body;
-    const category = await prisma.category.create({
-      data: { ...data }
-    });
-    res.status(201).json(category);
+    const docRef = await db.collection("categories").add(data);
+    res.status(201).json({ id: docRef.id, ...data });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -154,11 +149,8 @@ productRouter.put("/categories/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const data = req.body;
-    const category = await prisma.category.update({
-      where: { id },
-      data: { ...data }
-    });
-    res.json(category);
+    await db.collection("categories").doc(id).update(data);
+    res.json({ id, ...data });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -166,7 +158,7 @@ productRouter.put("/categories/:id", async (req, res) => {
 
 productRouter.delete("/categories/:id", async (req, res) => {
   try {
-    await prisma.category.delete({ where: { id: req.params.id } });
+    await db.collection("categories").doc(req.params.id).delete();
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

@@ -1,76 +1,53 @@
-import { Router, Response } from "express";
+import { Router } from "express";
 import { db } from "../firebase.js";
-import { AuthRequest } from "../middleware/auth.js";
 
 export const maintenanceRouter = Router();
 
 // Maintenance Logs
-maintenanceRouter.get("/logs", async (req: AuthRequest, res: Response) => {
+maintenanceRouter.get("/logs", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
+    const companyId = req.query.companyId as string;
+    if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const logs = await prisma.maintenanceLog.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("maintenance_logs")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(logs);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-maintenanceRouter.post("/logs", async (req: AuthRequest, res: Response) => {
+maintenanceRouter.post("/logs", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
-
     const logData = req.body;
-    const log = await prisma.maintenanceLog.create({
-      data: {
-        ...logData,
-        companyId
-      }
+    const docRef = await db.collection("maintenance_logs").add({
+      ...logData,
+      createdAt: new Date().toISOString()
     });
-    res.status(201).json(log);
+    res.status(201).json({ id: docRef.id, ...logData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-maintenanceRouter.put("/logs/:id", async (req: AuthRequest, res: Response) => {
+maintenanceRouter.put("/logs/:id", async (req, res) => {
   try {
     const logId = req.params.id;
     const updateData = req.body;
-    
-    const log = await prisma.maintenanceLog.findUnique({ where: { id: logId } });
-    
-    if (!log) return res.status(404).json({ error: "Log not found" });
-    if (log.companyId !== req.user?.companyId) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const updatedLog = await prisma.maintenanceLog.update({
-      where: { id: logId },
-      data: { ...updateData }
-    });
-    res.json(updatedLog);
+    await db.collection("maintenance_logs").doc(logId).update(updateData);
+    res.json({ id: logId, ...updateData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-maintenanceRouter.delete("/logs/:id", async (req: AuthRequest, res: Response) => {
+maintenanceRouter.delete("/logs/:id", async (req, res) => {
   try {
     const logId = req.params.id;
-    
-    const log = await prisma.maintenanceLog.findUnique({ where: { id: logId } });
-    
-    if (!log) return res.status(404).json({ error: "Log not found" });
-    if (log.companyId !== req.user?.companyId) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    await prisma.maintenanceLog.delete({ where: { id: logId } });
+    await db.collection("maintenance_logs").doc(logId).delete();
     res.json({ id: logId, deleted: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

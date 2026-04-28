@@ -29,7 +29,7 @@ const Recipes: React.FC = () => {
 
     const fetchData = async () => {
       try {
-        const data = await getRecipes();
+        const data = await getRecipes(profile.companyId);
         setRecipes(data);
         setLoading(false);
       } catch (error) {
@@ -58,7 +58,7 @@ const Recipes: React.FC = () => {
         companyId: profile.companyId,
       });
       // Refresh
-      const updatedRecipes = await getRecipes();
+      const updatedRecipes = await getRecipes(profile.companyId);
       setRecipes(updatedRecipes);
     } catch (error) {
       console.error("Error adding recipe:", error);
@@ -98,7 +98,7 @@ const Recipes: React.FC = () => {
       }
 
       // Refresh
-      const updatedRecipes = await getRecipes();
+      const updatedRecipes = await getRecipes(profile.companyId);
       setRecipes(updatedRecipes);
     } catch (error) {
       console.error("Error generating recipes:", error);

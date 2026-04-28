@@ -1,94 +1,72 @@
-import { Router, Response } from "express";
-import { prisma } from "../db";
-import { AuthRequest } from "../middleware/auth.js";
+import { Router } from "express";
+import { db } from "../firebase.js";
 
 export const procurementRouter = Router();
 
 // Purchase Orders
-procurementRouter.get("/orders", async (req: AuthRequest, res: Response) => {
+procurementRouter.get("/purchase-orders", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
+    const companyId = req.query.companyId as string;
+    if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const orders = await prisma.purchaseOrder.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("purchaseOrders")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(orders);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-procurementRouter.post("/orders", async (req: AuthRequest, res: Response) => {
+procurementRouter.post("/purchase-orders", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
-
     const orderData = req.body;
-    const order = await prisma.purchaseOrder.create({
-      data: {
-        ...orderData,
-        companyId,
-        createdAt: orderData.createdAt || new Date().toISOString(),
-        status: orderData.status || 'pending'
-      }
+    const docRef = await db.collection("purchaseOrders").add({
+      ...orderData,
+      createdAt: orderData.createdAt || new Date().toISOString(),
+      status: orderData.status || 'pending'
     });
-    res.status(201).json(order);
+    res.status(201).json({ id: docRef.id, ...orderData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-procurementRouter.put("/orders/:id", async (req: AuthRequest, res: Response) => {
+procurementRouter.put("/purchase-orders/:id", async (req, res) => {
   try {
     const orderId = req.params.id;
     const updateData = req.body;
-    
-    const order = await prisma.purchaseOrder.findUnique({ where: { id: orderId } });
-    
-    if (!order) return res.status(404).json({ error: "Order not found" });
-    if (order.companyId !== req.user?.companyId) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const updatedOrder = await prisma.purchaseOrder.update({
-      where: { id: orderId },
-      data: { ...updateData }
-    });
-    res.json(updatedOrder);
+    await db.collection("purchaseOrders").doc(orderId).update(updateData);
+    res.json({ id: orderId, ...updateData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Suppliers
-procurementRouter.get("/suppliers", async (req: AuthRequest, res: Response) => {
+procurementRouter.get("/suppliers", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
+    const companyId = req.query.companyId as string;
+    if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const suppliers = await prisma.supplier.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("suppliers")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const suppliers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(suppliers);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-procurementRouter.post("/suppliers", async (req: AuthRequest, res: Response) => {
+procurementRouter.post("/suppliers", async (req, res) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) return res.status(400).json({ error: "User companyId not found" });
-
     const supplierData = req.body;
-    const supplier = await prisma.supplier.create({
-      data: {
-        ...supplierData,
-        companyId
-      }
-    });
-    res.status(201).json(supplier);
+    const docRef = await db.collection("suppliers").add(supplierData);
+    res.status(201).json({ id: docRef.id, ...supplierData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

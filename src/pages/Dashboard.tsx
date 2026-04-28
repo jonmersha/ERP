@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { collection, onSnapshot, query, limit, where, getDocs, orderBy } from 'firebase/firestore';
+import { db } from '../firebase';
 import { motion } from 'motion/react';
-import { apiFetch } from '../utils/api';
+import { seedDatabase } from '../utils/seedData';
+import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { 
   Factory as FactoryIcon,
   Warehouse, 
@@ -35,9 +38,6 @@ import {
 } from 'recharts';
 import EditCompanyModal from '../components/EditCompanyModal';
 import { Product, Factory as FactoryType } from '../types';
-import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import Modal from '../components/Modal';
 
 const StatCard: React.FC<{ title: string; value: string | number; icon: any; trend?: number; color: string; onClick?: () => void }> = ({ title, value, icon: Icon, trend, color, onClick }) => (
   <motion.div 
@@ -60,6 +60,10 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: any; tre
     <p className="text-3xl font-serif font-bold text-[var(--color-text)] mt-1">{value}</p>
   </motion.div>
 );
+
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import Modal from '../components/Modal';
 
 const Dashboard: React.FC = () => {
   const { isAdmin, profile, company } = useAuth();
@@ -100,15 +104,8 @@ const Dashboard: React.FC = () => {
   const handleSeed = async () => {
     if (!profile?.companyId) return;
     setIsSeeding(true);
-    try {
-      await apiFetch(`/api/users/company/${profile.companyId}/seed`, { method: 'POST' });
-      // Refresh page to show new data
-      window.location.reload();
-    } catch (error) {
-      console.error("Error seeding data:", error);
-    } finally {
-      setIsSeeding(false);
-    }
+    await seedDatabase(profile.companyId);
+    setIsSeeding(false);
   };
 
   useEffect(() => {
@@ -116,6 +113,8 @@ const Dashboard: React.FC = () => {
       if (!profile?.companyId) return;
       
       try {
+        const companyId = profile.companyId;
+        
         // Fetch all data in parallel
         const [
           factoriesData,
@@ -129,16 +128,16 @@ const Dashboard: React.FC = () => {
           procurementPlansData,
           productionPlansData
         ] = await Promise.all([
-          apiFetch('/api/core/factories'),
-          apiFetch('/api/core/warehouses'),
-          apiFetch('/api/core/sales-orders'),
-          apiFetch('/api/inventory'),
-          apiFetch('/api/products'),
-          apiFetch('/api/core/sales-orders?limit=3&orderBy=createdAt&orderDir=desc'),
-          apiFetch('/api/production/runs?limit=3&orderBy=startDate&orderDir=desc'),
-          apiFetch('/api/production/runs'),
-          apiFetch('/api/plans/procurement'),
-          apiFetch('/api/plans/production')
+          fetch(`/api/core/factories?companyId=${companyId}`).then(r => r.json()),
+          fetch(`/api/core/warehouses?companyId=${companyId}`).then(r => r.json()),
+          fetch(`/api/core/sales-orders?companyId=${companyId}`).then(r => r.json()),
+          fetch(`/api/inventory?companyId=${companyId}`).then(r => r.json()),
+          fetch(`/api/products?companyId=${companyId}`).then(r => r.json()),
+          fetch(`/api/core/sales-orders?companyId=${companyId}&limit=3&orderBy=createdAt&orderDir=desc`).then(r => r.json()),
+          fetch(`/api/production/runs?companyId=${companyId}&limit=3&orderBy=startDate&orderDir=desc`).then(r => r.json()),
+          fetch(`/api/production/runs?companyId=${companyId}`).then(r => r.json()),
+          fetch(`/api/plans/procurement?companyId=${companyId}`).then(r => r.json()),
+          fetch(`/api/plans/production?companyId=${companyId}`).then(r => r.json())
         ]);
 
         // Update stats
@@ -272,6 +271,21 @@ const Dashboard: React.FC = () => {
                         className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-main)] hover:text-[var(--color-text)] transition-colors"
                       >
                         {isSeeding ? 'Seeding...' : 'Seed Data'}
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          setIsSeeding(true);
+                          const companiesSnap = await getDocs(collection(db, 'companies'));
+                          for (const doc of companiesSnap.docs) {
+                            await seedDatabase(doc.id);
+                          }
+                          setIsSeeding(false);
+                          alert('Seeding complete for all companies!');
+                        }}
+                        disabled={isSeeding}
+                        className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 hover:text-[var(--color-text)] transition-colors ml-4"
+                      >
+                        {isSeeding ? 'Seeding All...' : 'Seed All'}
                       </button>
                     </>
                   )}

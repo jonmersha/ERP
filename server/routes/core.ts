@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { prisma } from "../db";
+import { db } from "../firebase.js";
 
 export const coreRouter = Router();
 
@@ -9,9 +9,11 @@ coreRouter.get("/factories", async (req, res) => {
     const companyId = req.query.companyId as string;
     if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const factories = await prisma.factory.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("factories")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const factories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(factories);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -21,8 +23,8 @@ coreRouter.get("/factories", async (req, res) => {
 coreRouter.post("/factories", async (req, res) => {
   try {
     const data = req.body;
-    const factory = await prisma.factory.create({ data });
-    res.status(201).json(factory);
+    const docRef = await db.collection("factories").add(data);
+    res.status(201).json({ id: docRef.id, ...data });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -32,11 +34,8 @@ coreRouter.put("/factories/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const data = req.body;
-    const factory = await prisma.factory.update({
-      where: { id },
-      data
-    });
-    res.json(factory);
+    await db.collection("factories").doc(id).update(data);
+    res.json({ id, ...data });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -44,7 +43,7 @@ coreRouter.put("/factories/:id", async (req, res) => {
 
 coreRouter.delete("/factories/:id", async (req, res) => {
   try {
-    await prisma.factory.delete({ where: { id: req.params.id } });
+    await db.collection("factories").doc(req.params.id).delete();
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -57,9 +56,11 @@ coreRouter.get("/warehouses", async (req, res) => {
     const companyId = req.query.companyId as string;
     if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const warehouses = await prisma.warehouse.findMany({
-      where: { companyId }
-    });
+    const snapshot = await db.collection("warehouses")
+      .where("companyId", "==", companyId)
+      .get();
+
+    const warehouses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(warehouses);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -69,8 +70,8 @@ coreRouter.get("/warehouses", async (req, res) => {
 coreRouter.post("/warehouses", async (req, res) => {
   try {
     const data = req.body;
-    const warehouse = await prisma.warehouse.create({ data });
-    res.status(201).json(warehouse);
+    const docRef = await db.collection("warehouses").add(data);
+    res.status(201).json({ id: docRef.id, ...data });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -80,11 +81,8 @@ coreRouter.put("/warehouses/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const data = req.body;
-    const warehouse = await prisma.warehouse.update({
-      where: { id },
-      data
-    });
-    res.json(warehouse);
+    await db.collection("warehouses").doc(id).update(data);
+    res.json({ id, ...data });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -92,7 +90,7 @@ coreRouter.put("/warehouses/:id", async (req, res) => {
 
 coreRouter.delete("/warehouses/:id", async (req, res) => {
   try {
-    await prisma.warehouse.delete({ where: { id: req.params.id } });
+    await db.collection("warehouses").doc(req.params.id).delete();
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -109,11 +107,16 @@ coreRouter.get("/sales-orders", async (req, res) => {
     const orderByField = req.query.orderBy as string;
     const orderDir = (req.query.orderDir as string || "desc") as "asc" | "desc";
 
-    const orders = await prisma.salesOrder.findMany({
-      where: { companyId },
-      orderBy: orderByField ? { [orderByField]: orderDir } : undefined,
-      take: limit
-    });
+    let query = db.collection("salesOrders")
+      .where("companyId", "==", companyId);
+
+    if (orderByField) {
+      query = query.orderBy(orderByField, orderDir);
+    }
+
+    const snapshot = await query.limit(limit).get();
+
+    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(orders);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

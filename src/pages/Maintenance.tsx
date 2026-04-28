@@ -24,7 +24,7 @@ const Maintenance: React.FC = () => {
 
     const fetchData = async () => {
       try {
-        const data = await getMaintenanceLogs();
+        const data = await getMaintenanceLogs(profile.companyId);
         setLogs(data);
         setLoading(false);
       } catch (error) {
@@ -43,7 +43,7 @@ const Maintenance: React.FC = () => {
     if (!profile?.companyId) return;
     await addMaintenanceLog(newLog);
     setIsModalOpen(false);
-    getMaintenanceLogs().then(setLogs);
+    getMaintenanceLogs(profile.companyId).then(setLogs);
   };
 
   if (loading) return <Loader2 className="animate-spin mx-auto text-[var(--color-main)]" />;

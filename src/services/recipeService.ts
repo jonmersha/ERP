@@ -1,28 +1,34 @@
 import { Recipe } from '../types';
-import { apiFetch } from '../utils/api';
 
 const API_BASE = '/api/production/recipes';
 
-export const getRecipes = async (): Promise<Recipe[]> => {
-  return await apiFetch(`${API_BASE}`);
+export const getRecipes = async (companyId: string): Promise<Recipe[]> => {
+  const response = await fetch(`${API_BASE}?companyId=${companyId}`);
+  if (!response.ok) throw new Error('Failed to fetch recipes');
+  return await response.json();
 };
 
 export const addRecipe = async (recipe: Omit<Recipe, 'id'>) => {
-  return await apiFetch(API_BASE, {
+  const response = await fetch(API_BASE, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(recipe),
   });
+  return await response.json();
 };
 
 export const updateRecipe = async (id: string, recipe: Partial<Recipe>) => {
-  return await apiFetch(`${API_BASE}/${id}`, {
+  const response = await fetch(`${API_BASE}/${id}`, {
     method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(recipe),
   });
+  return await response.json();
 };
 
 export const deleteRecipe = async (id: string) => {
-  return await apiFetch(`${API_BASE}/${id}`, {
+  const response = await fetch(`${API_BASE}/${id}`, {
     method: 'DELETE',
   });
+  return await response.json();
 };

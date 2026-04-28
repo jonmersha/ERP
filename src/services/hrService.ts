@@ -1,11 +1,11 @@
 import { UserProfile } from '../types';
-import { apiFetch } from '../utils/api';
 
 const API_BASE = '/api/hr';
 
 export const createEmployee = async (form: any, profile: UserProfile | null) => {
-  return await apiFetch(`${API_BASE}/employees`, {
+  const response = await fetch(`${API_BASE}/employees`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       ...form,
       salary: Number(form.salary),
@@ -13,4 +13,6 @@ export const createEmployee = async (form: any, profile: UserProfile | null) => 
       companyId: profile?.companyId || ''
     }),
   });
+  if (!response.ok) throw new Error('Failed to create employee');
+  return await response.json();
 };
