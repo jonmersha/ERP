@@ -130,38 +130,28 @@ const getPool = () => {
 // Initialize tables if they don't exist
 const initializeSqlTables = async () => {
   try {
-    let configPath = path.resolve(process.cwd(), 'app-config.json');
-    if (!fs.existsSync(configPath)) {
-      configPath = path.resolve(process.cwd(), '..', 'app-config.json');
-    }
+    console.log('Database initialization started...');
     
-    if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      if (config.activeBackend === 'sql') {
-        console.log('SQL Mode detected, checking database connectivity...');
-        
-        // Test connection first
-        const p = getPool();
-        if (!p) {
-          console.error('SQL Mode active but Database Pool could not be initialized. Skipping table creation.');
-          return;
-        }
+    // Test connection first
+    const p = getPool();
+    if (!p) {
+      console.error('Database Pool could not be initialized. Skipping table creation.');
+      return;
+    }
 
-        const tables = [
-          'users', 'companies', 'factories', 'warehouses', 'products', 
-          'inventory', 'salesOrders', 'productionRuns', 'procurementPlans', 
-          'productionPlans', 'outlets', 'suppliers', 'rawMaterials', 
-          'categories', 'employees', 'purchaseOrders', 'salesPlans', 'recipes',
-          'grns', 'deliveryNotes'
-        ];
-        
-        for (const table of tables) {
-          await ensureTable(table);
-        }
-      }
+    const tables = [
+      'users', 'companies', 'factories', 'warehouses', 'products', 
+      'inventory', 'salesOrders', 'productionRuns', 'procurementPlans', 
+      'productionPlans', 'outlets', 'suppliers', 'rawMaterials', 
+      'categories', 'employees', 'purchaseOrders', 'salesPlans', 'recipes',
+      'grns', 'deliveryNotes'
+    ];
+    
+    for (const table of tables) {
+      await ensureTable(table);
     }
   } catch (err) {
-    console.error('Failed to initialize SQL mode:', err);
+    console.error('Failed to initialize database tables:', err);
   }
 };
 
@@ -322,84 +312,7 @@ class SQLStorage implements IStorage {
   }
 }
 
-class FirebaseStorage implements IStorage {
-  async find(collection: string, queryOpts: any) {
-    const { companyId, limitCount, orderByField, orderDir } = queryOpts;
-    const { getDb } = await import('../firebase.js');
-    const db = getDb();
-    let q = db.collection(collection).where("companyId", "==", companyId);
-    
-    if (orderByField) {
-      q = q.orderBy(orderByField, orderDir || 'desc');
-    }
-    
-    if (limitCount) {
-      q = q.limit(parseInt(limitCount));
-    }
-    
-    const snap = await q.get();
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  }
-
-  async findOne(collection: string, id: string) {
-    const { getDb } = await import('../firebase.js');
-    const db = getDb();
-    const doc = await db.collection(collection).doc(id).get();
-    if (!doc.exists) return null;
-    return { id: doc.id, ...doc.data() };
-  }
-
-  async create(collection: string, data: any) {
-    const { getDb } = await import('../firebase.js');
-    const db = getDb();
-    const cleanData = { ...data };
-    if (!cleanData.createdAt) cleanData.createdAt = new Date().toISOString();
-    
-    if (data.id) {
-        const id = data.id;
-        delete cleanData.id;
-        await db.collection(collection).doc(id).set(cleanData);
-        return { id, ...cleanData };
-    } else {
-        const docRef = await db.collection(collection).add(cleanData);
-        return { id: docRef.id, ...cleanData };
-    }
-  }
-
-  async update(collection: string, id: string, data: any) {
-    const { getDb } = await import('../firebase.js');
-    const db = getDb();
-    const cleanData = { ...data };
-    delete cleanData.id;
-    await db.collection(collection).doc(id).update({
-        ...cleanData,
-        updatedAt: new Date().toISOString()
-    });
-    return { id, ...cleanData };
-  }
-
-  async delete(collection: string, id: string) {
-    const { getDb } = await import('../firebase.js');
-    const db = getDb();
-    await db.collection(collection).doc(id).delete();
-  }
-}
-
+// Storage interface and SQL implementation
 export const getStorage = () => {
-    try {
-        // Look for config in parent directory (root) if running from /server/services
-        // or current directory if running from root.
-        let configPath = path.resolve(process.cwd(), 'app-config.json');
-        if (!fs.existsSync(configPath)) {
-            configPath = path.resolve(process.cwd(), '..', 'app-config.json');
-        }
-        
-        const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-        if (config.activeBackend === 'sql') {
-            return new SQLStorage();
-        }
-    } catch (e) {
-        console.error("Config read error, defaulting to firebase", e);
-    }
-    return new FirebaseStorage();
+    return new SQLStorage();
 }

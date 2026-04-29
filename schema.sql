@@ -252,21 +252,4 @@ CREATE TABLE IF NOT EXISTS `deliveryNotes` (
   FOREIGN KEY (salesOrderId) REFERENCES salesOrders(id) ON DELETE CASCADE
 );
 
--- ============================================================================
--- SEED DATA
--- ============================================================================
-
--- Default Company
-INSERT IGNORE INTO `companies` (id, data) VALUES ('company_default', '{"name": "Sheger Main Corp", "type": "Manufacturer"}');
-
--- Default Admin
-INSERT IGNORE INTO `users` (id, companyId, email, data) VALUES ('admin_1', 'company_default', 'admin@besheger.com', '{"name": "Master Admin", "roles": ["admin"]}');
-
--- Sample Factory
-INSERT IGNORE INTO `factories` (id, companyId, name, data) VALUES ('factory_1', 'company_default', 'Addis Ababa Plant', '{"location": "Addis Ababa", "capacity": 1000}');
-
--- Sample Warehouse
-INSERT IGNORE INTO `warehouses` (id, companyId, factoryId, data) VALUES ('wh_1', 'company_default', 'factory_1', '{"name": "Main Raw Storage", "type": "Raw Material"}');
-
--- Sample Product
-INSERT IGNORE INTO `products` (id, companyId, data) VALUES ('prod_1', 'company_default', '{"name": "High Protein Flour", "sku": "HPF-001", "unit": "kg", "price": 45.00}');
+-- End of Schema
