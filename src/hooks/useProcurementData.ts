@@ -31,10 +31,10 @@ export const useProcurementData = () => {
         if (Array.isArray(materialsData)) setMaterials(materialsData as any);
         if (Array.isArray(factoriesData)) setFactories(factoriesData as any);
         if (Array.isArray(warehousesData)) setWarehouses(warehousesData as any);
-        
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching procurement data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 

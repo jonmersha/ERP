@@ -25,9 +25,10 @@ const Logistics: React.FC = () => {
       try {
         const data = await getShipments(profile.companyId);
         setShipments(data);
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching shipments:", error);
+      } finally {
+        setLoading(false);
       }
     };
 

@@ -31,9 +31,10 @@ const Recipes: React.FC = () => {
       try {
         const data = await getRecipes(profile.companyId);
         setRecipes(data);
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching recipes:", error);
+      } finally {
+        setLoading(false);
       }
     };
 

@@ -1,24 +1,24 @@
+"use client";
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import Link from 'next/link';
 import { learningContent } from '../constants/learning';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 
-const Learning: React.FC = () => {
-  const { feature } = useParams<{ feature: string }>();
+const Learning: React.FC<{ feature?: string; }> = ({ feature }) => {
   const content = feature ? learningContent[feature] : null;
 
   if (!content) {
     return (
       <div className="text-center py-20">
         <h2 className="text-2xl font-bold">Learning module not found.</h2>
-        <Link to="/" className="text-[var(--color-main)] underline mt-4 block">Return to Dashboard</Link>
+        <Link href="/" className="text-[var(--color-main)] underline mt-4 block">Return to Dashboard</Link>
       </div>
     );
   }
 
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
-      <Link to="/" className="flex items-center text-[var(--color-text)]/60 hover:text-[var(--color-text)]">
+      <Link href="/" className="flex items-center text-[var(--color-text)]/60 hover:text-[var(--color-text)]">
         <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
       </Link>
       <header className="flex items-center space-x-4">

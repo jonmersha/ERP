@@ -22,10 +22,10 @@ export const useHRData = () => {
 
         if (Array.isArray(employeesData)) setEmployees(employeesData as any);
         if (Array.isArray(factoriesData)) setFactories(factoriesData as any);
-        
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching HR data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 

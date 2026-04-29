@@ -26,9 +26,10 @@ const Maintenance: React.FC = () => {
       try {
         const data = await getMaintenanceLogs(profile.companyId);
         setLogs(data);
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching maintenance logs:", error);
+      } finally {
+        setLoading(false);
       }
     };
 

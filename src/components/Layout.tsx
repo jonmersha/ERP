@@ -1,5 +1,7 @@
+"use client";
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
@@ -30,8 +32,8 @@ import { motion, AnimatePresence } from 'motion/react';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { profile, hasRole } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const router = useRouter();
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -51,7 +53,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const handleSignOut = async () => {
     await signOut(auth);
-    navigate('/login');
+    router.push('/login');
   };
 
   const navItems = [
@@ -150,7 +152,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                             </button>
                           ) : (
                             <Link
-                              to={item.path!}
+                              href={item.path!}
                               onClick={() => setIsMobileMenuOpen(false)}
                               className={`flex items-center space-x-3 px-4 py-3 text-sm transition-colors text-white/80 hover:bg-[var(--color-shell-hover)]`}
                             >
@@ -164,7 +166,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                               {item.submenu.map(sub => (
                                 <Link
                                   key={sub.path}
-                                  to={sub.path}
+                                  href={sub.path}
                                   onClick={() => { setOpenSubmenu(null); setIsMobileMenuOpen(false); }}
                                   className="flex items-center space-x-3 px-8 py-3 text-sm text-white/70 hover:text-white"
                                 >
@@ -197,9 +199,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     </button>
                   ) : (
                     <Link
-                      to={item.path!}
+                      href={item.path!}
                       className={`flex items-center space-x-2 px-3 h-full text-sm transition-colors ${
-                        location.pathname === item.path ? 'bg-[var(--color-shell-hover)] text-white font-bold border-b-2 border-white' : 'text-white/80 hover:bg-[var(--color-shell-hover)] hover:text-white'
+                        pathname === item.path ? 'bg-[var(--color-shell-hover)] text-white font-bold border-b-2 border-white' : 'text-white/80 hover:bg-[var(--color-shell-hover)] hover:text-white'
                       }`}
                     >
                       <item.icon size={16} />
@@ -212,7 +214,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                       {item.submenu.map(sub => (
                         <Link
                           key={sub.path}
-                          to={sub.path}
+                          href={sub.path}
                           onClick={() => { setOpenSubmenu(null); }}
                           className="flex items-center space-x-2 px-4 py-2.5 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]"
                         >

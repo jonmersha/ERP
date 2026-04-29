@@ -1,8 +1,9 @@
+"use client";
 import React, { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { seedDatabase } from '../utils/seedData';
 import { motion, AnimatePresence } from 'motion/react';
@@ -22,18 +23,18 @@ const Login: React.FC = () => {
   const [companyEmail, setCompanyEmail] = useState('');
   const [companyLogo, setCompanyLogo] = useState('');
   
-  const navigate = useNavigate();
+  const router = useRouter();
 
   React.useEffect(() => {
     if (!authLoading) {
       if (user && profile?.companyId) {
-        navigate('/');
+        router.push('/');
       } else if (user && !profile?.companyId) {
         setTempUser(user);
         setStep('company-setup');
       }
     }
-  }, [user, profile, authLoading, navigate]);
+  }, [user, profile, authLoading, router]);
 
   const handleGoogleLogin = async () => {
     setError(null);
@@ -51,7 +52,7 @@ const Login: React.FC = () => {
         setTempUser(user);
         setStep('company-setup');
       } else {
-        navigate('/');
+        router.push('/');
       }
     } catch (err: any) {
       console.error("Login error details:", err);
@@ -142,7 +143,7 @@ const Login: React.FC = () => {
         }
       }
 
-      navigate('/');
+      router.push('/');
     } catch (err: any) {
       console.error("Company setup error details:", err);
       setError(err.message || 'Failed to setup company. Please check your browser console for details.');

@@ -1,3 +1,4 @@
+"use client";
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
@@ -66,8 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
                 setLoading(false);
               }, (error) => {
-                handleFirestoreError(error, OperationType.GET, `companies/${profileData.companyId}`);
                 setLoading(false);
+                handleFirestoreError(error, OperationType.GET, `companies/${profileData.companyId}`);
               });
             } else {
               setCompany(null);
@@ -79,8 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
           }
         }, (error) => {
-          handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
           setLoading(false);
+          handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
         });
       } else {
         setProfile(null);

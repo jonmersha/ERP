@@ -1,4 +1,20 @@
 
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy as fsOrderBy, 
+  limit as fsLimit,
+  addDoc as fsAddDoc,
+  updateDoc as fsUpdateDoc,
+  deleteDoc as fsDeleteDoc,
+  doc as fsDoc,
+  onSnapshot as fsOnSnapshot
+} from 'firebase/firestore';
+import { db } from '../firebase';
+import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+
 export interface FetchOptions {
   orderByField?: string;
   orderDir?: 'asc' | 'desc';
@@ -6,97 +22,55 @@ export interface FetchOptions {
 }
 
 class ApiService {
-  private activeBackend: 'firebase' | 'sql' = 'firebase';
-
-  constructor() {}
-
-  setMode(mode: 'firebase' | 'sql') {
-    this.activeBackend = mode;
-  }
-
-  getMode() {
-    return this.activeBackend;
-  }
-
   async fetchCollection<T>(collectionName: string, companyId: string, options?: FetchOptions): Promise<T[]> {
+    let q = query(collection(db, collectionName), where('companyId', '==', companyId));
+    if (options?.orderByField) {
+      q = query(q, fsOrderBy(options.orderByField, options.orderDir || 'asc'));
+    }
+    if (options?.limitCount) {
+      q = query(q, fsLimit(options.limitCount));
+    }
+    
     try {
-      const params = new URLSearchParams({ companyId });
-      if (options?.orderByField) params.append('orderByField', options.orderByField);
-      if (options?.orderDir) params.append('orderDir', options.orderDir);
-      if (options?.limitCount) params.append('limitCount', String(options.limitCount));
-
-      const resp = await fetch(`/api/data/${collectionName}?${params.toString()}`);
-      if (!resp.ok) {
-        const body = await resp.json().catch(() => ({}));
-        console.error(`API Error on ${collectionName}:`, resp.status, body);
-        throw new Error(`API Error: ${resp.status} - ${body.details || body.error || 'Unknown error'}`);
-      }
-      return resp.json();
-    } catch (err) {
-      console.error(`Fetch failure on ${collectionName}:`, err);
-      throw err;
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any as T));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, collectionName);
+      return []; // fallback if not thrown
     }
   }
 
   subscribeToCollection<T>(collectionName: string, companyId: string, callback: (data: T[]) => void) {
-    // Standard polling for now as backend doesn't support WebSockets yet
-    this.fetchCollection<T>(collectionName, companyId).then(callback);
-    const interval = setInterval(() => {
-      this.fetchCollection<T>(collectionName, companyId).then(callback);
-    }, 5000);
-    return () => clearInterval(interval);
+    const q = query(collection(db, collectionName), where('companyId', '==', companyId));
+    return fsOnSnapshot(q, (snapshot) => {
+      callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any as T)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, collectionName);
+    });
   }
 
   async addDocument(collectionName: string, data: any) {
-    const resp = await fetch(`/api/data/${collectionName}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!resp.ok) {
-      const body = await resp.json().catch(() => ({}));
-      throw new Error(`API Error: ${resp.status} - ${body.details || body.error || 'Unknown error'}`);
+    try {
+      return await fsAddDoc(collection(db, collectionName), data);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, collectionName);
     }
-    return resp.json();
   }
 
   async updateDocument(collectionName: string, docId: string, data: any) {
-    const resp = await fetch(`/api/data/${collectionName}/${docId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!resp.ok) {
-      const body = await resp.json().catch(() => ({}));
-      throw new Error(`API Error: ${resp.status} - ${body.details || body.error || 'Unknown error'}`);
+    try {
+      return await fsUpdateDoc(fsDoc(db, collectionName, docId), data);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `${collectionName}/${docId}`);
     }
-    return resp.json();
   }
 
   async deleteDocument(collectionName: string, docId: string) {
-    const resp = await fetch(`/api/data/${collectionName}/${docId}`, {
-      method: 'DELETE'
-    });
-    if (!resp.ok) {
-      const body = await resp.json().catch(() => ({}));
-      throw new Error(`API Error: ${resp.status} - ${body.details || body.error || 'Unknown error'}`);
-    }
-    return resp.json();
-  }
-
-  // Helper for mode sync
-  async syncModeFromServer() {
     try {
-      const resp = await fetch('/api/settings/backend');
-      if (resp.ok) {
-        const { activeBackend } = await resp.json();
-        this.activeBackend = activeBackend;
-        return activeBackend;
-      }
-    } catch (err) {
-      console.error('Failed to sync mode from server:', err);
+      return await fsDeleteDoc(fsDoc(db, collectionName, docId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `${collectionName}/${docId}`);
     }
-    return 'firebase'; 
   }
 }
 

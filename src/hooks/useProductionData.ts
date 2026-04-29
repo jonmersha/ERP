@@ -31,10 +31,10 @@ export const useProductionData = () => {
         if (Array.isArray(plansData)) setPlans(plansData as any);
         if (Array.isArray(productsData)) setProducts(productsData as any);
         if (Array.isArray(recipesData)) setRecipes(recipesData as any);
-        
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching production data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 

@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { seedDatabase } from '../utils/seedData';
@@ -60,12 +61,12 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: any; tre
 );
 
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import Modal from '../components/Modal';
 
 const Dashboard: React.FC = () => {
   const { isAdmin, profile, company } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [isSeeding, setIsSeeding] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
@@ -289,7 +290,7 @@ const Dashboard: React.FC = () => {
           icon={FactoryIcon} 
           trend={12}
           color="bg-[var(--color-main)]" 
-          onClick={() => navigate('/production')}
+          onClick={() => router.push('/production')}
         />
         <StatCard 
           title="Total Revenue" 
@@ -297,7 +298,7 @@ const Dashboard: React.FC = () => {
           icon={TrendingUp} 
           trend={8}
           color="bg-[var(--color-main)]" 
-          onClick={() => navigate('/finance')}
+          onClick={() => router.push('/finance')}
         />
         <StatCard 
           title="Sales Orders" 
@@ -305,14 +306,14 @@ const Dashboard: React.FC = () => {
           icon={ShoppingCart} 
           trend={-3}
           color="bg-[var(--color-main)]" 
-          onClick={() => navigate('/sales')}
+          onClick={() => router.push('/sales')}
         />
         <StatCard 
           title="Low Stock Items" 
           value={stats.lowStock} 
           icon={AlertTriangle} 
           color="bg-[var(--color-accent)]" 
-          onClick={() => navigate('/inventory')}
+          onClick={() => router.push('/inventory')}
         />
       </div>
 
@@ -416,7 +417,7 @@ const Dashboard: React.FC = () => {
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Recent Sales Orders</h3>
               <button 
-                onClick={() => navigate('/sales')}
+                onClick={() => router.push('/sales')}
                 className="text-sm font-medium text-[var(--color-main)] hover:underline"
               >
                 View All
@@ -458,7 +459,7 @@ const Dashboard: React.FC = () => {
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Manufacturing Schedule</h3>
               <button 
-                onClick={() => navigate('/production')}
+                onClick={() => router.push('/production')}
                 className="text-sm font-medium text-[var(--color-main)] hover:underline"
               >
                 View All
@@ -515,7 +516,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
           <h3 className="text-xl font-serif font-bold text-[var(--color-text)] mb-8">Unit Distribution</h3>
           <div className="space-y-6">
-            <div className="space-y-2 cursor-pointer group" onClick={() => navigate('/production')}>
+            <div className="space-y-2 cursor-pointer group" onClick={() => router.push('/production')}>
               <div className="flex justify-between text-sm">
                 <span className="text-[var(--color-text)]/60 group-hover:text-[var(--color-main)] transition-colors">Factories</span>
                 <span className="font-bold">{stats.factories}</span>
@@ -524,7 +525,7 @@ const Dashboard: React.FC = () => {
                 <div className="h-full bg-[var(--color-main)]" style={{ width: '40%' }}></div>
               </div>
             </div>
-            <div className="space-y-2 cursor-pointer group" onClick={() => navigate('/inventory')}>
+            <div className="space-y-2 cursor-pointer group" onClick={() => router.push('/inventory')}>
               <div className="flex justify-between text-sm">
                 <span className="text-[var(--color-text)]/60 group-hover:text-blue-600 transition-colors">Warehouses</span>
                 <span className="font-bold">{stats.warehouses}</span>
@@ -533,7 +534,7 @@ const Dashboard: React.FC = () => {
                 <div className="h-full bg-blue-600" style={{ width: '60%' }}></div>
               </div>
             </div>
-            <div className="space-y-2 cursor-pointer group" onClick={() => navigate('/sales')}>
+            <div className="space-y-2 cursor-pointer group" onClick={() => router.push('/sales')}>
               <div className="flex justify-between text-sm">
                 <span className="text-[var(--color-text)]/60 group-hover:text-amber-500 transition-colors">Retail Outlets</span>
                 <span className="font-bold">12</span>
@@ -612,7 +613,7 @@ const Dashboard: React.FC = () => {
             <button 
               onClick={() => {
                 setSelectedOrder(null);
-                navigate('/sales');
+                router.push('/sales');
               }}
               className="w-full bg-[var(--color-main)] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
             >
@@ -701,7 +702,7 @@ const Dashboard: React.FC = () => {
             <button 
               onClick={() => {
                 setSelectedRun(null);
-                navigate('/production');
+                router.push('/production');
               }}
               className="w-full bg-[var(--color-main)] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
             >
