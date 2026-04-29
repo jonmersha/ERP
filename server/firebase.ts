@@ -5,7 +5,10 @@ import fs from "fs";
 import path from "path";
 
 // Load the Firebase configuration
-const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+let configPath = path.join(process.cwd(), "firebase-applet-config.json");
+if (!fs.existsSync(configPath)) {
+  configPath = path.join(process.cwd(), "..", "firebase-applet-config.json");
+}
 let firebaseConfig: any = {};
 
 if (fs.existsSync(configPath)) {

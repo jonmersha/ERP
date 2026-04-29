@@ -2,7 +2,11 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
-import { apiRouter } from "./server/routes/index.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+import { apiRouter } from "./server/routes/index";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +20,11 @@ async function startServer() {
 
   // API routes
   app.use("/api", apiRouter);
+
+  // Catch-all for /api that weren't handled
+  app.use("/api", (req, res) => {
+    res.status(404).json({ error: `API route not found: ${req.method} ${req.url}` });
+  });
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {

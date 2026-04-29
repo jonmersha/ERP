@@ -36,11 +36,34 @@ class ApiService {
     return (localStorage.getItem('app_data_mode') as 'firebase' | 'sql') || 'firebase';
   }
 
+  async syncModeFromServer() {
+    try {
+      const resp = await fetch('/api/settings/backend');
+      if (resp.ok) {
+        const { activeBackend } = await resp.json();
+        this.setMode(activeBackend);
+        return activeBackend;
+      }
+    } catch (err) {
+      console.error('Failed to sync mode from server:', err);
+    }
+    return this.getMode();
+  }
+
   async fetchCollection<T>(collectionName: string, companyId: string, options?: FetchOptions): Promise<T[]> {
     if (this.getMode() === 'sql') {
-      const resp = await fetch(`/api/data/${collectionName}?companyId=${companyId}`);
-      if (!resp.ok) throw new Error('API Error');
-      return resp.json();
+      try {
+        const resp = await fetch(`/api/data/${collectionName}?companyId=${companyId}`);
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => ({}));
+          console.error(`API Error on ${collectionName}:`, resp.status, body);
+          throw new Error(`API Error: ${resp.status} - ${body.details || body.error || 'Unknown error'}`);
+        }
+        return resp.json();
+      } catch (err) {
+        console.error(`Fetch failure on ${collectionName}:`, err);
+        throw err;
+      }
     }
 
     // Firebase Implementation
@@ -96,6 +119,16 @@ class ApiService {
        return resp.json();
     }
     return fsUpdateDoc(fsDoc(db, collectionName, docId), data);
+  }
+
+  async deleteDocument(collectionName: string, docId: string) {
+    if (this.getMode() === 'sql') {
+       const resp = await fetch(`/api/data/${collectionName}/${docId}`, {
+         method: 'DELETE'
+       });
+       return resp.json();
+    }
+    return fsDeleteDoc(fsDoc(db, collectionName, docId));
   }
 }
 

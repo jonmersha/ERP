@@ -7,7 +7,10 @@ export const settingsRouter = Router();
 
 settingsRouter.get('/backend', (req, res) => {
     try {
-        const configPath = path.resolve(process.cwd(), 'app-config.json');
+        let configPath = path.resolve(process.cwd(), 'app-config.json');
+        if (!fs.existsSync(configPath)) {
+            configPath = path.resolve(process.cwd(), '..', 'app-config.json');
+        }
         const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
         res.json({ activeBackend: config.activeBackend });
     } catch (e) {
@@ -22,7 +25,10 @@ settingsRouter.post('/backend', (req, res) => {
     }
     
     try {
-        const configPath = path.resolve(process.cwd(), 'app-config.json');
+        let configPath = path.resolve(process.cwd(), 'app-config.json');
+        if (!fs.existsSync(configPath)) {
+            configPath = path.resolve(process.cwd(), '..', 'app-config.json');
+        }
         const config = { activeBackend: mode };
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
         res.json({ success: true, activeBackend: mode });

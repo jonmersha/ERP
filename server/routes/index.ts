@@ -1,18 +1,18 @@
 import { Router } from "express";
-import { productionRouter } from "./production.js";
-import { productRouter } from "./products.js";
-import { inventoryRouter } from "./inventory.js";
-import { plansRouter } from "./plans.js";
-import { financeRouter } from "./finance.js";
-import { coreRouter } from "./core.js";
-import { procurementRouter } from "./procurement.js";
-import { salesRouter } from "./sales.js";
-import { hrRouter } from "./hr.js";
-import { logisticsRouter } from "./logistics.js";
-import { maintenanceRouter } from "./maintenance.js";
-import usersRouter from "./users.js";
-import { dataRouter } from "./data.js";
-import { settingsRouter } from "./settings.js";
+import { productionRouter } from "./production";
+import { productRouter } from "./products";
+import { inventoryRouter } from "./inventory";
+import { plansRouter } from "./plans";
+import { financeRouter } from "./finance";
+import { coreRouter } from "./core";
+import { procurementRouter } from "./procurement";
+import { salesRouter } from "./sales";
+import { hrRouter } from "./hr";
+import { logisticsRouter } from "./logistics";
+import { maintenanceRouter } from "./maintenance";
+import usersRouter from "./users";
+import { dataRouter } from "./data";
+import { settingsRouter } from "./settings";
 
 export const apiRouter = Router();
 
@@ -34,4 +34,14 @@ apiRouter.use("/users", usersRouter);
 // Health check
 apiRouter.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+apiRouter.get("/debug-env", (req, res) => {
+  const safeEnv: any = {};
+  for (const key in process.env) {
+    if (key.includes('PG') || key.includes('DATABASE') || key.includes('PORT') || key.includes('VITE')) {
+      safeEnv[key] = process.env[key];
+    }
+  }
+  res.json(safeEnv);
 });

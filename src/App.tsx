@@ -19,6 +19,7 @@ import Admin from './pages/Admin';
 import Users from './pages/Users';
 import Learning from './pages/Learning';
 import Finance from './pages/Finance';
+import { apiService } from './services/apiService';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, profile, loading, isAdmin } = useAuth();
@@ -48,6 +49,18 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 export default function App() {
+  React.useEffect(() => {
+    const sync = async () => {
+      const currentMode = apiService.getMode();
+      const serverMode = await apiService.syncModeFromServer();
+      if (serverMode && serverMode !== currentMode) {
+        console.log(`Switching mode from ${currentMode} to ${serverMode}. Reloading...`);
+        window.location.reload();
+      }
+    };
+    sync();
+  }, []);
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />

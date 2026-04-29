@@ -13,28 +13,27 @@ The application uses a **Decoupled Architecture**:
 
 ### Prerequisites
 - Node.js (v18+)
-- MySQL or PostgreSQL (Optional, if using dedicated SQL server)
+- PostgreSQL (Active instance or Docker container)
 
 ### Step-by-Step Installation
-1. **Clone the repository** (if you haven't already).
+1. **Clone the repository**.
 2. **Install Dependencies**:
    ```bash
    npm install
    ```
 3. **Configure Environment**:
-   - Create a `.env` file from `.env.example`.
-   - Add your Firebase configuration keys if you still want to use Firebase mode.
+   - Create a `.env` file and populate it with your PostgreSQL credentials:
+     - `PGHOST`, `PGUSER`, `PGDATABASE`, `PGPASSWORD`, `PGPORT`.
 4. **Initialize Database**:
-   - For **SQLite** (Auto-mode): The system automatically creates `local_storage.db` in the root folder when you switch to SQL mode in the Admin panel.
-   - For **MySQL/PostgreSQL**: Run the provided `database_setup.sql` script on your database server.
+   - Run the provided `database_setup.sql` script on your PostgreSQL server to create the relational structure.
+   - The application will also automatically create storage tables (JSONB based) if they are missing during operation.
 5. **Run the Development Server**:
    ```bash
    npm run dev
    ```
 6. **Switch to SQL Mode**:
    - Go to the **Admin Panel** (`/admin`).
-   - Find the "Storage Infrastructure" card.
-   - Click "SQL (Mocked/Active)". This updates the `app-config.json` on the server and `localStorage` on your browser.
+   - Switch "Storage Infrastructure" to **SQL**.
 
 ## 3. Data Migration (Firebase -> SQL)
 
