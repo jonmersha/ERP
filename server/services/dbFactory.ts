@@ -93,7 +93,7 @@ const getPool = () => {
       pool = mysql.createPool(options);
     } catch (createError) {
       console.error('CRITICAL: Failed to create MySQL pool:', createError);
-      throw createError;
+      throw new Error(`Failed to create database pool. Please check if your database credentials in .env are correct. (Host: ${options.host}:${options.port}, User: ${options.user})`);
     }
   }
   return pool;
@@ -282,7 +282,8 @@ class SQLStorage implements IStorage {
 class FirebaseStorage implements IStorage {
   async find(collection: string, queryOpts: any) {
     const { companyId, limitCount, orderByField, orderDir } = queryOpts;
-    const { db } = await import('../firebase.js');
+    const { getDb } = await import('../firebase.js');
+    const db = getDb();
     let q = db.collection(collection).where("companyId", "==", companyId);
     
     if (orderByField) {
@@ -298,14 +299,16 @@ class FirebaseStorage implements IStorage {
   }
 
   async findOne(collection: string, id: string) {
-    const { db } = await import('../firebase.js');
+    const { getDb } = await import('../firebase.js');
+    const db = getDb();
     const doc = await db.collection(collection).doc(id).get();
     if (!doc.exists) return null;
     return { id: doc.id, ...doc.data() };
   }
 
   async create(collection: string, data: any) {
-    const { db } = await import('../firebase.js');
+    const { getDb } = await import('../firebase.js');
+    const db = getDb();
     const cleanData = { ...data };
     if (!cleanData.createdAt) cleanData.createdAt = new Date().toISOString();
     
@@ -321,7 +324,8 @@ class FirebaseStorage implements IStorage {
   }
 
   async update(collection: string, id: string, data: any) {
-    const { db } = await import('../firebase.js');
+    const { getDb } = await import('../firebase.js');
+    const db = getDb();
     const cleanData = { ...data };
     delete cleanData.id;
     await db.collection(collection).doc(id).update({
@@ -332,7 +336,8 @@ class FirebaseStorage implements IStorage {
   }
 
   async delete(collection: string, id: string) {
-    const { db } = await import('../firebase.js');
+    const { getDb } = await import('../firebase.js');
+    const db = getDb();
     await db.collection(collection).doc(id).delete();
   }
 }

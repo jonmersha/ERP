@@ -1,6 +1,6 @@
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { getAuth } from "firebase-admin/auth";
+import { getAuth as baseGetAuth } from "firebase-admin/auth";
 import fs from "fs";
 import path from "path";
 
@@ -38,8 +38,22 @@ if (!getApps().length) {
   }
 }
 
-export const db = firebaseConfig.firestoreDatabaseId 
-  ? getFirestore(firebaseConfig.firestoreDatabaseId)
-  : getFirestore();
-console.log("Firestore initialized with database:", firebaseConfig.firestoreDatabaseId || "(default)");
-export const auth = getAuth();
+let _db: any = null;
+let _auth: any = null;
+
+export const getDb = () => {
+  if (!_db) {
+    _db = firebaseConfig.firestoreDatabaseId 
+      ? getFirestore(firebaseConfig.firestoreDatabaseId)
+      : getFirestore();
+    console.log("Firestore initialized with database:", firebaseConfig.firestoreDatabaseId || "(default)");
+  }
+  return _db;
+};
+
+export const getAuth = () => {
+  if (!_auth) {
+    _auth = baseGetAuth();
+  }
+  return _auth;
+};
