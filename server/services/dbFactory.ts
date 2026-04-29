@@ -49,7 +49,12 @@ const getPool = () => {
     if (!options.password) options.password = process.env.MYSQL_PASSWORD;
     if (!options.database) options.database = process.env.MYSQL_DATABASE;
     if (!options.port) {
-      options.port = parseInt(process.env.MYSQL_PORT || '3306');
+      const p = process.env.MYSQL_PORT;
+      options.port = parseInt(p || '3306');
+    }
+
+    if (options.port === 3600 && options.host === 'localhost') {
+        console.warn('HINT: Port 3600 on localhost is very unusual for MySQL. Standard is 3306. If connection fails, check your environment variables.');
     }
 
     // Validation: Enforce env vars
@@ -66,8 +71,13 @@ const getPool = () => {
       user: options.user,
       database: options.database,
       port: options.port,
-      adapter: 'mysql'
+      adapter: 'mysql',
+      hasPassword: !!options.password
     });
+
+    if (options.port === 3600) {
+       console.log('Warning: Attempting connection on port 3600. If this is unexpected, check MYSQL_PORT or DATABASE_URL in your environment.');
+    }
 
     try {
       pool = mysql.createPool(options);
@@ -124,7 +134,11 @@ const ensureTable = async (table: string) => {
   } catch (err: any) {
     console.error(`Error ensuring table ${table}:`, err);
     if (err.message.includes('getaddrinfo') || err.message.includes('ECONNREFUSED')) {
-      throw new Error(`MySQL Connection Failed. Please ensure your database is running and credentials in .env are correct. Original error: ${err.message}`);
+      let extraHint = '';
+      if (err.message.includes('3600')) {
+        extraHint = ' (Note: Port 3600 is being used. Did you mean 3306 in your .env?)';
+      }
+      throw new Error(`MySQL Connection Failed. Please ensure your database is running and credentials in .env are correct.${extraHint} Original error: ${err.message}`);
     }
     throw err; 
   }
