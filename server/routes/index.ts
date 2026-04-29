@@ -11,9 +11,13 @@ import { hrRouter } from "./hr.js";
 import { logisticsRouter } from "./logistics.js";
 import { maintenanceRouter } from "./maintenance.js";
 import usersRouter from "./users.js";
+import { dataRouter } from "./data.js";
+import { settingsRouter } from "./settings.js";
 
 export const apiRouter = Router();
 
+apiRouter.use("/data", dataRouter);
+apiRouter.use("/settings", settingsRouter);
 apiRouter.use("/production", productionRouter);
 apiRouter.use("/products", productRouter);
 apiRouter.use("/inventory", inventoryRouter);
