@@ -1,4 +1,5 @@
 
+import "dotenv/config";
 import fs from 'fs';
 import path from 'path';
 import mysql from 'mysql2/promise';
