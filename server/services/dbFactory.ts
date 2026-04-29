@@ -1,20 +1,18 @@
 
 import fs from 'fs';
 import path from 'path';
-import pg from 'pg';
+import mysql from 'mysql2/promise';
 
-const { Pool } = pg;
-
-let pool: pg.Pool | null = null;
+let pool: mysql.Pool | null = null;
 
 const getPool = () => {
   if (!pool) {
-    const rawHost = process.env.PGHOST;
+    const rawHost = process.env.MYSQL_HOST || process.env.PGHOST; // fallback for transition
     const rawConnectionString = process.env.DATABASE_URL;
 
-    // Cleanup all PG env vars that might have "base"
-    const pgEnvVars = ['PGHOST', 'PGUSER', 'PGDATABASE', 'PGPASSWORD', 'PGPORT', 'DATABASE_URL'];
-    pgEnvVars.forEach(v => {
+    // Cleanup env vars that might have "base"
+    const dbEnvVars = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_DATABASE', 'MYSQL_PASSWORD', 'MYSQL_PORT', 'DATABASE_URL', 'PGHOST', 'PGUSER', 'PGDATABASE', 'PGPASSWORD', 'PGPORT'];
+    dbEnvVars.forEach(v => {
       const val = process.env[v];
       if (val && (val.toLowerCase() === 'base' || val.includes('base'))) {
         delete process.env[v];
@@ -23,7 +21,7 @@ const getPool = () => {
 
     // Use FRESH values after cleanup
     const currentConnectionString = process.env.DATABASE_URL;
-    const currentHost = process.env.PGHOST;
+    const currentHost = process.env.MYSQL_HOST || process.env.PGHOST;
 
     let finalConnectionString: string | undefined = undefined;
     if (currentConnectionString && !currentConnectionString.includes('base')) {
@@ -35,34 +33,33 @@ const getPool = () => {
       finalHost = 'localhost';
     }
 
-    const config: pg.PoolConfig = {
-      connectionString: finalConnectionString,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+    const config: mysql.PoolOptions = {
+      uri: finalConnectionString,
+      waitForConnections: true,
+      connectionLimit: 20,
+      queueLimit: 0,
+      idleTimeout: 60000,
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 0,
     };
 
     if (!finalConnectionString) {
       config.host = finalHost;
-      config.user = process.env.PGUSER || 'postgres';
-      config.password = process.env.PGPASSWORD || 'postgres';
-      config.database = process.env.PGDATABASE || 'erp_db';
-      config.port = parseInt(process.env.PGPORT || '5432');
+      config.user = process.env.MYSQL_USER || process.env.PGUSER || 'erpuser';
+      config.password = process.env.MYSQL_PASSWORD || process.env.PGPASSWORD || 'xyz';
+      config.database = process.env.MYSQL_DATABASE || process.env.PGDATABASE || 'erpsystem';
+      config.port = parseInt(process.env.MYSQL_PORT || process.env.PGPORT || '3306');
     }
 
-    console.log('Final PostgreSQL Pool Config:', {
-      hasConnectionString: !!config.connectionString,
+    console.log('Final MySQL Pool Config:', {
+      hasConnectionString: !!config.uri,
       host: config.host,
       user: config.user,
       database: config.database,
       port: config.port
     });
 
-    pool = new Pool(config);
-
-    pool.on('error', (err) => {
-      console.error('Unexpected error on idle postgres client', err);
-    });
+    pool = mysql.createPool(config);
   }
   return pool;
 };
@@ -97,19 +94,19 @@ const initializeSqlTables = async () => {
 const ensureTable = async (table: string) => {
   try {
     const activePool = getPool();
-    // Basic table structure for the JSON-based storage pattern
+    // MySQL table structure
     await activePool.query(`
-      CREATE TABLE IF NOT EXISTS "${table}" (
-        id TEXT PRIMARY KEY,
-        "companyId" TEXT,
-        data JSONB,
-        "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      CREATE TABLE IF NOT EXISTS \`${table}\` (
+        id VARCHAR(255) PRIMARY KEY,
+        companyId VARCHAR(255),
+        data JSON,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
   } catch (err: any) {
     console.error(`Error ensuring table ${table}:`, err);
     if (err.message.includes('getaddrinfo') || err.message.includes('ECONNREFUSED')) {
-      throw new Error(`PostgreSQL Connection Failed. Please ensure your database is running and credentials in .env are correct. Original error: ${err.message}`);
+      throw new Error(`MySQL Connection Failed. Please ensure your database is running and credentials in .env are correct. Original error: ${err.message}`);
     }
     throw err; 
   }
@@ -131,8 +128,8 @@ class SQLStorage implements IStorage {
     await ensureTable(collection);
     
     const activePool = getPool();
-    const res = await activePool.query(`SELECT * FROM "${collection}" WHERE "companyId" = $1`, [companyId]);
-    return res.rows.map((row: any) => ({
+    const [rows]: [any[], any] = await activePool.query(`SELECT * FROM \`${collection}\` WHERE companyId = ?`, [companyId]);
+    return rows.map((row: any) => ({
       id: row.id,
       ...row.data
     }));
@@ -146,11 +143,12 @@ class SQLStorage implements IStorage {
     delete cleanData.id;
     
     const activePool = getPool();
+    // MySQL INSERT ... ON DUPLICATE KEY UPDATE
     await activePool.query(
-      `INSERT INTO "${collection}" (id, "companyId", data) 
-       VALUES ($1, $2, $3) 
-       ON CONFLICT (id) DO UPDATE SET data = $3, "companyId" = $2`,
-      [id, companyId, cleanData]
+      `INSERT INTO \`${collection}\` (id, companyId, data) 
+       VALUES (?, ?, ?) 
+       ON DUPLICATE KEY UPDATE data = ?, companyId = ?`,
+      [id, companyId, JSON.stringify(cleanData), JSON.stringify(cleanData), companyId]
     );
       
     return { id, ...cleanData };
@@ -159,14 +157,14 @@ class SQLStorage implements IStorage {
   async update(collection: string, id: string, data: any) {
     await ensureTable(collection);
     const activePool = getPool();
-    const existingRes = await activePool.query(`SELECT data FROM "${collection}" WHERE id = $1`, [id]);
-    const currentData = existingRes.rows[0] ? existingRes.rows[0].data : {};
+    const [rows]: [any[], any] = await activePool.query(`SELECT data FROM \`${collection}\` WHERE id = ?`, [id]);
+    const currentData = rows[0] ? rows[0].data : {};
     const newData = { ...currentData, ...data };
     const companyId = newData.companyId || '';
     
     await activePool.query(
-      `UPDATE "${collection}" SET data = $1, "companyId" = $2 WHERE id = $3`,
-      [newData, companyId, id]
+      `UPDATE \`${collection}\` SET data = ?, companyId = ? WHERE id = ?`,
+      [JSON.stringify(newData), companyId, id]
     );
       
     return { id, ...newData };
@@ -174,7 +172,7 @@ class SQLStorage implements IStorage {
 
   async delete(collection: string, id: string) {
     const activePool = getPool();
-    await activePool.query(`DELETE FROM "${collection}" WHERE id = $1`, [id]);
+    await activePool.query(`DELETE FROM \`${collection}\` WHERE id = ?`, [id]);
   }
 }
 
