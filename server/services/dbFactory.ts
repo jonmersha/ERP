@@ -8,6 +8,12 @@ let pool: mysql.Pool | null = null;
 
 const getPool = () => {
   if (!pool) {
+    // Check for .env file existence
+    const dotEnvPath = path.resolve(process.cwd(), '.env');
+    if (!fs.existsSync(dotEnvPath)) {
+      console.warn('WARNING: .env file not found in root directory. Database credentials might be missing.');
+    }
+
     const options: mysql.PoolOptions = {
       waitForConnections: true,
       connectionLimit: 20,
@@ -58,45 +64,43 @@ const getPool = () => {
         console.warn('HINT: Port 3600 on localhost is very unusual for MySQL. Standard is 3306. If connection fails, check your environment variables.');
     }
 
-    // Validation: Enforce env vars
-    if (!options.host || !options.user || !options.database) {
+    // Validation: Check env vars but don't throw yet, handle gracefully in getPool
+    const isConfigMissing = !options.host || !options.user || !options.database;
+    
+    if (isConfigMissing) {
       const missing = [];
       if (!options.host) missing.push('MYSQL_HOST');
       if (!options.user) missing.push('MYSQL_USER');
       if (!options.database) missing.push('MYSQL_DATABASE');
       
-      console.error('Database connection failed due to missing environment variables.');
-      console.log('Current environment state:', {
-        MYSQL_HOST: process.env.MYSQL_HOST ? 'is set' : 'is MISSING',
-        MYSQL_USER: process.env.MYSQL_USER ? 'is set' : 'is MISSING',
-        MYSQL_DATABASE: process.env.MYSQL_DATABASE ? 'is set' : 'is MISSING',
-        HAS_DATABASE_URL: !!process.env.DATABASE_URL
-      });
+      console.warn('Database configuration is incomplete. Some features may be disabled.');
+      console.log('Missing variables:', missing.join(', '));
       
-      const envKeys = Object.keys(process.env).filter(key => key.startsWith('MYSQL_') || key === 'DATABASE_URL');
-      console.log('Environment keys found:', envKeys);
-      
-      throw new Error(`Missing required database environment variables: ${missing.join(', ')}. Please check your .env file.`);
+      // If we are in SQL mode but missing vars, we will eventually fail when a query is made.
+      // We don't throw here to allow the server to start (e.g. for health checks or non-db routes).
     }
 
-    console.log('Final Database Configuration:', {
-      host: options.host,
-      user: options.user,
-      database: options.database,
+    console.log('Database Configuration Attempt:', {
+      host: options.host || 'MISSING',
+      user: options.user || 'MISSING',
+      database: options.database || 'MISSING',
       port: options.port,
-      adapter: 'mysql',
       hasPassword: !!options.password
     });
 
-    if (options.port === 3600) {
-       console.log('Warning: Attempting connection on port 3600. If this is unexpected, check MYSQL_PORT or DATABASE_URL in your environment.');
+    if (options.port === 3600 && (options.host === 'localhost' || options.host === '127.0.0.1')) {
+       console.warn('Detected port 3600 on localhost. This is unusual for MySQL (standard is 3306).');
+       console.warn('If you see ECONNREFUSED 127.0.0.1:3600, please update your MYSQL_PORT to 3306 in .env');
     }
 
     try {
-      pool = mysql.createPool(options);
+      if (isConfigMissing) {
+         console.error('Cannot create MySQL pool: Missing required credentials.');
+      } else {
+         pool = mysql.createPool(options);
+      }
     } catch (createError) {
       console.error('CRITICAL: Failed to create MySQL pool:', createError);
-      throw new Error(`Failed to create database pool. Please check if your database credentials in .env are correct. (Host: ${options.host}:${options.port}, User: ${options.user})`);
     }
   }
   return pool;
@@ -113,7 +117,15 @@ const initializeSqlTables = async () => {
     if (fs.existsSync(configPath)) {
       const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
       if (config.activeBackend === 'sql') {
-        console.log('SQL Mode detected, ensuring tables...');
+        console.log('SQL Mode detected, checking database connectivity...');
+        
+        // Test connection first
+        const p = getPool();
+        if (!p) {
+          console.error('SQL Mode active but Database Pool could not be initialized. Skipping table creation.');
+          return;
+        }
+
         const tables = [
           'users', 'companies', 'factories', 'warehouses', 'products', 
           'inventory', 'salesOrders', 'productionRuns', 'procurementPlans', 
@@ -135,6 +147,9 @@ const initializeSqlTables = async () => {
 const ensureTable = async (table: string) => {
   try {
     const activePool = getPool();
+    if (!activePool) {
+      throw new Error(`Database connection pool not initialized. Cannot ensure table ${table}. Please check your environment variables (MYSQL_HOST, MYSQL_USER, MYSQL_DATABASE).`);
+    }
     // MySQL table structure
     await activePool.query(`
       CREATE TABLE IF NOT EXISTS \`${table}\` (

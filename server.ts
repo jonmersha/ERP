@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import cors from "cors";
 import { apiRouter } from "./server/routes/index.js";
@@ -12,6 +13,10 @@ const __dirname = path.dirname(__filename);
 async function startServer() {
   const app = express();
   const PORT = process.env.PORT || 3000;
+  
+  if (!process.env.NODE_ENV) {
+    process.env.NODE_ENV = "development";
+  }
 
   // CORS Configuration
   const allowedOrigins = process.env.ALLOWED_ORIGINS 
@@ -59,10 +64,16 @@ async function startServer() {
   } else {
     // In production, serve the built static files
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
+    
+    if (!fs.existsSync(distPath)) {
+      console.warn(`WARNING: 'dist' folder not found at ${distPath}. If this is production, please run 'npm run build' first.`);
+      // Fallback to development mode if possible or just log error
+    } else {
+      app.use(express.static(distPath));
+      app.get("*", (req, res) => {
+        res.sendFile(path.join(distPath, "index.html"));
+      });
+    }
   }
 
   app.listen(Number(PORT), "0.0.0.0", () => {
