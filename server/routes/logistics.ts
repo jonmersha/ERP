@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../firebase.js";
+import { getStorage } from "../services/dbFactory.js";
 
 export const logisticsRouter = Router();
 
@@ -9,11 +9,8 @@ logisticsRouter.get("/shipments", async (req, res) => {
     const companyId = req.query.companyId as string;
     if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const snapshot = await db.collection("shipments")
-      .where("companyId", "==", companyId)
-      .get();
-
-    const shipments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const storage = getStorage();
+    const shipments = await storage.find("shipments", { companyId });
     res.json(shipments);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -23,11 +20,9 @@ logisticsRouter.get("/shipments", async (req, res) => {
 logisticsRouter.post("/shipments", async (req, res) => {
   try {
     const shipmentData = req.body;
-    const docRef = await db.collection("shipments").add({
-      ...shipmentData,
-      createdAt: new Date().toISOString()
-    });
-    res.status(201).json({ id: docRef.id, ...shipmentData });
+    const storage = getStorage();
+    const result = await storage.create("shipments", shipmentData);
+    res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -37,8 +32,9 @@ logisticsRouter.put("/shipments/:id", async (req, res) => {
   try {
     const shipmentId = req.params.id;
     const updateData = req.body;
-    await db.collection("shipments").doc(shipmentId).update(updateData);
-    res.json({ id: shipmentId, ...updateData });
+    const storage = getStorage();
+    const result = await storage.update("shipments", shipmentId, updateData);
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -47,7 +43,8 @@ logisticsRouter.put("/shipments/:id", async (req, res) => {
 logisticsRouter.delete("/shipments/:id", async (req, res) => {
   try {
     const shipmentId = req.params.id;
-    await db.collection("shipments").doc(shipmentId).delete();
+    const storage = getStorage();
+    await storage.delete("shipments", shipmentId);
     res.json({ id: shipmentId, deleted: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

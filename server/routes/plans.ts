@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../firebase.js";
+import { getStorage } from "../services/dbFactory.js";
 
 export const plansRouter = Router();
 
@@ -11,11 +11,8 @@ const getPlans = async (collectionName: string, req: any, res: any) => {
       return res.status(400).json({ error: "companyId is required" });
     }
 
-    const snapshot = await db.collection(collectionName)
-      .where("companyId", "==", companyId)
-      .get();
-
-    const plans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const storage = getStorage();
+    const plans = await storage.find(collectionName, { companyId });
     res.json(plans);
   } catch (error: any) {
     console.error(`Error fetching ${collectionName}:`, error);
@@ -27,12 +24,9 @@ const getPlans = async (collectionName: string, req: any, res: any) => {
 const addPlan = async (collectionName: string, req: any, res: any) => {
   try {
     const planData = req.body;
-    const docRef = await db.collection(collectionName).add({
-      ...planData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    res.status(201).json({ id: docRef.id, ...planData });
+    const storage = getStorage();
+    const result = await storage.create(collectionName, planData);
+    res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -43,11 +37,9 @@ const updatePlan = async (collectionName: string, req: any, res: any) => {
   try {
     const planId = req.params.id;
     const updateData = req.body;
-    await db.collection(collectionName).doc(planId).update({
-      ...updateData,
-      updatedAt: new Date().toISOString(),
-    });
-    res.json({ id: planId, ...updateData });
+    const storage = getStorage();
+    const result = await storage.update(collectionName, planId, updateData);
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -57,7 +49,8 @@ const updatePlan = async (collectionName: string, req: any, res: any) => {
 const deletePlan = async (collectionName: string, req: any, res: any) => {
   try {
     const planId = req.params.id;
-    await db.collection(collectionName).doc(planId).delete();
+    const storage = getStorage();
+    await storage.delete(collectionName, planId);
     res.json({ id: planId, deleted: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

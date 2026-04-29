@@ -18,13 +18,23 @@ if (fs.existsSync(configPath)) {
 // Initialize Firebase Admin SDK
 if (!getApps().length) {
   try {
-    console.log("Initializing Firebase Admin with project:", firebaseConfig.projectId);
-    initializeApp({
-      projectId: firebaseConfig.projectId,
-    });
-    console.log("Firebase Admin initialized successfully");
+    if (firebaseConfig.projectId) {
+      console.log("Initializing Firebase Admin with project:", firebaseConfig.projectId);
+      initializeApp({
+        projectId: firebaseConfig.projectId,
+      });
+      console.log("Firebase Admin initialized successfully");
+    } else {
+      console.warn("Firebase projectId not found in config. Skipping Admin SDK initialization or using ADC.");
+      try {
+        initializeApp();
+        console.log("Firebase Admin initialized via ADC");
+      } catch (adcError) {
+        console.error("Firebase Admin initialization failed both with config and ADC:", adcError);
+      }
+    }
   } catch (error) {
-    console.error("Error initializing Firebase Admin:", error);
+    console.error("Error during Firebase Admin initialization attempt:", error);
   }
 }
 

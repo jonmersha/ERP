@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../firebase.js";
+import { getStorage } from "../services/dbFactory.js";
 
 export const maintenanceRouter = Router();
 
@@ -9,11 +9,8 @@ maintenanceRouter.get("/logs", async (req, res) => {
     const companyId = req.query.companyId as string;
     if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const snapshot = await db.collection("maintenance_logs")
-      .where("companyId", "==", companyId)
-      .get();
-
-    const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const storage = getStorage();
+    const logs = await storage.find("maintenance_logs", { companyId });
     res.json(logs);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -23,11 +20,9 @@ maintenanceRouter.get("/logs", async (req, res) => {
 maintenanceRouter.post("/logs", async (req, res) => {
   try {
     const logData = req.body;
-    const docRef = await db.collection("maintenance_logs").add({
-      ...logData,
-      createdAt: new Date().toISOString()
-    });
-    res.status(201).json({ id: docRef.id, ...logData });
+    const storage = getStorage();
+    const result = await storage.create("maintenance_logs", logData);
+    res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -37,8 +32,9 @@ maintenanceRouter.put("/logs/:id", async (req, res) => {
   try {
     const logId = req.params.id;
     const updateData = req.body;
-    await db.collection("maintenance_logs").doc(logId).update(updateData);
-    res.json({ id: logId, ...updateData });
+    const storage = getStorage();
+    const result = await storage.update("maintenance_logs", logId, updateData);
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -47,7 +43,8 @@ maintenanceRouter.put("/logs/:id", async (req, res) => {
 maintenanceRouter.delete("/logs/:id", async (req, res) => {
   try {
     const logId = req.params.id;
-    await db.collection("maintenance_logs").doc(logId).delete();
+    const storage = getStorage();
+    await storage.delete("maintenance_logs", logId);
     res.json({ id: logId, deleted: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

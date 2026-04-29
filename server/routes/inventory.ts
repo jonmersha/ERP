@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../firebase.js";
+import { getStorage } from "../services/dbFactory.js";
 
 export const inventoryRouter = Router();
 
@@ -11,11 +11,8 @@ inventoryRouter.get("/", async (req, res) => {
       return res.status(400).json({ error: "companyId is required" });
     }
 
-    const snapshot = await db.collection("inventory")
-      .where("companyId", "==", companyId)
-      .get();
-
-    const inventory = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const storage = getStorage();
+    const inventory = await storage.find("inventory", { companyId });
     res.json(inventory);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -25,12 +22,16 @@ inventoryRouter.get("/", async (req, res) => {
 // Get inventory for a specific unit
 inventoryRouter.get("/unit/:unitId", async (req, res) => {
   try {
-    const snapshot = await db.collection("inventory")
-      .where("unitId", "==", req.params.unitId)
-      .get();
-
-    const inventory = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json(inventory);
+    const companyId = req.query.companyId as string;
+    if (!companyId) return res.status(400).json({ error: "companyId is required for filtering" });
+    
+    const storage = getStorage();
+    // We might need a better 'find' that supports multiple filters, but for now we filter by companyId
+    // and manually filter by unitId if the find doesn't support it.
+    // In SQL mode we can improve find, in Firebase too.
+    const allInventory = await storage.find("inventory", { companyId });
+    const filtered = allInventory.filter((item: any) => item.unitId === req.params.unitId);
+    res.json(filtered);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -41,11 +42,9 @@ inventoryRouter.put("/:id", async (req, res) => {
   try {
     const inventoryId = req.params.id;
     const updateData = req.body;
-    await db.collection("inventory").doc(inventoryId).update({
-      ...updateData,
-      updatedAt: new Date().toISOString(),
-    });
-    res.json({ id: inventoryId, ...updateData });
+    const storage = getStorage();
+    const result = await storage.update("inventory", inventoryId, updateData);
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -55,11 +54,11 @@ inventoryRouter.put("/:id", async (req, res) => {
 inventoryRouter.post("/receive-po", async (req, res) => {
   try {
     const { selectedPO, warehouseId, notes, profile } = req.body;
-    const batch = db.batch();
-    const grnRef = db.collection("grns").doc();
-    
+    const storage = getStorage();
+    const companyId = profile?.companyId || selectedPO.companyId || '';
+
+    // Create GRN
     const grnData = {
-      id: grnRef.id,
       purchaseOrderId: selectedPO.id,
       warehouseId: warehouseId,
       receivedBy: profile?.uid || '',
@@ -69,40 +68,35 @@ inventoryRouter.post("/receive-po", async (req, res) => {
         quantityReceived: item.quantity
       })),
       notes: notes,
-      companyId: profile?.companyId || ''
+      companyId: companyId
     };
-    batch.set(grnRef, grnData);
+    const createdGrn = await storage.create("grns", grnData);
 
     const items = selectedPO.items || [];
     for (const item of items) {
-      const inventorySnap = await db.collection("inventory")
-        .where("companyId", "==", profile?.companyId)
-        .where("unitId", "==", warehouseId)
-        .where("itemId", "==", item.itemId)
-        .where("itemType", "==", "raw")
-        .get();
+      // Find current inventory
+      const existingInv = await storage.find("inventory", { companyId });
+      const currentItem = existingInv.find((i: any) => 
+        i.unitId === warehouseId && i.itemId === item.itemId && i.itemType === "raw"
+      );
 
-      if (!inventorySnap.empty) {
-        const invDoc = inventorySnap.docs[0];
-        batch.update(invDoc.ref, {
-          quantity: invDoc.data().quantity + item.quantity
+      if (currentItem) {
+        await storage.update("inventory", currentItem.id, {
+          quantity: (Number(currentItem.quantity) || 0) + Number(item.quantity)
         });
       } else {
-        const newInvRef = db.collection("inventory").doc();
-        batch.set(newInvRef, {
+        await storage.create("inventory", {
           unitId: warehouseId,
           itemId: item.itemId,
           itemType: "raw",
           quantity: item.quantity,
-          createdAt: new Date().toISOString(),
-          companyId: profile?.companyId || ''
+          companyId: companyId
         });
       }
     }
 
-    batch.update(db.collection("purchaseOrders").doc(selectedPO.id), { status: "received" });
-    await batch.commit();
-    res.json({ success: true, grnId: grnRef.id });
+    await storage.update("purchaseOrders", selectedPO.id, { status: "received" });
+    res.json({ success: true, grnId: createdGrn.id });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -112,33 +106,29 @@ inventoryRouter.post("/receive-po", async (req, res) => {
 inventoryRouter.post("/transfer-production", async (req, res) => {
   try {
     const { productId, quantity, warehouseId, profile } = req.body;
-    const batch = db.batch();
+    const storage = getStorage();
+    const companyId = profile?.companyId || '';
     
-    const inventorySnap = await db.collection("inventory")
-      .where("companyId", "==", profile?.companyId)
-      .where("unitId", "==", warehouseId)
-      .where("itemId", "==", productId)
-      .where("itemType", "==", "product")
-      .get();
+    // Find current inventory
+    const existingInv = await storage.find("inventory", { companyId });
+    const currentItem = existingInv.find((i: any) => 
+      i.unitId === warehouseId && i.itemId === productId && i.itemType === "product"
+    );
 
-    if (!inventorySnap.empty) {
-      const invDoc = inventorySnap.docs[0];
-      batch.update(invDoc.ref, {
-        quantity: invDoc.data().quantity + quantity
+    if (currentItem) {
+      await storage.update("inventory", currentItem.id, {
+        quantity: (Number(currentItem.quantity) || 0) + Number(quantity)
       });
     } else {
-      const newInvRef = db.collection("inventory").doc();
-      batch.set(newInvRef, {
+      await storage.create("inventory", {
         unitId: warehouseId,
         itemId: productId,
         itemType: "product",
         quantity: quantity,
-        createdAt: new Date().toISOString(),
-        companyId: profile?.companyId || ''
+        companyId: companyId
       });
     }
 
-    await batch.commit();
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -149,50 +139,51 @@ inventoryRouter.post("/transfer-production", async (req, res) => {
 inventoryRouter.post("/ship-order", async (req, res) => {
   try {
     const { selectedSO, warehouseId, notes, profile } = req.body;
-    const batch = db.batch();
-    const dnRef = db.collection("deliveryNotes").doc();
+    const storage = getStorage();
+    const companyId = profile?.companyId || selectedSO.companyId || '';
     
+    const items = selectedSO.items || [];
+    const existingInv = await storage.find("inventory", { companyId });
+
+    // Validate quantities first
+    for (const item of items) {
+      const currentItem = existingInv.find((i: any) => 
+        i.unitId === warehouseId && i.itemId === item.productId && i.itemType === "product"
+      );
+
+      if (!currentItem || (Number(currentItem.quantity) || 0) < Number(item.quantity)) {
+        throw new Error(`Insufficient stock for ${item.productName || item.productId}`);
+      }
+    }
+
+    // Process updates
+    for (const item of items) {
+      const currentItem = existingInv.find((i: any) => 
+        i.unitId === warehouseId && i.itemId === item.productId && i.itemType === "product"
+      )!;
+
+      await storage.update("inventory", currentItem.id, {
+        quantity: (Number(currentItem.quantity) || 0) - Number(item.quantity)
+      });
+    }
+
+    // Create DN
     const dnData = {
-      id: dnRef.id,
       salesOrderId: selectedSO.id,
       warehouseId: warehouseId,
       shippedBy: profile?.uid || '',
       shippedAt: new Date().toISOString(),
-      items: (selectedSO.items || []).map((item: any) => ({
+      items: items.map((item: any) => ({
         productId: item.productId,
         quantityShipped: item.quantity
       })),
       notes: notes,
-      companyId: profile?.companyId || ''
+      companyId: companyId
     };
-    batch.set(dnRef, dnData);
+    const createdDn = await storage.create("deliveryNotes", dnData);
 
-    const items = selectedSO.items || [];
-    for (const item of items) {
-      const inventorySnap = await db.collection("inventory")
-        .where("companyId", "==", profile?.companyId)
-        .where("unitId", "==", warehouseId)
-        .where("itemId", "==", item.productId)
-        .where("itemType", "==", "product")
-        .get();
-
-      if (!inventorySnap.empty) {
-        const invDoc = inventorySnap.docs[0];
-        const currentQty = invDoc.data().quantity;
-        if (currentQty < item.quantity) {
-           throw new Error(`Insufficient stock for ${item.productName}`);
-        }
-        batch.update(invDoc.ref, {
-          quantity: currentQty - item.quantity
-        });
-      } else {
-        throw new Error(`No stock found for ${item.productName} in the selected warehouse.`);
-      }
-    }
-
-    batch.update(db.collection("salesOrders").doc(selectedSO.id), { status: "shipped" });
-    await batch.commit();
-    res.json({ success: true, dnId: dnRef.id });
+    await storage.update("salesOrders", selectedSO.id, { status: "shipped" });
+    res.json({ success: true, dnId: createdDn.id });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -204,12 +195,12 @@ inventoryRouter.get("/grns", async (req, res) => {
     const companyId = req.query.companyId as string;
     if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const snapshot = await db.collection("grns")
-      .where("companyId", "==", companyId)
-      .orderBy("receivedAt", "desc")
-      .get();
-
-    const grns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const storage = getStorage();
+    const grns = await storage.find("grns", { 
+      companyId,
+      orderByField: "receivedAt",
+      orderDir: "desc"
+    });
     res.json(grns);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -222,12 +213,12 @@ inventoryRouter.get("/delivery-notes", async (req, res) => {
     const companyId = req.query.companyId as string;
     if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const snapshot = await db.collection("deliveryNotes")
-      .where("companyId", "==", companyId)
-      .orderBy("shippedAt", "desc")
-      .get();
-
-    const dns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const storage = getStorage();
+    const dns = await storage.find("deliveryNotes", { 
+      companyId,
+      orderByField: "shippedAt",
+      orderDir: "desc"
+    });
     res.json(dns);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

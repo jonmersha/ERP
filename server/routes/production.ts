@@ -33,7 +33,7 @@ productionRouter.get("/runs", async (req, res) => {
 productionRouter.get("/runs/:id", async (req, res) => {
   try {
     const storage = getStorage();
-    const run = await storage.getOne("productionRuns", req.params.id);
+    const run = await storage.findOne("productionRuns", req.params.id);
     if (!run) {
       return res.status(404).json({ error: "Production run not found" });
     }

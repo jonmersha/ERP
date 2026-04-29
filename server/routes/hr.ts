@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../firebase.js";
+import { getStorage } from "../services/dbFactory.js";
 
 export const hrRouter = Router();
 
@@ -9,11 +9,8 @@ hrRouter.get("/employees", async (req, res) => {
     const companyId = req.query.companyId as string;
     if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const snapshot = await db.collection("employees")
-      .where("companyId", "==", companyId)
-      .get();
-
-    const employees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const storage = getStorage();
+    const employees = await storage.find("employees", { companyId });
     res.json(employees);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -23,11 +20,9 @@ hrRouter.get("/employees", async (req, res) => {
 hrRouter.post("/employees", async (req, res) => {
   try {
     const employeeData = req.body;
-    const docRef = await db.collection("employees").add({
-      ...employeeData,
-      createdAt: new Date().toISOString()
-    });
-    res.status(201).json({ id: docRef.id, ...employeeData });
+    const storage = getStorage();
+    const result = await storage.create("employees", employeeData);
+    res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -37,8 +32,9 @@ hrRouter.put("/employees/:id", async (req, res) => {
   try {
     const employeeId = req.params.id;
     const updateData = req.body;
-    await db.collection("employees").doc(employeeId).update(updateData);
-    res.json({ id: employeeId, ...updateData });
+    const storage = getStorage();
+    const result = await storage.update("employees", employeeId, updateData);
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

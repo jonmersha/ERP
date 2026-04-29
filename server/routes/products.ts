@@ -11,11 +11,8 @@ productRouter.get("/", async (req, res) => {
       return res.status(400).json({ error: "companyId is required" });
     }
 
-    const snapshot = await db.collection("products")
-      .where("companyId", "==", companyId)
-      .get();
-
-    const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const storage = getStorage();
+    const products = await storage.find("products", { companyId });
     res.json(products);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -25,11 +22,12 @@ productRouter.get("/", async (req, res) => {
 // Get a single product
 productRouter.get("/:id", async (req, res) => {
   try {
-    const doc = await db.collection("products").doc(req.params.id).get();
-    if (!doc.exists) {
+    const storage = getStorage();
+    const result = await storage.findOne("products", req.params.id);
+    if (!result) {
       return res.status(404).json({ error: "Product not found" });
     }
-    res.json({ id: doc.id, ...doc.data() });
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -39,11 +37,9 @@ productRouter.get("/:id", async (req, res) => {
 productRouter.post("/", async (req, res) => {
   try {
     const productData = req.body;
-    const docRef = await db.collection("products").add({
-      ...productData,
-      createdAt: new Date().toISOString(),
-    });
-    res.status(201).json({ id: docRef.id, ...productData });
+    const storage = getStorage();
+    const result = await storage.create("products", productData);
+    res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -53,8 +49,9 @@ productRouter.put("/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const data = req.body;
-    await db.collection("products").doc(id).update(data);
-    res.json({ id, ...data });
+    const storage = getStorage();
+    const result = await storage.update("products", id, data);
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -62,7 +59,8 @@ productRouter.put("/:id", async (req, res) => {
 
 productRouter.delete("/:id", async (req, res) => {
   try {
-    await db.collection("products").doc(req.params.id).delete();
+    const storage = getStorage();
+    await storage.delete("products", req.params.id);
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -77,11 +75,8 @@ productRouter.get("/raw-materials", async (req, res) => {
       return res.status(400).json({ error: "companyId is required" });
     }
 
-    const snapshot = await db.collection("rawMaterials")
-      .where("companyId", "==", companyId)
-      .get();
-
-    const materials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const storage = getStorage();
+    const materials = await storage.find("rawMaterials", { companyId });
     res.json(materials);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -91,8 +86,9 @@ productRouter.get("/raw-materials", async (req, res) => {
 productRouter.post("/raw-materials", async (req, res) => {
   try {
     const data = req.body;
-    const docRef = await db.collection("rawMaterials").add(data);
-    res.status(201).json({ id: docRef.id, ...data });
+    const storage = getStorage();
+    const result = await storage.create("rawMaterials", data);
+    res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -102,8 +98,9 @@ productRouter.put("/raw-materials/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const data = req.body;
-    await db.collection("rawMaterials").doc(id).update(data);
-    res.json({ id, ...data });
+    const storage = getStorage();
+    const result = await storage.update("rawMaterials", id, data);
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -111,7 +108,8 @@ productRouter.put("/raw-materials/:id", async (req, res) => {
 
 productRouter.delete("/raw-materials/:id", async (req, res) => {
   try {
-    await db.collection("rawMaterials").doc(req.params.id).delete();
+    const storage = getStorage();
+    await storage.delete("rawMaterials", req.params.id);
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -124,11 +122,8 @@ productRouter.get("/categories", async (req, res) => {
     const companyId = req.query.companyId as string;
     if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const snapshot = await db.collection("categories")
-      .where("companyId", "==", companyId)
-      .get();
-
-    const categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const storage = getStorage();
+    const categories = await storage.find("categories", { companyId });
     res.json(categories);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -138,8 +133,9 @@ productRouter.get("/categories", async (req, res) => {
 productRouter.post("/categories", async (req, res) => {
   try {
     const data = req.body;
-    const docRef = await db.collection("categories").add(data);
-    res.status(201).json({ id: docRef.id, ...data });
+    const storage = getStorage();
+    const result = await storage.create("categories", data);
+    res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -149,8 +145,9 @@ productRouter.put("/categories/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const data = req.body;
-    await db.collection("categories").doc(id).update(data);
-    res.json({ id, ...data });
+    const storage = getStorage();
+    const result = await storage.update("categories", id, data);
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -158,7 +155,8 @@ productRouter.put("/categories/:id", async (req, res) => {
 
 productRouter.delete("/categories/:id", async (req, res) => {
   try {
-    await db.collection("categories").doc(req.params.id).delete();
+    const storage = getStorage();
+    await storage.delete("categories", req.params.id);
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

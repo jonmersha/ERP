@@ -155,7 +155,7 @@ initializeSqlTables().catch(err => console.error('SQL Initialization failed:', e
 
 export interface IStorage {
   find(collection: string, query: any): Promise<any[]>;
-  getOne(collection: string, id: string): Promise<any | null>;
+  findOne(collection: string, id: string): Promise<any | null>;
   create(collection: string, data: any): Promise<any>;
   update(collection: string, id: string, data: any): Promise<any>;
   delete(collection: string, id: string): Promise<void>;
@@ -195,7 +195,7 @@ class SQLStorage implements IStorage {
     }));
   }
 
-  async getOne(collection: string, id: string) {
+  async findOne(collection: string, id: string) {
     await ensureTable(collection);
     const activePool = getPool();
     const [rows]: [any[], any] = await activePool.query(`SELECT * FROM \`${collection}\` WHERE id = ?`, [id]);
@@ -297,7 +297,7 @@ class FirebaseStorage implements IStorage {
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }
 
-  async getOne(collection: string, id: string) {
+  async findOne(collection: string, id: string) {
     const { db } = await import('../firebase.js');
     const doc = await db.collection(collection).doc(id).get();
     if (!doc.exists) return null;
