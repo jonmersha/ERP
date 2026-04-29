@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS `companies` (
 );
 
 -- Users (Linked to Company)
--- Relationship: Many Users -> One Company
 CREATE TABLE IF NOT EXISTS `users` (
   `id` VARCHAR(128) PRIMARY KEY,
   `companyId` VARCHAR(128),
@@ -24,22 +23,22 @@ CREATE TABLE IF NOT EXISTS `users` (
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX (companyId),
-  INDEX (email)
+  INDEX (email),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- Factories
--- Relationship: Many Factories -> One Company
 CREATE TABLE IF NOT EXISTS `factories` (
   `id` VARCHAR(128) PRIMARY KEY,
   `companyId` VARCHAR(128),
   `name` VARCHAR(255),
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX (companyId)
+  INDEX (companyId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- Warehouses
--- Relationship: Many Warehouses -> One Factory
 CREATE TABLE IF NOT EXISTS `warehouses` (
   `id` VARCHAR(128) PRIMARY KEY,
   `companyId` VARCHAR(128),
@@ -47,17 +46,19 @@ CREATE TABLE IF NOT EXISTS `warehouses` (
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX (companyId),
-  INDEX (factoryId)
+  INDEX (factoryId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE,
+  FOREIGN KEY (factoryId) REFERENCES factories(id) ON DELETE CASCADE
 );
 
 -- Outlets (Sales/Distribution Points)
--- Relationship: Many Outlets -> One Company
 CREATE TABLE IF NOT EXISTS `outlets` (
   `id` VARCHAR(128) PRIMARY KEY,
   `companyId` VARCHAR(128),
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX (companyId)
+  INDEX (companyId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- Suppliers
@@ -66,7 +67,8 @@ CREATE TABLE IF NOT EXISTS `suppliers` (
   `companyId` VARCHAR(128),
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX (companyId)
+  INDEX (companyId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- ============================================================================
@@ -79,7 +81,8 @@ CREATE TABLE IF NOT EXISTS `rawMaterials` (
   `companyId` VARCHAR(128),
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX (companyId)
+  INDEX (companyId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- Products
@@ -88,7 +91,8 @@ CREATE TABLE IF NOT EXISTS `products` (
   `companyId` VARCHAR(128),
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX (companyId)
+  INDEX (companyId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- Categories
@@ -97,7 +101,8 @@ CREATE TABLE IF NOT EXISTS `categories` (
   `companyId` VARCHAR(128),
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX (companyId)
+  INDEX (companyId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- ============================================================================
@@ -105,8 +110,6 @@ CREATE TABLE IF NOT EXISTS `categories` (
 -- ============================================================================
 
 -- Inventory
--- Relationship: Many Inventory Items -> One Warehouse/Outlet (unitId)
--- Relationship: Many Inventory Items -> One Product/RawMaterial (itemId)
 CREATE TABLE IF NOT EXISTS `inventory` (
   `id` VARCHAR(128) PRIMARY KEY,
   `companyId` VARCHAR(128),
@@ -117,11 +120,11 @@ CREATE TABLE IF NOT EXISTS `inventory` (
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX (companyId),
   INDEX (unitId),
-  INDEX (itemId)
+  INDEX (itemId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- Purchase Orders
--- Relationship: Many POs -> One Supplier
 CREATE TABLE IF NOT EXISTS `purchaseOrders` (
   `id` VARCHAR(128) PRIMARY KEY,
   `companyId` VARCHAR(128),
@@ -129,11 +132,12 @@ CREATE TABLE IF NOT EXISTS `purchaseOrders` (
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX (companyId),
-  INDEX (supplierId)
+  INDEX (supplierId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE,
+  FOREIGN KEY (supplierId) REFERENCES suppliers(id) ON DELETE CASCADE
 );
 
 -- Sales Orders
--- Relationship: Many Sales Orders -> One Outlet
 CREATE TABLE IF NOT EXISTS `salesOrders` (
   `id` VARCHAR(128) PRIMARY KEY,
   `companyId` VARCHAR(128),
@@ -141,12 +145,12 @@ CREATE TABLE IF NOT EXISTS `salesOrders` (
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX (companyId),
-  INDEX (outletId)
+  INDEX (outletId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE,
+  FOREIGN KEY (outletId) REFERENCES outlets(id) ON DELETE CASCADE
 );
 
 -- Production Runs
--- Relationship: Many Runs -> One Factory
--- Relationship: Many Runs -> One Product
 CREATE TABLE IF NOT EXISTS `productionRuns` (
   `id` VARCHAR(128) PRIMARY KEY,
   `companyId` VARCHAR(128),
@@ -156,11 +160,13 @@ CREATE TABLE IF NOT EXISTS `productionRuns` (
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX (companyId),
   INDEX (factoryId),
-  INDEX (productId)
+  INDEX (productId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE,
+  FOREIGN KEY (factoryId) REFERENCES factories(id) ON DELETE CASCADE,
+  FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE
 );
 
 -- Employees
--- Relationship: Many Employees -> One Factory (Optional)
 CREATE TABLE IF NOT EXISTS `employees` (
   `id` VARCHAR(128) PRIMARY KEY,
   `companyId` VARCHAR(128),
@@ -168,7 +174,9 @@ CREATE TABLE IF NOT EXISTS `employees` (
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX (companyId),
-  INDEX (factoryId)
+  INDEX (factoryId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE,
+  FOREIGN KEY (factoryId) REFERENCES factories(id) ON DELETE CASCADE
 );
 
 -- ============================================================================
@@ -181,7 +189,8 @@ CREATE TABLE IF NOT EXISTS `productionPlans` (
   `companyId` VARCHAR(128),
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX (companyId)
+  INDEX (companyId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- Procurement Plans
@@ -190,7 +199,8 @@ CREATE TABLE IF NOT EXISTS `procurementPlans` (
   `companyId` VARCHAR(128),
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX (companyId)
+  INDEX (companyId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- Sales Plans
@@ -199,7 +209,8 @@ CREATE TABLE IF NOT EXISTS `salesPlans` (
   `companyId` VARCHAR(128),
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX (companyId)
+  INDEX (companyId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 -- Recipes
@@ -210,5 +221,52 @@ CREATE TABLE IF NOT EXISTS `recipes` (
   `data` JSON,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX (companyId),
-  INDEX (productId)
+  INDEX (productId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE,
+  FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE
 );
+
+-- Goods Received Notes (GRNs)
+CREATE TABLE IF NOT EXISTS `grns` (
+  `id` VARCHAR(128) PRIMARY KEY,
+  `companyId` VARCHAR(128),
+  `purchaseOrderId` VARCHAR(128),
+  `warehouseId` VARCHAR(128),
+  `data` JSON,
+  `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX (companyId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE,
+  FOREIGN KEY (purchaseOrderId) REFERENCES purchaseOrders(id) ON DELETE CASCADE
+);
+
+-- Delivery Notes (DNs)
+CREATE TABLE IF NOT EXISTS `deliveryNotes` (
+  `id` VARCHAR(128) PRIMARY KEY,
+  `companyId` VARCHAR(128),
+  `salesOrderId` VARCHAR(128),
+  `warehouseId` VARCHAR(128),
+  `data` JSON,
+  `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX (companyId),
+  FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE,
+  FOREIGN KEY (salesOrderId) REFERENCES salesOrders(id) ON DELETE CASCADE
+);
+
+-- ============================================================================
+-- SEED DATA
+-- ============================================================================
+
+-- Default Company
+INSERT IGNORE INTO `companies` (id, data) VALUES ('company_default', '{"name": "Sheger Main Corp", "type": "Manufacturer"}');
+
+-- Default Admin
+INSERT IGNORE INTO `users` (id, companyId, email, data) VALUES ('admin_1', 'company_default', 'admin@besheger.com', '{"name": "Master Admin", "roles": ["admin"]}');
+
+-- Sample Factory
+INSERT IGNORE INTO `factories` (id, companyId, name, data) VALUES ('factory_1', 'company_default', 'Addis Ababa Plant', '{"location": "Addis Ababa", "capacity": 1000}');
+
+-- Sample Warehouse
+INSERT IGNORE INTO `warehouses` (id, companyId, factoryId, data) VALUES ('wh_1', 'company_default', 'factory_1', '{"name": "Main Raw Storage", "type": "Raw Material"}');
+
+-- Sample Product
+INSERT IGNORE INTO `products` (id, companyId, data) VALUES ('prod_1', 'company_default', '{"name": "High Protein Flour", "sku": "HPF-001", "unit": "kg", "price": 45.00}');

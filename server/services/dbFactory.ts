@@ -115,7 +115,8 @@ const initializeSqlTables = async () => {
           'users', 'companies', 'factories', 'warehouses', 'products', 
           'inventory', 'salesOrders', 'productionRuns', 'procurementPlans', 
           'productionPlans', 'outlets', 'suppliers', 'rawMaterials', 
-          'categories', 'employees', 'purchaseOrders', 'salesPlans'
+          'categories', 'employees', 'purchaseOrders', 'salesPlans', 'recipes',
+          'grns', 'deliveryNotes'
         ];
         
         for (const table of tables) {
@@ -210,11 +211,31 @@ class SQLStorage implements IStorage {
     delete cleanData.id;
     
     const activePool = getPool();
+    
+    // Dynamically identify columns in the table and match them with data fields
+    // This allows promoting some JSON fields to actual columns for indexing/FKs
+    const [columns]: [any[], any] = await activePool.query(`SHOW COLUMNS FROM \`${collection}\``);
+    const colNames = columns.map(c => c.Field);
+    
+    const fields = ['id', 'companyId', 'data'];
+    const values = [id, companyId, JSON.stringify(cleanData)];
+    
+    // Add extra columns if they exist in the incoming data
+    colNames.forEach(col => {
+        if (!fields.includes(col) && data[col] !== undefined && col !== 'createdAt') {
+            fields.push(col);
+            values.push(data[col]);
+        }
+    });
+
+    const placeholders = fields.map(() => '?').join(', ');
+    const updateClause = fields.filter(f => f !== 'id').map(f => `\`${f}\` = VALUES(\`${f}\`)`).join(', ');
+    
     await activePool.query(
-      `INSERT INTO \`${collection}\` (id, companyId, data) 
-       VALUES (?, ?, ?) 
-       ON DUPLICATE KEY UPDATE data = ?, companyId = ?`,
-      [id, companyId, JSON.stringify(cleanData), JSON.stringify(cleanData), companyId]
+      `INSERT INTO \`${collection}\` (${fields.map(f => `\`${f}\``).join(', ')}) 
+       VALUES (${placeholders}) 
+       ON DUPLICATE KEY UPDATE ${updateClause}`,
+      [...values]
     );
       
     return { id, ...cleanData };
@@ -228,9 +249,25 @@ class SQLStorage implements IStorage {
     const newData = { ...currentData, ...data };
     const companyId = newData.companyId || rows[0]?.companyId || '';
     
+    // Dynamically identify columns to update
+    const [columns]: [any[], any] = await activePool.query(`SHOW COLUMNS FROM \`${collection}\``);
+    const colNames = columns.map(c => c.Field);
+    
+    const fields = ['data', 'companyId'];
+    const values = [JSON.stringify(newData), companyId];
+    
+    colNames.forEach(col => {
+        if (!['id', 'companyId', 'data', 'createdAt'].includes(col) && newData[col] !== undefined) {
+            fields.push(col);
+            values.push(newData[col]);
+        }
+    });
+
+    const setClause = fields.map(f => `\`${f}\` = ?`).join(', ');
+    
     await activePool.query(
-      `UPDATE \`${collection}\` SET data = ?, companyId = ? WHERE id = ?`,
-      [JSON.stringify(newData), companyId, id]
+      `UPDATE \`${collection}\` SET ${setClause} WHERE id = ?`,
+      [...values, id]
     );
       
     return { id, ...newData };
