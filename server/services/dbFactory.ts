@@ -7,15 +7,6 @@ let pool: mysql.Pool | null = null;
 
 const getPool = () => {
   if (!pool) {
-    // Cleanup env vars that might have "base"
-    const dbEnvVars = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_DATABASE', 'MYSQL_PASSWORD', 'MYSQL_PORT', 'DATABASE_URL', 'PGHOST', 'PGUSER', 'PGDATABASE', 'PGPASSWORD', 'PGPORT'];
-    dbEnvVars.forEach(v => {
-      const val = process.env[v];
-      if (val && (val.toLowerCase() === 'base' || val.includes('base'))) {
-        delete process.env[v];
-      }
-    });
-
     const options: mysql.PoolOptions = {
       waitForConnections: true,
       connectionLimit: 20,
@@ -25,21 +16,11 @@ const getPool = () => {
       keepAliveInitialDelay: 0,
     };
 
-    // Manual parsing of DATABASE_URL if present to avoid TypeError: Invalid URL in some environments
     let currentConnectionString = process.env.DATABASE_URL;
     if (currentConnectionString === 'undefined' || currentConnectionString === 'null' || (currentConnectionString && currentConnectionString.length < 10)) {
        currentConnectionString = undefined;
     }
     
-    console.log('DB Connection Debug:', {
-      hasConnectionString: !!currentConnectionString,
-      MYSQL_HOST: process.env.MYSQL_HOST,
-      MYSQL_PORT: process.env.MYSQL_PORT,
-      PGHOST: process.env.PGHOST,
-      PGPORT: process.env.PGPORT,
-      DATABASE_URL_START: currentConnectionString ? currentConnectionString.substring(0, 15) + '...' : 'none'
-    });
-
     if (currentConnectionString && currentConnectionString.toLowerCase().startsWith('mysql://')) {
       try {
         console.log('Parsing DATABASE_URL manually...');
@@ -51,7 +32,6 @@ const getPool = () => {
           options.port = parseInt(urlMatch[4]);
           options.database = urlMatch[5];
         } else {
-          // Fallback to simple URL parser but catch error
           const parsed = new URL(currentConnectionString);
           options.user = decodeURIComponent(parsed.username);
           options.password = decodeURIComponent(parsed.password);
@@ -64,21 +44,21 @@ const getPool = () => {
       }
     }
 
-    const isMySQL = currentConnectionString?.toLowerCase().startsWith('mysql://') || process.env.MYSQL_HOST;
-    
-    if (!options.host) options.host = process.env.MYSQL_HOST || (isMySQL ? undefined : process.env.PGHOST) || 'localhost';
-    if (!options.user) options.user = process.env.MYSQL_USER || (isMySQL ? undefined : process.env.PGUSER) || 'erpuser';
-    if (!options.password) options.password = process.env.MYSQL_PASSWORD || (isMySQL ? undefined : process.env.PGPASSWORD) || 'xyz';
-    if (!options.database) options.database = process.env.MYSQL_DATABASE || (isMySQL ? undefined : process.env.PGDATABASE) || 'erpsystem';
+    if (!options.host) options.host = process.env.MYSQL_HOST;
+    if (!options.user) options.user = process.env.MYSQL_USER;
+    if (!options.password) options.password = process.env.MYSQL_PASSWORD;
+    if (!options.database) options.database = process.env.MYSQL_DATABASE;
     if (!options.port) {
-      const envPort = isMySQL ? process.env.MYSQL_PORT : (process.env.MYSQL_PORT || process.env.PGPORT);
-      options.port = parseInt(envPort || '3306');
-      // Intelligent Correction: if it's 3600 and failing, maybe it's 3306?
-      // But we better just trust 3306 by default if 3600 is likely a typo.
-      if (options.port === 3600 && options.host === 'localhost') {
-         console.warn('Port 3600 detected on localhost. This is unusual for MySQL. Defaulting to 3306 unless explicitly required.');
-         options.port = 3306;
-      }
+      options.port = parseInt(process.env.MYSQL_PORT || '3306');
+    }
+
+    // Validation: Enforce env vars
+    if (!options.host || !options.user || !options.database) {
+      const missing = [];
+      if (!options.host) missing.push('MYSQL_HOST');
+      if (!options.user) missing.push('MYSQL_USER');
+      if (!options.database) missing.push('MYSQL_DATABASE');
+      throw new Error(`Missing required database environment variables: ${missing.join(', ')}. Please check your .env file.`);
     }
 
     console.log('Final Database Configuration:', {
