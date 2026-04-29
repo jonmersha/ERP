@@ -23,6 +23,7 @@ const getPool = () => {
       keepAliveInitialDelay: 0,
     };
 
+    let source = "Defaults";
     let currentConnectionString = process.env.DATABASE_URL;
     if (currentConnectionString === 'undefined' || currentConnectionString === 'null' || (currentConnectionString && currentConnectionString.length < 10)) {
        currentConnectionString = undefined;
@@ -30,7 +31,8 @@ const getPool = () => {
     
     if (currentConnectionString && currentConnectionString.toLowerCase().startsWith('mysql://')) {
       try {
-        console.log('Parsing DATABASE_URL manually...');
+        source = "DATABASE_URL";
+        console.log('Parsing configuration from DATABASE_URL...');
         const urlMatch = currentConnectionString.match(/mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
         if (urlMatch) {
           options.user = urlMatch[1];
@@ -48,16 +50,32 @@ const getPool = () => {
         }
       } catch (e) {
         console.warn('Failed to parse DATABASE_URL, falling back to individual env vars:', e);
+        source = "Fallback Individual Vars";
       }
     }
 
-    if (!options.host) options.host = process.env.MYSQL_HOST;
-    if (!options.user) options.user = process.env.MYSQL_USER;
-    if (!options.password) options.password = process.env.MYSQL_PASSWORD;
-    if (!options.database) options.database = process.env.MYSQL_DATABASE;
-    if (!options.port) {
-      const p = process.env.MYSQL_PORT;
-      options.port = parseInt(p || '3306');
+    // Individual variables ALWAYS override DATABASE_URL if explicitly set
+    if (process.env.MYSQL_HOST) {
+        options.host = process.env.MYSQL_HOST;
+        if (source === "DATABASE_URL") console.log('Overriding host from MYSQL_HOST');
+    }
+    if (process.env.MYSQL_USER) {
+        options.user = process.env.MYSQL_USER;
+        if (source === "DATABASE_URL") console.log('Overriding user from MYSQL_USER');
+    }
+    if (process.env.MYSQL_PASSWORD) {
+        options.password = process.env.MYSQL_PASSWORD;
+        if (source === "DATABASE_URL") console.log('Overriding password from MYSQL_PASSWORD');
+    }
+    if (process.env.MYSQL_DATABASE) {
+        options.database = process.env.MYSQL_DATABASE;
+        if (source === "DATABASE_URL") console.log('Overriding database from MYSQL_DATABASE');
+    }
+    if (process.env.MYSQL_PORT) {
+      options.port = parseInt(process.env.MYSQL_PORT);
+      if (source === "DATABASE_URL") console.log('Overriding port from MYSQL_PORT');
+    } else if (!options.port) {
+      options.port = 3306;
     }
 
     if (options.port === 3600 && options.host === 'localhost') {
@@ -96,7 +114,10 @@ const getPool = () => {
     try {
       if (isConfigMissing) {
          console.error('Cannot create MySQL pool: Missing required credentials.');
+         console.log('HINT: If you are running locally, make sure your .env file exists and contains MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE.');
+         console.log('Current source of truth:', source);
       } else {
+         console.log(`Creating MySQL pool for ${options.user}@${options.host}:${options.port}/${options.database}`);
          pool = mysql.createPool(options);
       }
     } catch (createError) {
