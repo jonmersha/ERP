@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import { Company } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, Building2, MapPin, Phone, Mail, Image as ImageIcon } from 'lucide-react';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { apiService } from '../services/apiService';
 
 interface EditCompanyModalProps {
   isOpen: boolean;
@@ -100,14 +98,13 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
     e.preventDefault();
     setLoading(true);
     try {
-      const companyRef = doc(db, 'companies', company.id);
-      await updateDoc(companyRef, {
+      await apiService.updateDocument('companies', company.id, {
         ...formData,
         updatedAt: new Date().toISOString(),
       });
       onClose();
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `companies/${company.id}`);
+      console.error('Error updating company:', error);
     } finally {
       setLoading(false);
     }

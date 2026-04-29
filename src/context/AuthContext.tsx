@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         unsubProfile = onSnapshot(profileRef, (docSnap) => {
           if (docSnap.exists()) {
             const profileData = docSnap.data() as UserProfile;
-            setProfile(profileData);
+            setProfile({ ...profileData, id: docSnap.id, uid: docSnap.id });
 
             // Fetch company data
             if (profileData.companyId) {

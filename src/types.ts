@@ -14,12 +14,14 @@ export interface Company {
 }
 
 export interface UserProfile {
-  uid: string;
+  id?: string;
+  uid?: string;
   email: string;
   name: string;
   roles: UserRole[];
   unitId?: string;
   companyId: string;
+  createdAt?: string;
 }
 
 export interface Factory {

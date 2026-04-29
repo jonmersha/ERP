@@ -27,6 +27,10 @@ export interface FetchOptions {
 class ApiService {
   private mode: 'firebase' | 'sql' = 'firebase';
 
+  constructor() {
+    this.syncModeFromServer();
+  }
+
   setMode(mode: 'firebase' | 'sql') {
     this.mode = mode;
     localStorage.setItem('app_data_mode', mode);

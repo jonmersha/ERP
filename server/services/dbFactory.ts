@@ -7,9 +7,6 @@ let pool: mysql.Pool | null = null;
 
 const getPool = () => {
   if (!pool) {
-    const rawHost = process.env.MYSQL_HOST || process.env.PGHOST; // fallback for transition
-    const rawConnectionString = process.env.DATABASE_URL;
-
     // Cleanup env vars that might have "base"
     const dbEnvVars = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_DATABASE', 'MYSQL_PASSWORD', 'MYSQL_PORT', 'DATABASE_URL', 'PGHOST', 'PGUSER', 'PGDATABASE', 'PGPASSWORD', 'PGPORT'];
     dbEnvVars.forEach(v => {
@@ -19,22 +16,7 @@ const getPool = () => {
       }
     });
 
-    // Use FRESH values after cleanup
-    const currentConnectionString = process.env.DATABASE_URL;
-    const currentHost = process.env.MYSQL_HOST || process.env.PGHOST;
-
-    let finalConnectionString: string | undefined = undefined;
-    if (currentConnectionString && !currentConnectionString.includes('base')) {
-      finalConnectionString = currentConnectionString;
-    }
-
-    let finalHost = currentHost;
-    if (!finalHost || finalHost.trim().toLowerCase() === 'base') {
-      finalHost = 'localhost';
-    }
-
-    const config: mysql.PoolOptions = {
-      uri: finalConnectionString,
+    const options: mysql.PoolOptions = {
       waitForConnections: true,
       connectionLimit: 20,
       queueLimit: 0,
@@ -43,23 +25,76 @@ const getPool = () => {
       keepAliveInitialDelay: 0,
     };
 
-    if (!finalConnectionString) {
-      config.host = finalHost;
-      config.user = process.env.MYSQL_USER || process.env.PGUSER || 'erpuser';
-      config.password = process.env.MYSQL_PASSWORD || process.env.PGPASSWORD || 'xyz';
-      config.database = process.env.MYSQL_DATABASE || process.env.PGDATABASE || 'erpsystem';
-      config.port = parseInt(process.env.MYSQL_PORT || process.env.PGPORT || '3306');
+    // Manual parsing of DATABASE_URL if present to avoid TypeError: Invalid URL in some environments
+    let currentConnectionString = process.env.DATABASE_URL;
+    if (currentConnectionString === 'undefined' || currentConnectionString === 'null' || (currentConnectionString && currentConnectionString.length < 10)) {
+       currentConnectionString = undefined;
     }
-
-    console.log('Final MySQL Pool Config:', {
-      hasConnectionString: !!config.uri,
-      host: config.host,
-      user: config.user,
-      database: config.database,
-      port: config.port
+    
+    console.log('DB Connection Debug:', {
+      hasConnectionString: !!currentConnectionString,
+      MYSQL_HOST: process.env.MYSQL_HOST,
+      MYSQL_PORT: process.env.MYSQL_PORT,
+      PGHOST: process.env.PGHOST,
+      PGPORT: process.env.PGPORT,
+      DATABASE_URL_START: currentConnectionString ? currentConnectionString.substring(0, 15) + '...' : 'none'
     });
 
-    pool = mysql.createPool(config);
+    if (currentConnectionString && currentConnectionString.toLowerCase().startsWith('mysql://')) {
+      try {
+        console.log('Parsing DATABASE_URL manually...');
+        const urlMatch = currentConnectionString.match(/mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
+        if (urlMatch) {
+          options.user = urlMatch[1];
+          options.password = urlMatch[2];
+          options.host = urlMatch[3];
+          options.port = parseInt(urlMatch[4]);
+          options.database = urlMatch[5];
+        } else {
+          // Fallback to simple URL parser but catch error
+          const parsed = new URL(currentConnectionString);
+          options.user = decodeURIComponent(parsed.username);
+          options.password = decodeURIComponent(parsed.password);
+          options.host = parsed.hostname;
+          options.port = parseInt(parsed.port) || 3306;
+          options.database = parsed.pathname.startsWith('/') ? parsed.pathname.slice(1) : parsed.pathname;
+        }
+      } catch (e) {
+        console.warn('Failed to parse DATABASE_URL, falling back to individual env vars:', e);
+      }
+    }
+
+    const isMySQL = currentConnectionString?.toLowerCase().startsWith('mysql://') || process.env.MYSQL_HOST;
+    
+    if (!options.host) options.host = process.env.MYSQL_HOST || (isMySQL ? undefined : process.env.PGHOST) || 'localhost';
+    if (!options.user) options.user = process.env.MYSQL_USER || (isMySQL ? undefined : process.env.PGUSER) || 'erpuser';
+    if (!options.password) options.password = process.env.MYSQL_PASSWORD || (isMySQL ? undefined : process.env.PGPASSWORD) || 'xyz';
+    if (!options.database) options.database = process.env.MYSQL_DATABASE || (isMySQL ? undefined : process.env.PGDATABASE) || 'erpsystem';
+    if (!options.port) {
+      const envPort = isMySQL ? process.env.MYSQL_PORT : (process.env.MYSQL_PORT || process.env.PGPORT);
+      options.port = parseInt(envPort || '3306');
+      // Intelligent Correction: if it's 3600 and failing, maybe it's 3306?
+      // But we better just trust 3306 by default if 3600 is likely a typo.
+      if (options.port === 3600 && options.host === 'localhost') {
+         console.warn('Port 3600 detected on localhost. This is unusual for MySQL. Defaulting to 3306 unless explicitly required.');
+         options.port = 3306;
+      }
+    }
+
+    console.log('Final Database Configuration:', {
+      host: options.host,
+      user: options.user,
+      database: options.database,
+      port: options.port,
+      adapter: 'mysql'
+    });
+
+    try {
+      pool = mysql.createPool(options);
+    } catch (createError) {
+      console.error('CRITICAL: Failed to create MySQL pool:', createError);
+      throw createError;
+    }
   }
   return pool;
 };
@@ -78,7 +113,9 @@ const initializeSqlTables = async () => {
         console.log('SQL Mode detected, ensuring tables...');
         const tables = [
           'users', 'companies', 'factories', 'warehouses', 'products', 
-          'inventory', 'salesOrders', 'productionRuns', 'procurementPlans', 'productionPlans'
+          'inventory', 'salesOrders', 'productionRuns', 'procurementPlans', 
+          'productionPlans', 'outlets', 'suppliers', 'rawMaterials', 
+          'categories', 'employees', 'purchaseOrders', 'salesPlans'
         ];
         
         for (const table of tables) {
@@ -117,6 +154,7 @@ initializeSqlTables().catch(err => console.error('SQL Initialization failed:', e
 
 export interface IStorage {
   find(collection: string, query: any): Promise<any[]>;
+  getOne(collection: string, id: string): Promise<any | null>;
   create(collection: string, data: any): Promise<any>;
   update(collection: string, id: string, data: any): Promise<any>;
   delete(collection: string, id: string): Promise<void>;
@@ -124,15 +162,44 @@ export interface IStorage {
 
 class SQLStorage implements IStorage {
   async find(collection: string, queryOpts: any) {
-    const { companyId } = queryOpts;
+    const { companyId, limitCount, orderByField, orderDir } = queryOpts;
     await ensureTable(collection);
     
     const activePool = getPool();
-    const [rows]: [any[], any] = await activePool.query(`SELECT * FROM \`${collection}\` WHERE companyId = ?`, [companyId]);
+    let sql = `SELECT * FROM \`${collection}\` WHERE companyId = ?`;
+    const params: any[] = [companyId];
+
+    if (orderByField) {
+      const direction = orderDir?.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+      // Basic sanitization for column/field name
+      if (/^[a-zA-Z0-9_]+$/.test(orderByField)) {
+        // Since custom fields are inside data JSON, we might need to handle them differently
+        // or just rely on 'createdAt' which is a real column.
+        if (orderByField === 'createdAt' || orderByField === 'id') {
+          sql += ` ORDER BY ${orderByField} ${direction}`;
+        } else {
+          sql += ` ORDER BY data->>'$.${orderByField}' ${direction}`;
+        }
+      }
+    }
+
+    if (limitCount && !isNaN(parseInt(limitCount))) {
+      sql += ` LIMIT ${parseInt(limitCount)}`;
+    }
+
+    const [rows]: [any[], any] = await activePool.query(sql, params);
     return rows.map((row: any) => ({
       id: row.id,
       ...row.data
     }));
+  }
+
+  async getOne(collection: string, id: string) {
+    await ensureTable(collection);
+    const activePool = getPool();
+    const [rows]: [any[], any] = await activePool.query(`SELECT * FROM \`${collection}\` WHERE id = ?`, [id]);
+    if (rows.length === 0) return null;
+    return { id: rows[0].id, ...rows[0].data };
   }
 
   async create(collection: string, data: any) {
@@ -143,7 +210,6 @@ class SQLStorage implements IStorage {
     delete cleanData.id;
     
     const activePool = getPool();
-    // MySQL INSERT ... ON DUPLICATE KEY UPDATE
     await activePool.query(
       `INSERT INTO \`${collection}\` (id, companyId, data) 
        VALUES (?, ?, ?) 
@@ -157,10 +223,10 @@ class SQLStorage implements IStorage {
   async update(collection: string, id: string, data: any) {
     await ensureTable(collection);
     const activePool = getPool();
-    const [rows]: [any[], any] = await activePool.query(`SELECT data FROM \`${collection}\` WHERE id = ?`, [id]);
+    const [rows]: [any[], any] = await activePool.query(`SELECT data, companyId FROM \`${collection}\` WHERE id = ?`, [id]);
     const currentData = rows[0] ? rows[0].data : {};
     const newData = { ...currentData, ...data };
-    const companyId = newData.companyId || '';
+    const companyId = newData.companyId || rows[0]?.companyId || '';
     
     await activePool.query(
       `UPDATE \`${collection}\` SET data = ?, companyId = ? WHERE id = ?`,
@@ -177,21 +243,60 @@ class SQLStorage implements IStorage {
 }
 
 class FirebaseStorage implements IStorage {
-  async find(collection: string, query: any) {
-    // This would use firebase-admin. Since we want to keep the frontend SDK logic 
-    // for standard Firebase mode, this backend adapter is mostly used as a fallback
-    // or if we decide to move all logic to the backend.
-    console.log(`[Firebase] Fetching ${collection} for company ${query.companyId}`);
-    return []; 
+  async find(collection: string, queryOpts: any) {
+    const { companyId, limitCount, orderByField, orderDir } = queryOpts;
+    const { db } = await import('../firebase.js');
+    let q = db.collection(collection).where("companyId", "==", companyId);
+    
+    if (orderByField) {
+      q = q.orderBy(orderByField, orderDir || 'desc');
+    }
+    
+    if (limitCount) {
+      q = q.limit(parseInt(limitCount));
+    }
+    
+    const snap = await q.get();
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }
+
+  async getOne(collection: string, id: string) {
+    const { db } = await import('../firebase.js');
+    const doc = await db.collection(collection).doc(id).get();
+    if (!doc.exists) return null;
+    return { id: doc.id, ...doc.data() };
+  }
+
   async create(collection: string, data: any) {
-     return { id: 'firebase_id', ...data };
+    const { db } = await import('../firebase.js');
+    const cleanData = { ...data };
+    if (!cleanData.createdAt) cleanData.createdAt = new Date().toISOString();
+    
+    if (data.id) {
+        const id = data.id;
+        delete cleanData.id;
+        await db.collection(collection).doc(id).set(cleanData);
+        return { id, ...cleanData };
+    } else {
+        const docRef = await db.collection(collection).add(cleanData);
+        return { id: docRef.id, ...cleanData };
+    }
   }
+
   async update(collection: string, id: string, data: any) {
-     return { id, ...data };
+    const { db } = await import('../firebase.js');
+    const cleanData = { ...data };
+    delete cleanData.id;
+    await db.collection(collection).doc(id).update({
+        ...cleanData,
+        updatedAt: new Date().toISOString()
+    });
+    return { id, ...cleanData };
   }
+
   async delete(collection: string, id: string) {
-     console.log(`[Firebase] Deleting ${id} from ${collection}`);
+    const { db } = await import('../firebase.js');
+    await db.collection(collection).doc(id).delete();
   }
 }
 

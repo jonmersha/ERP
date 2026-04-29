@@ -5,13 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "start": "node server.ts",
-    "server:dev": "cd server && npm run dev",
-    "server:start": "cd server && npm run start",
+    "start": "NODE_ENV=production node server.ts",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

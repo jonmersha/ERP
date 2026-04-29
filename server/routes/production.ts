@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../firebase.js";
+import { getStorage } from "../services/dbFactory.js";
 
 export const productionRouter = Router();
 
@@ -11,20 +11,18 @@ productionRouter.get("/runs", async (req, res) => {
       return res.status(400).json({ error: "companyId is required" });
     }
 
-    const limit = parseInt(req.query.limit as string) || 100;
+    const limitCount = parseInt(req.query.limit as string) || 100;
     const orderByField = req.query.orderBy as string;
     const orderDir = (req.query.orderDir as string || "desc") as "asc" | "desc";
 
-    let query = db.collection("productionRuns")
-      .where("companyId", "==", companyId);
+    const storage = getStorage();
+    const runs = await storage.find("productionRuns", {
+      companyId,
+      limitCount,
+      orderByField,
+      orderDir
+    });
 
-    if (orderByField) {
-      query = query.orderBy(orderByField, orderDir);
-    }
-
-    const snapshot = await query.limit(limit).get();
-
-    const runs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(runs);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -34,11 +32,12 @@ productionRouter.get("/runs", async (req, res) => {
 // Get a single production run
 productionRouter.get("/runs/:id", async (req, res) => {
   try {
-    const doc = await db.collection("productionRuns").doc(req.params.id).get();
-    if (!doc.exists) {
+    const storage = getStorage();
+    const run = await storage.getOne("productionRuns", req.params.id);
+    if (!run) {
       return res.status(404).json({ error: "Production run not found" });
     }
-    res.json({ id: doc.id, ...doc.data() });
+    res.json(run);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -48,12 +47,9 @@ productionRouter.get("/runs/:id", async (req, res) => {
 productionRouter.post("/runs", async (req, res) => {
   try {
     const runData = req.body;
-    const docRef = await db.collection("productionRuns").add({
-      ...runData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    res.status(201).json({ id: docRef.id, ...runData });
+    const storage = getStorage();
+    const result = await storage.create("productionRuns", runData);
+    res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -64,11 +60,9 @@ productionRouter.put("/runs/:id", async (req, res) => {
   try {
     const runId = req.params.id;
     const updateData = req.body;
-    await db.collection("productionRuns").doc(runId).update({
-      ...updateData,
-      updatedAt: new Date().toISOString(),
-    });
-    res.json({ id: runId, ...updateData });
+    const storage = getStorage();
+    const result = await storage.update("productionRuns", runId, updateData);
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -80,11 +74,8 @@ productionRouter.get("/recipes", async (req, res) => {
     const companyId = req.query.companyId as string;
     if (!companyId) return res.status(400).json({ error: "companyId is required" });
 
-    const snapshot = await db.collection("recipes")
-      .where("companyId", "==", companyId)
-      .get();
-
-    const recipes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const storage = getStorage();
+    const recipes = await storage.find("recipes", { companyId });
     res.json(recipes);
   } catch (error: any) {
     console.error("Error fetching recipes:", error);
@@ -95,11 +86,9 @@ productionRouter.get("/recipes", async (req, res) => {
 productionRouter.post("/recipes", async (req, res) => {
   try {
     const recipeData = req.body;
-    const docRef = await db.collection("recipes").add({
-      ...recipeData,
-      createdAt: new Date().toISOString(),
-    });
-    res.status(201).json({ id: docRef.id, ...recipeData });
+    const storage = getStorage();
+    const result = await storage.create("recipes", recipeData);
+    res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -109,11 +98,9 @@ productionRouter.put("/recipes/:id", async (req, res) => {
   try {
     const recipeId = req.params.id;
     const updateData = req.body;
-    await db.collection("recipes").doc(recipeId).update({
-      ...updateData,
-      updatedAt: new Date().toISOString(),
-    });
-    res.json({ id: recipeId, ...updateData });
+    const storage = getStorage();
+    const result = await storage.update("recipes", recipeId, updateData);
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -122,7 +109,8 @@ productionRouter.put("/recipes/:id", async (req, res) => {
 productionRouter.delete("/recipes/:id", async (req, res) => {
   try {
     const recipeId = req.params.id;
-    await db.collection("recipes").doc(recipeId).delete();
+    const storage = getStorage();
+    await storage.delete("recipes", recipeId);
     res.json({ id: recipeId, deleted: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

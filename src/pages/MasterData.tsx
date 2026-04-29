@@ -15,8 +15,8 @@ import {
   Edit2
 } from 'lucide-react';
 import Modal from '../components/Modal';
-import { db } from '../firebase';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { apiService } from '../services/apiService';
+import { fetchCollection } from '../utils/firestore';
 
 const MasterData: React.FC = () => {
   const { profile, isAdmin } = useAuth();
@@ -45,19 +45,20 @@ const MasterData: React.FC = () => {
     if (!profile?.companyId) return;
     try {
       const companyId = profile.companyId;
-      const collectionsToFetch = [
-        { name: 'factories', setter: setFactories },
-        { name: 'warehouses', setter: setWarehouses },
-        { name: 'products', setter: setProducts },
-        { name: 'rawMaterials', setter: setRawMaterials },
-        { name: 'categories', setter: setCategories },
-      ];
+      
+      const [factoriesData, warehousesData, productsData, rawMaterialsData, categoriesData] = await Promise.all([
+        fetchCollection<Factory>('factories', companyId),
+        fetchCollection<Warehouse>('warehouses', companyId),
+        fetchCollection<Product>('products', companyId),
+        fetchCollection<RawMaterial>('rawMaterials', companyId),
+        fetchCollection<Category>('categories', companyId),
+      ]);
 
-      for (const col of collectionsToFetch) {
-        const q = query(collection(db, col.name), where('companyId', '==', companyId));
-        const snap = await getDocs(q);
-        col.setter(snap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
-      }
+      setFactories(factoriesData);
+      setWarehouses(warehousesData);
+      setProducts(productsData);
+      setRawMaterials(rawMaterialsData);
+      setCategories(categoriesData);
     } catch (error) {
       console.error("Error fetching master data:", error);
     }
@@ -96,22 +97,22 @@ const MasterData: React.FC = () => {
       };
 
       const colName = collectionMapping[activeTab];
+      const formData = {
+        ... (activeTab === 'factories' ? factoryForm : 
+             activeTab === 'warehouses' ? warehouseForm :
+             activeTab === 'products' ? {...productForm, price: Number(productForm.price)} :
+             activeTab === 'raw' ? rawForm : categoryForm),
+        companyId: profile.companyId
+      };
       
       if (editingItem) {
-        await updateDoc(doc(db, colName, editingItem.id), {
-          ... (activeTab === 'factories' ? factoryForm : 
-               activeTab === 'warehouses' ? warehouseForm :
-               activeTab === 'products' ? {...productForm, price: Number(productForm.price)} :
-               activeTab === 'raw' ? rawForm : categoryForm),
+        await apiService.updateDocument(colName, editingItem.id, {
+          ...formData,
           updatedAt: new Date().toISOString()
         });
       } else {
-        await addDoc(collection(db, colName), {
-          ... (activeTab === 'factories' ? factoryForm : 
-               activeTab === 'warehouses' ? warehouseForm :
-               activeTab === 'products' ? {...productForm, price: Number(productForm.price)} :
-               activeTab === 'raw' ? rawForm : categoryForm),
-          companyId: profile.companyId,
+        await apiService.addDocument(colName, {
+          ...formData,
           createdAt: new Date().toISOString()
         });
       }
@@ -143,7 +144,7 @@ const MasterData: React.FC = () => {
           rawMaterials: 'rawMaterials',
           categories: 'categories'
         };
-        await deleteDoc(doc(db, collectionMapping[tab], id));
+        await apiService.deleteDocument(collectionMapping[tab], id);
         await fetchData();
       } catch (error) {
         console.error("Error deleting item:", error);

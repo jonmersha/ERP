@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, query, limit, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '../firebase';
 import { motion } from 'motion/react';
 import { seedDatabase } from '../utils/seedData';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { fetchCollection } from '../utils/firestore';
 import { 
   Factory as FactoryIcon,
@@ -17,7 +14,6 @@ import {
   Building2,
   MapPin,
   Phone,
-  Mail,
   Settings,
   ClipboardList,
   Truck,
@@ -38,7 +34,7 @@ import {
   Cell
 } from 'recharts';
 import EditCompanyModal from '../components/EditCompanyModal';
-import { Product, Factory as FactoryType } from '../types';
+import { Product } from '../types';
 
 const StatCard: React.FC<{ title: string; value: string | number; icon: any; trend?: number; color: string; onClick?: () => void }> = ({ title, value, icon: Icon, trend, color, onClick }) => (
   <motion.div 
@@ -106,8 +102,13 @@ const Dashboard: React.FC = () => {
   const handleSeed = async () => {
     if (!profile?.companyId) return;
     setIsSeeding(true);
-    await seedDatabase(profile.companyId);
-    setIsSeeding(false);
+    try {
+      await seedDatabase(profile.companyId);
+    } catch (err) {
+      console.error('Failed to seed database:', err);
+    } finally {
+      setIsSeeding(false);
+    }
   };
 
   useEffect(() => {
@@ -118,18 +119,7 @@ const Dashboard: React.FC = () => {
         const companyId = profile.companyId;
         
         // Fetch all data in parallel
-        const [
-          factoriesData,
-          warehousesData,
-          ordersData,
-          inventoryData,
-          productsData,
-          recentOrdersData,
-          recentRunsData,
-          allRunsData,
-          procurementPlansData,
-          productionPlansData
-        ] = await Promise.all([
+        const results = await Promise.allSettled([
           fetchCollection('factories', companyId),
           fetchCollection('warehouses', companyId),
           fetchCollection('salesOrders', companyId),
@@ -142,11 +132,27 @@ const Dashboard: React.FC = () => {
           fetchCollection('productionPlans', companyId)
         ]);
 
+        const [
+          factoriesData,
+          warehousesData,
+          ordersData,
+          inventoryData,
+          productsData,
+          recentOrdersData,
+          recentRunsData,
+          allRunsData,
+          procurementPlansData,
+          productionPlansData
+        ] = results.map(r => r.status === 'fulfilled' ? r.value : []);
+
+        if (results.some(r => r.status === 'rejected')) {
+          console.warn('Some dashboard data failed to fetch');
+        }
+
         // Update stats
         const totalRevenue = Array.isArray(ordersData) ? ordersData.reduce((acc: number, doc: any) => acc + (doc.totalAmount || 0), 0) : 0;
         const lowStockCount = Array.isArray(inventoryData) ? inventoryData.filter((doc: any) => doc.quantity < 100).length : 0;
 
-        
         setStats({
           factories: Array.isArray(factoriesData) ? factoriesData.length : 0,
           warehouses: Array.isArray(warehousesData) ? warehousesData.length : 0,

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../firebase.js";
+import { getStorage } from "../services/dbFactory.js";
 
 export const productRouter = Router();
 

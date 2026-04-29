@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
-import { db } from '../firebase';
 import { SalesOrder, Product, SalesOutlet } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { fetchCollection } from '../utils/firestore';
 
 export const useSalesData = () => {
   const { profile } = useAuth();
@@ -15,26 +13,28 @@ export const useSalesData = () => {
   useEffect(() => {
     if (!profile?.companyId) return;
 
-    const companyFilter = where('companyId', '==', profile.companyId);
+    const fetchData = async () => {
+      try {
+        const companyId = profile.companyId;
+        const [ordersData, productsData, outletsData] = await Promise.all([
+          fetchCollection<SalesOrder>('salesOrders', companyId, { orderByField: 'createdAt', orderDir: 'desc' }),
+          fetchCollection<Product>('products', companyId),
+          fetchCollection<SalesOutlet>('outlets', companyId),
+        ]);
 
-    const unsubOrders = onSnapshot(query(collection(db, 'salesOrders'), companyFilter, orderBy('createdAt', 'desc')), (snap) => {
-      setOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SalesOrder)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'salesOrders'));
-
-    const unsubProducts = onSnapshot(query(collection(db, 'products'), companyFilter), (snap) => {
-      setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'products'));
-
-    const unsubOutlets = onSnapshot(query(collection(db, 'outlets'), companyFilter), (snap) => {
-      setOutlets(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SalesOutlet)));
-      setLoading(false);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'outlets'));
-
-    return () => {
-      unsubOrders();
-      unsubProducts();
-      unsubOutlets();
+        setOrders(ordersData);
+        setProducts(productsData);
+        setOutlets(outletsData);
+      } catch (error) {
+        console.error('Error fetching useSalesData:', error);
+      } finally {
+        setLoading(false);
+      }
     };
+
+    fetchData();
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
   }, [profile?.companyId]);
 
   return {

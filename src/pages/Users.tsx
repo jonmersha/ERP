@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc, query, orderBy, where, getDoc, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
 import { UserProfile, UserRole, Company } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { motion } from 'motion/react';
 import { Users as UsersIcon, Shield, Mail, Search, Loader2, CheckCircle, XCircle, Building2, Copy } from 'lucide-react';
 import Modal from '../components/Modal';
+import { apiService } from '../services/apiService';
+import { fetchCollection } from '../utils/firestore';
 
 const Users: React.FC = () => {
   const { isAdmin, profile } = useAuth();
@@ -23,38 +22,42 @@ const Users: React.FC = () => {
   useEffect(() => {
     if (!profile?.companyId) return;
 
-    const companyFilter = where('companyId', '==', profile.companyId);
-    
-    // Fetch users in this company
-    const unsubUsers = onSnapshot(query(collection(db, 'users'), companyFilter), (snap) => {
-      setUsers(snap.docs.map(doc => ({ uid: doc.id, ...doc.data() } as UserProfile)));
-      setLoading(false);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'users'));
-
-    // Fetch company info
-    const fetchCompany = async () => {
-      const companyQuery = query(collection(db, 'companies'), where('id', '==', profile.companyId));
-      const snap = await getDocs(companyQuery);
-      if (!snap.empty) {
-        setCompany({ id: snap.docs[0].id, ...snap.docs[0].data() } as Company);
+    const fetchData = async () => {
+      try {
+        const uData = await fetchCollection<UserProfile>('users', profile.companyId);
+        setUsers(uData);
+        
+        // Fetch company
+        const cData = await fetchCollection<Company>('companies', profile.companyId);
+        if (cData.length > 0) {
+          setCompany(cData[0]);
+        }
+      } catch (err) {
+        console.error('Error fetching users:', err);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchCompany();
 
-    return () => {
-      unsubUsers();
-    };
+    fetchData();
+    
+    // Polling as a fallback for real-time
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
   }, [profile?.companyId]);
 
   const handleUpdateRoles = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedUser) return;
+    if (!selectedUser || !selectedUser.id) return;
     setSubmitting(true);
     try {
-      await updateDoc(doc(db, 'users', selectedUser.uid!), { roles: selectedUser.roles });
+      await apiService.updateDocument('users', selectedUser.id, { roles: selectedUser.roles });
       setIsModalOpen(false);
+      // Refresh
+      const uData = await fetchCollection<UserProfile>('users', profile!.companyId);
+      setUsers(uData);
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${selectedUser.uid}`);
+      console.error('Error updating user roles:', error);
     } finally {
       setSubmitting(false);
     }

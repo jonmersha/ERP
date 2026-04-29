@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
-import { db } from '../firebase';
 import { Factory, Warehouse, SalesOutlet, RawMaterial, Product } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { fetchCollection } from '../utils/firestore';
 
 export const useMasterData = () => {
   const { profile } = useAuth();
@@ -17,36 +15,38 @@ export const useMasterData = () => {
   useEffect(() => {
     if (!profile?.companyId) return;
 
-    const companyFilter = where('companyId', '==', profile.companyId);
+    const fetchData = async () => {
+      try {
+        const companyId = profile.companyId;
+        const [
+          factoriesData,
+          warehousesData,
+          outletsData,
+          materialsData,
+          productsData
+        ] = await Promise.all([
+          fetchCollection<Factory>('factories', companyId),
+          fetchCollection<Warehouse>('warehouses', companyId),
+          fetchCollection<SalesOutlet>('outlets', companyId),
+          fetchCollection<RawMaterial>('rawMaterials', companyId),
+          fetchCollection<Product>('products', companyId),
+        ]);
 
-    const unsubFactories = onSnapshot(query(collection(db, 'factories'), companyFilter), (snap) => {
-      setFactories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Factory)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'factories'));
-
-    const unsubWarehouses = onSnapshot(query(collection(db, 'warehouses'), companyFilter), (snap) => {
-      setWarehouses(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Warehouse)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'warehouses'));
-
-    const unsubOutlets = onSnapshot(query(collection(db, 'outlets'), companyFilter), (snap) => {
-      setOutlets(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SalesOutlet)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'outlets'));
-
-    const unsubMaterials = onSnapshot(query(collection(db, 'rawMaterials'), companyFilter), (snap) => {
-      setMaterials(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as RawMaterial)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'rawMaterials'));
-
-    const unsubProducts = onSnapshot(query(collection(db, 'products'), companyFilter), (snap) => {
-      setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-      setLoading(false);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'products'));
-
-    return () => {
-      unsubFactories();
-      unsubWarehouses();
-      unsubOutlets();
-      unsubMaterials();
-      unsubProducts();
+        setFactories(factoriesData);
+        setWarehouses(warehousesData);
+        setOutlets(outletsData);
+        setMaterials(materialsData);
+        setProducts(productsData);
+      } catch (error) {
+        console.error('Error fetching useMasterData:', error);
+      } finally {
+        setLoading(false);
+      }
     };
+
+    fetchData();
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
   }, [profile?.companyId]);
 
   return {
