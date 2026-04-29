@@ -1,23 +1,4 @@
 
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy as fsOrderBy, 
-  limit as fsLimit,
-  addDoc as fsAddDoc,
-  updateDoc as fsUpdateDoc,
-  deleteDoc as fsDeleteDoc,
-  doc as fsDoc,
-  onSnapshot as fsOnSnapshot
-} from 'firebase/firestore';
-import { db } from '../firebase';
-
-// This service acts as a proxy. 
-// Initially, it uses Firebase. 
-// Later, it will call our Express Backend when we switch to "SQL Mode".
-
 export interface FetchOptions {
   orderByField?: string;
   orderDir?: 'asc' | 'desc';
@@ -25,114 +6,97 @@ export interface FetchOptions {
 }
 
 class ApiService {
-  private mode: 'firebase' | 'sql' = 'firebase';
+  private activeBackend: 'firebase' | 'sql' = 'firebase';
 
-  constructor() {
-    this.syncModeFromServer();
-  }
+  constructor() {}
 
   setMode(mode: 'firebase' | 'sql') {
-    this.mode = mode;
-    localStorage.setItem('app_data_mode', mode);
+    this.activeBackend = mode;
   }
 
   getMode() {
-    return (localStorage.getItem('app_data_mode') as 'firebase' | 'sql') || 'firebase';
+    return this.activeBackend;
   }
 
+  async fetchCollection<T>(collectionName: string, companyId: string, options?: FetchOptions): Promise<T[]> {
+    try {
+      const params = new URLSearchParams({ companyId });
+      if (options?.orderByField) params.append('orderByField', options.orderByField);
+      if (options?.orderDir) params.append('orderDir', options.orderDir);
+      if (options?.limitCount) params.append('limitCount', String(options.limitCount));
+
+      const resp = await fetch(`/api/data/${collectionName}?${params.toString()}`);
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        console.error(`API Error on ${collectionName}:`, resp.status, body);
+        throw new Error(`API Error: ${resp.status} - ${body.details || body.error || 'Unknown error'}`);
+      }
+      return resp.json();
+    } catch (err) {
+      console.error(`Fetch failure on ${collectionName}:`, err);
+      throw err;
+    }
+  }
+
+  subscribeToCollection<T>(collectionName: string, companyId: string, callback: (data: T[]) => void) {
+    // Standard polling for now as backend doesn't support WebSockets yet
+    this.fetchCollection<T>(collectionName, companyId).then(callback);
+    const interval = setInterval(() => {
+      this.fetchCollection<T>(collectionName, companyId).then(callback);
+    }, 5000);
+    return () => clearInterval(interval);
+  }
+
+  async addDocument(collectionName: string, data: any) {
+    const resp = await fetch(`/api/data/${collectionName}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!resp.ok) {
+      const body = await resp.json().catch(() => ({}));
+      throw new Error(`API Error: ${resp.status} - ${body.details || body.error || 'Unknown error'}`);
+    }
+    return resp.json();
+  }
+
+  async updateDocument(collectionName: string, docId: string, data: any) {
+    const resp = await fetch(`/api/data/${collectionName}/${docId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!resp.ok) {
+      const body = await resp.json().catch(() => ({}));
+      throw new Error(`API Error: ${resp.status} - ${body.details || body.error || 'Unknown error'}`);
+    }
+    return resp.json();
+  }
+
+  async deleteDocument(collectionName: string, docId: string) {
+    const resp = await fetch(`/api/data/${collectionName}/${docId}`, {
+      method: 'DELETE'
+    });
+    if (!resp.ok) {
+      const body = await resp.json().catch(() => ({}));
+      throw new Error(`API Error: ${resp.status} - ${body.details || body.error || 'Unknown error'}`);
+    }
+    return resp.json();
+  }
+
+  // Helper for mode sync
   async syncModeFromServer() {
     try {
       const resp = await fetch('/api/settings/backend');
       if (resp.ok) {
         const { activeBackend } = await resp.json();
-        this.setMode(activeBackend);
+        this.activeBackend = activeBackend;
         return activeBackend;
       }
     } catch (err) {
       console.error('Failed to sync mode from server:', err);
     }
-    return this.getMode();
-  }
-
-  async fetchCollection<T>(collectionName: string, companyId: string, options?: FetchOptions): Promise<T[]> {
-    if (this.getMode() === 'sql') {
-      try {
-        const resp = await fetch(`/api/data/${collectionName}?companyId=${companyId}`);
-        if (!resp.ok) {
-          const body = await resp.json().catch(() => ({}));
-          console.error(`API Error on ${collectionName}:`, resp.status, body);
-          throw new Error(`API Error: ${resp.status} - ${body.details || body.error || 'Unknown error'}`);
-        }
-        return resp.json();
-      } catch (err) {
-        console.error(`Fetch failure on ${collectionName}:`, err);
-        throw err;
-      }
-    }
-
-    // Firebase Implementation
-    let q = query(collection(db, collectionName), where('companyId', '==', companyId));
-    if (options?.orderByField) {
-      q = query(q, fsOrderBy(options.orderByField, options.orderDir || 'asc'));
-    }
-    if (options?.limitCount) {
-      q = query(q, fsLimit(options.limitCount));
-    }
-    
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any as T));
-  }
-
-  // Real-time listener placeholder
-  subscribeToCollection<T>(collectionName: string, companyId: string, callback: (data: T[]) => void) {
-    if (this.getMode() === 'sql') {
-      // For SQL, we might use polling or WebSockets. 
-      // For now, let's just do a single fetch for the demo.
-      this.fetchCollection<T>(collectionName, companyId).then(callback);
-      const interval = setInterval(() => {
-        this.fetchCollection<T>(collectionName, companyId).then(callback);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-
-    const q = query(collection(db, collectionName), where('companyId', '==', companyId));
-    return fsOnSnapshot(q, (snapshot) => {
-      callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any as T)));
-    });
-  }
-
-  async addDocument(collectionName: string, data: any) {
-    if (this.getMode() === 'sql') {
-       const resp = await fetch(`/api/data/${collectionName}`, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(data)
-       });
-       return resp.json();
-    }
-    return fsAddDoc(collection(db, collectionName), data);
-  }
-
-  async updateDocument(collectionName: string, docId: string, data: any) {
-    if (this.getMode() === 'sql') {
-       const resp = await fetch(`/api/data/${collectionName}/${docId}`, {
-         method: 'PATCH',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(data)
-       });
-       return resp.json();
-    }
-    return fsUpdateDoc(fsDoc(db, collectionName, docId), data);
-  }
-
-  async deleteDocument(collectionName: string, docId: string) {
-    if (this.getMode() === 'sql') {
-       const resp = await fetch(`/api/data/${collectionName}/${docId}`, {
-         method: 'DELETE'
-       });
-       return resp.json();
-    }
-    return fsDeleteDoc(fsDoc(db, collectionName, docId));
+    return 'firebase'; 
   }
 }
 

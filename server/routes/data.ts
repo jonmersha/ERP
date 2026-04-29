@@ -6,12 +6,12 @@ export const dataRouter = Router();
 
 dataRouter.get('/:collection', async (req, res) => {
     const { collection } = req.params;
-    const { companyId } = req.query;
-    console.log(`[GET] /api/data/${collection}?companyId=${companyId}`);
+    console.log(`[GET] /api/data/${collection}`, req.query);
     
     try {
         const storage = getStorage();
-        const data = await storage.find(collection, { companyId });
+        // Pass all query parameters to find
+        const data = await storage.find(collection, req.query);
         res.json(data);
     } catch (err) {
         console.error(`[GET ERROR] ${collection}:`, err);

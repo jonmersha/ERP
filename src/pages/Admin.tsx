@@ -73,7 +73,7 @@ const Admin: React.FC = () => {
                 <DatabaseZap size={24} />
               </div>
               <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">Storage Infrastructure</h3>
-              <p className="text-sm text-[var(--color-text)]/60 mt-1">Detach storage from Firebase and switch to SQL.</p>
+              <p className="text-sm text-[var(--color-text)]/60 mt-1">Detach storage from Firebase and switch to standard SQL.</p>
            </div>
            
            <div className="mt-6 flex space-x-2">
@@ -86,7 +86,7 @@ const Admin: React.FC = () => {
                   : 'bg-[var(--color-bg)] text-[var(--color-text)] hover:bg-[var(--color-main)]/10'
                 }`}
               >
-                Firebase (NoSQL)
+                Firebase (Live)
               </button>
               <button 
                 onClick={() => switchBackend('sql')}
@@ -97,7 +97,7 @@ const Admin: React.FC = () => {
                   : 'bg-[var(--color-bg)] text-[var(--color-text)] hover:bg-[var(--color-main)]/10'
                 }`}
               >
-                SQL (Mocked)
+                MySQL DB
               </button>
            </div>
         </div>
