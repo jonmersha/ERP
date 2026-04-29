@@ -485,11 +485,11 @@ const Dashboard: React.FC = () => {
                         </p>
                         <div className="flex items-center space-x-2 mt-0.5">
                           <p className="text-[10px] font-bold text-[var(--color-text)]/40 uppercase tracking-widest">
-                            {run.quantityProduced.toLocaleString()} / {run.quantity.toLocaleString()} units
+                            {(run.quantityProduced || 0).toLocaleString()} / {(run.quantity || 0).toLocaleString()} units
                           </p>
                           {run.status !== 'completed' && (
                             <span className="text-[10px] font-bold text-[var(--color-main)] uppercase tracking-widest">
-                              • {(run.quantity - run.quantityProduced).toLocaleString()} left
+                              • {((run.quantity || 0) - (run.quantityProduced || 0)).toLocaleString()} left
                             </span>
                           )}
                         </div>
