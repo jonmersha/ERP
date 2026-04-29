@@ -73,6 +73,9 @@ const getPool = () => {
         HAS_DATABASE_URL: !!process.env.DATABASE_URL
       });
       
+      const envKeys = Object.keys(process.env).filter(key => key.startsWith('MYSQL_') || key === 'DATABASE_URL');
+      console.log('Environment keys found:', envKeys);
+      
       throw new Error(`Missing required database environment variables: ${missing.join(', ')}. Please check your .env file.`);
     }
 
