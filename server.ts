@@ -1,13 +1,10 @@
+import "dotenv/config";
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
-import dotenv from "dotenv";
 import cors from "cors";
-
-dotenv.config();
-
-import { apiRouter } from "./server/routes/index";
+import { apiRouter } from "./server/routes/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

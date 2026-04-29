@@ -63,6 +63,15 @@ const getPool = () => {
       if (!options.host) missing.push('MYSQL_HOST');
       if (!options.user) missing.push('MYSQL_USER');
       if (!options.database) missing.push('MYSQL_DATABASE');
+      
+      console.error('Database connection failed due to missing environment variables.');
+      console.log('Current environment state:', {
+        MYSQL_HOST: process.env.MYSQL_HOST ? 'is set' : 'is MISSING',
+        MYSQL_USER: process.env.MYSQL_USER ? 'is set' : 'is MISSING',
+        MYSQL_DATABASE: process.env.MYSQL_DATABASE ? 'is set' : 'is MISSING',
+        HAS_DATABASE_URL: !!process.env.DATABASE_URL
+      });
+      
       throw new Error(`Missing required database environment variables: ${missing.join(', ')}. Please check your .env file.`);
     }
 
