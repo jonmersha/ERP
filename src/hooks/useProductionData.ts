@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
-import { db } from '../firebase';
 import { Factory, Product, ProductionRun, Recipe, ProductionPlan } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { fetchCollection } from '../utils/firestore';
 
 export const useProductionData = () => {
   const { profile } = useAuth();
@@ -20,27 +18,19 @@ export const useProductionData = () => {
     const fetchData = async () => {
       try {
         const companyId = profile.companyId;
-        const [factoriesRes, runsRes, plansRes, productsRes, recipesRes] = await Promise.all([
-          fetch(`/api/core/factories?companyId=${companyId}`),
-          fetch(`/api/production/runs?companyId=${companyId}&orderBy=startDate&orderDir=desc`),
-          fetch(`/api/plans/production?companyId=${companyId}`),
-          fetch(`/api/products?companyId=${companyId}`),
-          fetch(`/api/production/recipes?companyId=${companyId}`)
-        ]);
-
         const [factoriesData, runsData, plansData, productsData, recipesData] = await Promise.all([
-          factoriesRes.json(),
-          runsRes.json(),
-          plansRes.json(),
-          productsRes.json(),
-          recipesRes.json()
+          fetchCollection('factories', companyId),
+          fetchCollection('productionRuns', companyId, { orderByField: 'startDate', orderDir: 'desc' }),
+          fetchCollection('productionPlans', companyId),
+          fetchCollection('products', companyId),
+          fetchCollection('recipes', companyId)
         ]);
 
-        if (Array.isArray(factoriesData)) setFactories(factoriesData);
-        if (Array.isArray(runsData)) setRuns(runsData);
-        if (Array.isArray(plansData)) setPlans(plansData);
-        if (Array.isArray(productsData)) setProducts(productsData);
-        if (Array.isArray(recipesData)) setRecipes(recipesData);
+        if (Array.isArray(factoriesData)) setFactories(factoriesData as any);
+        if (Array.isArray(runsData)) setRuns(runsData as any);
+        if (Array.isArray(plansData)) setPlans(plansData as any);
+        if (Array.isArray(productsData)) setProducts(productsData as any);
+        if (Array.isArray(recipesData)) setRecipes(recipesData as any);
         
         setLoading(false);
       } catch (error) {

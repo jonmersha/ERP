@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Factory, Warehouse, Product, RawMaterial, Category } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 import { motion } from 'motion/react';
 import { 
   Database, 
@@ -16,6 +15,8 @@ import {
   Edit2
 } from 'lucide-react';
 import Modal from '../components/Modal';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 
 const MasterData: React.FC = () => {
   const { profile, isAdmin } = useAuth();
@@ -40,38 +41,29 @@ const MasterData: React.FC = () => {
   const [rawForm, setRawForm] = useState({ name: '', unit: 'kg' as RawMaterial['unit'] });
   const [categoryForm, setCategoryForm] = useState({ name: '', description: '' });
 
-  useEffect(() => {
+  const fetchData = async () => {
     if (!profile?.companyId) return;
+    try {
+      const companyId = profile.companyId;
+      const collectionsToFetch = [
+        { name: 'factories', setter: setFactories },
+        { name: 'warehouses', setter: setWarehouses },
+        { name: 'products', setter: setProducts },
+        { name: 'rawMaterials', setter: setRawMaterials },
+        { name: 'categories', setter: setCategories },
+      ];
 
-    const fetchData = async () => {
-      try {
-        const companyId = profile.companyId;
-        const [factoriesRes, warehousesRes, productsRes, rawRes, catsRes] = await Promise.all([
-          fetch(`/api/core/factories?companyId=${companyId}`),
-          fetch(`/api/core/warehouses?companyId=${companyId}`),
-          fetch(`/api/products?companyId=${companyId}`),
-          fetch(`/api/products/raw-materials?companyId=${companyId}`),
-          fetch(`/api/products/categories?companyId=${companyId}`)
-        ]);
-
-        const [factoriesData, warehousesData, productsData, rawData, catsData] = await Promise.all([
-          factoriesRes.json(),
-          warehousesRes.json(),
-          productsRes.json(),
-          rawRes.json(),
-          catsRes.json()
-        ]);
-
-        if (Array.isArray(factoriesData)) setFactories(factoriesData);
-        if (Array.isArray(warehousesData)) setWarehouses(warehousesData);
-        if (Array.isArray(productsData)) setProducts(productsData);
-        if (Array.isArray(rawData)) setRawMaterials(rawData);
-        if (Array.isArray(catsData)) setCategories(catsData);
-      } catch (error) {
-        console.error("Error fetching master data:", error);
+      for (const col of collectionsToFetch) {
+        const q = query(collection(db, col.name), where('companyId', '==', companyId));
+        const snap = await getDocs(q);
+        col.setter(snap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
       }
-    };
+    } catch (error) {
+      console.error("Error fetching master data:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, [profile?.companyId]);
 
@@ -94,61 +86,37 @@ const MasterData: React.FC = () => {
     if (!canManage || !profile?.companyId) return;
     setSubmitting(true);
 
-    let url = '';
-    let method = editingItem ? 'PUT' : 'POST';
-    let formData: any = {};
-
     try {
-      switch (activeTab) {
-        case 'factories': 
-          url = '/api/core/factories'; 
-          formData = factoryForm; 
-          break;
-        case 'warehouses': 
-          url = '/api/core/warehouses'; 
-          formData = warehouseForm; 
-          break;
-        case 'products': 
-          url = '/api/products'; 
-          formData = { ...productForm, price: Number(productForm.price) }; 
-          break;
-        case 'raw': 
-          url = '/api/products/raw-materials'; 
-          formData = rawForm; 
-          break;
-        case 'categories': 
-          url = '/api/products/categories'; 
-          formData = categoryForm; 
-          break;
-      }
+      const collectionMapping: Record<string, string> = {
+        factories: 'factories',
+        warehouses: 'warehouses',
+        products: 'products',
+        raw: 'rawMaterials',
+        categories: 'categories'
+      };
 
+      const colName = collectionMapping[activeTab];
+      
       if (editingItem) {
-        url += `/${editingItem.id}`;
+        await updateDoc(doc(db, colName, editingItem.id), {
+          ... (activeTab === 'factories' ? factoryForm : 
+               activeTab === 'warehouses' ? warehouseForm :
+               activeTab === 'products' ? {...productForm, price: Number(productForm.price)} :
+               activeTab === 'raw' ? rawForm : categoryForm),
+          updatedAt: new Date().toISOString()
+        });
+      } else {
+        await addDoc(collection(db, colName), {
+          ... (activeTab === 'factories' ? factoryForm : 
+               activeTab === 'warehouses' ? warehouseForm :
+               activeTab === 'products' ? {...productForm, price: Number(productForm.price)} :
+               activeTab === 'raw' ? rawForm : categoryForm),
+          companyId: profile.companyId,
+          createdAt: new Date().toISOString()
+        });
       }
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, companyId: profile.companyId }),
-      });
-
-      if (!response.ok) throw new Error('Failed to save item');
-      
-      // Refresh data
-      const companyId = profile.companyId;
-      const refreshRes = await fetch(`${url.split('/').slice(0, -1).join('/') || url}?companyId=${companyId}`);
-      const refreshData = await refreshRes.json();
-      
-      if (Array.isArray(refreshData)) {
-        switch (activeTab) {
-          case 'factories': setFactories(refreshData); break;
-          case 'warehouses': setWarehouses(refreshData); break;
-          case 'products': setProducts(refreshData); break;
-          case 'raw': setRawMaterials(refreshData); break;
-          case 'categories': setCategories(refreshData); break;
-        }
-      }
-
+      await fetchData();
       setIsModalOpen(false);
       setEditingItem(null);
       // Reset forms
@@ -168,32 +136,15 @@ const MasterData: React.FC = () => {
     if (!canManage || !profile?.companyId) return;
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-        let url = '';
-        switch (tab) {
-          case 'factories': url = `/api/core/factories/${id}`; break;
-          case 'warehouses': url = `/api/core/warehouses/${id}`; break;
-          case 'products': url = `/api/products/${id}`; break;
-          case 'raw': url = `/api/products/raw-materials/${id}`; break;
-          case 'categories': url = `/api/products/categories/${id}`; break;
-        }
-
-        const response = await fetch(url, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Failed to delete item');
-
-        // Refresh data
-        const companyId = profile.companyId;
-        const refreshRes = await fetch(`${url.split('/').slice(0, -1).join('/')}?companyId=${companyId}`);
-        const refreshData = await refreshRes.json();
-        
-        if (Array.isArray(refreshData)) {
-          switch (tab) {
-            case 'factories': setFactories(refreshData); break;
-            case 'warehouses': setWarehouses(refreshData); break;
-            case 'products': setProducts(refreshData); break;
-            case 'raw': setRawMaterials(refreshData); break;
-            case 'categories': setCategories(refreshData); break;
-          }
-        }
+        const collectionMapping: Record<string, string> = {
+          factories: 'factories',
+          warehouses: 'warehouses',
+          products: 'products',
+          rawMaterials: 'rawMaterials',
+          categories: 'categories'
+        };
+        await deleteDoc(doc(db, collectionMapping[tab], id));
+        await fetchData();
       } catch (error) {
         console.error("Error deleting item:", error);
       }

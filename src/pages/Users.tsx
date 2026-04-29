@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc, query, orderBy, where, getDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, query, orderBy, where, getDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { UserProfile, UserRole, Company } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -23,31 +23,27 @@ const Users: React.FC = () => {
   useEffect(() => {
     if (!profile?.companyId) return;
 
-    const fetchData = async () => {
-      try {
-        const companyId = profile.companyId;
-        const [usersRes, companyRes] = await Promise.all([
-          fetch(`/api/users?companyId=${companyId}`),
-          fetch(`/api/users/company/${companyId}`)
-        ]);
+    const companyFilter = where('companyId', '==', profile.companyId);
+    
+    // Fetch users in this company
+    const unsubUsers = onSnapshot(query(collection(db, 'users'), companyFilter), (snap) => {
+      setUsers(snap.docs.map(doc => ({ uid: doc.id, ...doc.data() } as UserProfile)));
+      setLoading(false);
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'users'));
 
-        const [usersData, companyData] = await Promise.all([
-          usersRes.json(),
-          companyRes.json()
-        ]);
-
-        if (Array.isArray(usersData)) setUsers(usersData);
-        if (companyData && !companyData.error) setCompany(companyData);
-        
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
+    // Fetch company info
+    const fetchCompany = async () => {
+      const companyQuery = query(collection(db, 'companies'), where('id', '==', profile.companyId));
+      const snap = await getDocs(companyQuery);
+      if (!snap.empty) {
+        setCompany({ id: snap.docs[0].id, ...snap.docs[0].data() } as Company);
       }
     };
+    fetchCompany();
 
-    fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      unsubUsers();
+    };
   }, [profile?.companyId]);
 
   const handleUpdateRoles = async (e: React.FormEvent) => {
@@ -55,17 +51,10 @@ const Users: React.FC = () => {
     if (!selectedUser) return;
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/users/${selectedUser.uid}/roles`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roles: selectedUser.roles })
-      });
-      
-      if (!response.ok) throw new Error('Failed to update roles');
-      
+      await updateDoc(doc(db, 'users', selectedUser.uid!), { roles: selectedUser.roles });
       setIsModalOpen(false);
     } catch (error) {
-      console.error("Error updating roles:", error);
+      handleFirestoreError(error, OperationType.UPDATE, `users/${selectedUser.uid}`);
     } finally {
       setSubmitting(false);
     }

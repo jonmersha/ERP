@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { motion } from 'motion/react';
 import { seedDatabase } from '../utils/seedData';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { fetchCollection } from '../utils/firestore';
 import { 
   Factory as FactoryIcon,
   Warehouse, 
@@ -43,7 +44,7 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: any; tre
   <motion.div 
     whileHover={{ scale: 1.02 }}
     onClick={onClick}
-    className={`bg-white dark:bg-[var(--color-surface)] p-4 h-40 flex flex-col justify-between shadow-sm border-b-[3px] border-b-[var(--color-border)] hover:border-b-[var(--color-main)] transition-colors ${onClick ? 'cursor-pointer' : ''}`}
+    className={`bg-[var(--color-surface)] p-4 h-40 flex flex-col justify-between shadow-sm border-b-[3px] border-b-[var(--color-border)] hover:border-b-[var(--color-main)] transition-colors ${onClick ? 'cursor-pointer' : ''}`}
   >
     <div className="flex justify-between items-start">
       <h3 className="text-[var(--color-text)] text-sm font-normal text-left max-w-[70%]">{title}</h3>
@@ -129,21 +130,22 @@ const Dashboard: React.FC = () => {
           procurementPlansData,
           productionPlansData
         ] = await Promise.all([
-          fetch(`/api/core/factories?companyId=${companyId}`).then(r => r.json()),
-          fetch(`/api/core/warehouses?companyId=${companyId}`).then(r => r.json()),
-          fetch(`/api/core/sales-orders?companyId=${companyId}`).then(r => r.json()),
-          fetch(`/api/inventory?companyId=${companyId}`).then(r => r.json()),
-          fetch(`/api/products?companyId=${companyId}`).then(r => r.json()),
-          fetch(`/api/core/sales-orders?companyId=${companyId}&limit=3&orderBy=createdAt&orderDir=desc`).then(r => r.json()),
-          fetch(`/api/production/runs?companyId=${companyId}&limit=3&orderBy=startDate&orderDir=desc`).then(r => r.json()),
-          fetch(`/api/production/runs?companyId=${companyId}`).then(r => r.json()),
-          fetch(`/api/plans/procurement?companyId=${companyId}`).then(r => r.json()),
-          fetch(`/api/plans/production?companyId=${companyId}`).then(r => r.json())
+          fetchCollection('factories', companyId),
+          fetchCollection('warehouses', companyId),
+          fetchCollection('salesOrders', companyId),
+          fetchCollection('inventory', companyId),
+          fetchCollection('products', companyId),
+          fetchCollection('salesOrders', companyId, { limitCount: 3, orderByField: 'createdAt', orderDir: 'desc' }),
+          fetchCollection('productionRuns', companyId, { limitCount: 3, orderByField: 'startDate', orderDir: 'desc' }),
+          fetchCollection('productionRuns', companyId),
+          fetchCollection('procurementPlans', companyId),
+          fetchCollection('productionPlans', companyId)
         ]);
 
         // Update stats
         const totalRevenue = Array.isArray(ordersData) ? ordersData.reduce((acc: number, doc: any) => acc + (doc.totalAmount || 0), 0) : 0;
         const lowStockCount = Array.isArray(inventoryData) ? inventoryData.filter((doc: any) => doc.quantity < 100).length : 0;
+
         
         setStats({
           factories: Array.isArray(factoriesData) ? factoriesData.length : 0,
@@ -203,7 +205,7 @@ const Dashboard: React.FC = () => {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm px-8 py-6 flex flex-col md:flex-row items-center justify-between"
+        className="bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm px-8 py-6 flex flex-col md:flex-row items-center justify-between"
       >
         <div className="flex items-center space-x-6">
           <div className="w-16 h-16 bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center shrink-0">

@@ -1,88 +1,58 @@
 import { ProductionPlan, ProcurementPlan, SalesPlan } from '../types';
+import { db } from '../firebase';
+import { collection, addDoc, doc, updateDoc, deleteDoc, getDocs, query, where } from 'firebase/firestore';
 
-const API_BASE = '/api/plans';
-
-const getPlans = async <T>(type: string, companyId: string): Promise<T[]> => {
-  const response = await fetch(`${API_BASE}/${type}?companyId=${companyId}`);
-  if (!response.ok) throw new Error(`Failed to fetch ${type} plans`);
-  return await response.json();
+const getPlans = async <T>(collectionName: string, companyId: string): Promise<T[]> => {
+  const q = query(collection(db, collectionName), where('companyId', '==', companyId));
+  const snap = await getDocs(q);
+  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
 };
 
-export const getProductionPlans = (companyId: string) => getPlans<ProductionPlan>('production', companyId);
-export const getProcurementPlans = (companyId: string) => getPlans<ProcurementPlan>('procurement', companyId);
-export const getSalesPlans = (companyId: string) => getPlans<SalesPlan>('sales', companyId);
+export const getProductionPlans = (companyId: string) => getPlans<ProductionPlan>('productionPlans', companyId);
+export const getProcurementPlans = (companyId: string) => getPlans<ProcurementPlan>('procurementPlans', companyId);
+export const getSalesPlans = (companyId: string) => getPlans<SalesPlan>('salesPlans', companyId);
 
 export const addProductionPlan = async (plan: Omit<ProductionPlan, 'id'>) => {
-  const response = await fetch(`${API_BASE}/production`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(plan),
-  });
-  return await response.json();
+  const docRef = await addDoc(collection(db, 'productionPlans'), { ...plan, createdAt: new Date().toISOString() });
+  return { id: docRef.id, ...plan };
 };
 
 export const updateProductionPlan = async (id: string, plan: Partial<ProductionPlan>) => {
-  const response = await fetch(`${API_BASE}/production/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(plan),
-  });
-  return await response.json();
+  await updateDoc(doc(db, 'productionPlans', id), plan);
+  return { id, ...plan };
 };
 
 export const deleteProductionPlan = async (id: string) => {
-  const response = await fetch(`${API_BASE}/production/${id}`, {
-    method: 'DELETE',
-  });
-  return await response.json();
+  await deleteDoc(doc(db, 'productionPlans', id));
+  return { id, deleted: true };
 };
 
 export const addProcurementPlan = async (plan: Omit<ProcurementPlan, 'id'>) => {
-  const response = await fetch(`${API_BASE}/procurement`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(plan),
-  });
-  return await response.json();
+  const docRef = await addDoc(collection(db, 'procurementPlans'), { ...plan, createdAt: new Date().toISOString() });
+  return { id: docRef.id, ...plan };
 };
 
 export const updateProcurementPlan = async (id: string, plan: Partial<ProcurementPlan>) => {
-  const response = await fetch(`${API_BASE}/procurement/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(plan),
-  });
-  return await response.json();
+  await updateDoc(doc(db, 'procurementPlans', id), plan);
+  return { id, ...plan };
 };
 
 export const deleteProcurementPlan = async (id: string) => {
-  const response = await fetch(`${API_BASE}/procurement/${id}`, {
-    method: 'DELETE',
-  });
-  return await response.json();
+  await deleteDoc(doc(db, 'procurementPlans', id));
+  return { id, deleted: true };
 };
 
 export const addSalesPlan = async (plan: Omit<SalesPlan, 'id'>) => {
-  const response = await fetch(`${API_BASE}/sales`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(plan),
-  });
-  return await response.json();
+  const docRef = await addDoc(collection(db, 'salesPlans'), { ...plan, createdAt: new Date().toISOString() });
+  return { id: docRef.id, ...plan };
 };
 
 export const updateSalesPlan = async (id: string, plan: Partial<SalesPlan>) => {
-  const response = await fetch(`${API_BASE}/sales/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(plan),
-  });
-  return await response.json();
+  await updateDoc(doc(db, 'salesPlans', id), plan);
+  return { id, ...plan };
 };
 
 export const deleteSalesPlan = async (id: string) => {
-  const response = await fetch(`${API_BASE}/sales/${id}`, {
-    method: 'DELETE',
-  });
-  return await response.json();
+  await deleteDoc(doc(db, 'salesPlans', id));
+  return { id, deleted: true };
 };

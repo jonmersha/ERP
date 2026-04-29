@@ -151,29 +151,40 @@ service cloud.firestore {
     }
 
     match /recipes/{id} {
-      allow read: if canReadCompanyData(resource.data);
+      allow get: if canReadCompanyData(resource.data);
+      allow list: if isAuthenticated() && userExists();
+      allow write: if hasAnyRole(['admin', 'factory_manager']) && belongsToCompany();
+    }
+    match /maintenanceLogs/{id} {
+      allow get: if canReadCompanyData(resource.data);
+      allow list: if isAuthenticated() && userExists();
       allow write: if hasAnyRole(['admin', 'factory_manager']) && belongsToCompany();
     }
 
     // Operational Data
     match /inventory/{id} {
-      allow read: if canReadCompanyData(resource.data);
+      allow get: if canReadCompanyData(resource.data);
+      allow list: if isAuthenticated() && userExists();
       allow write: if hasAnyRole(['store', 'factory_manager']) && belongsToCompany();
     }
     match /purchaseOrders/{id} {
-      allow read: if canReadCompanyData(resource.data);
+      allow get: if canReadCompanyData(resource.data);
+      allow list: if isAuthenticated() && userExists();
       allow write: if hasAnyRole(['procurement', 'finance', 'store']) && belongsToCompany();
     }
     match /productionPlans/{id} {
-      allow read: if canReadCompanyData(resource.data);
+      allow get: if canReadCompanyData(resource.data);
+      allow list: if isAuthenticated() && userExists();
       allow write: if hasRole('factory_manager') && belongsToCompany();
     }
     match /procurementPlans/{id} {
-      allow read: if canReadCompanyData(resource.data);
+      allow get: if canReadCompanyData(resource.data);
+      allow list: if isAuthenticated() && userExists();
       allow write: if hasRole('procurement') && belongsToCompany();
     }
     match /salesPlans/{id} {
-      allow read: if canReadCompanyData(resource.data);
+      allow get: if canReadCompanyData(resource.data);
+      allow list: if isAuthenticated() && userExists();
       allow write: if hasRole('sales') && belongsToCompany();
     }
     match /salesOrders/{id} {
@@ -209,7 +220,8 @@ service cloud.firestore {
       allow write: if hasAnyRole(['finance', 'admin']) && belongsToCompany() && isValidPayment(request.resource.data);
     }
     match /financialPlans/{id} {
-      allow read: if canReadCompanyData(resource.data);
+      allow get: if canReadCompanyData(resource.data);
+      allow list: if isAuthenticated() && userExists();
       allow write: if hasAnyRole(['finance', 'admin']) && belongsToCompany() && isValidFinancialPlan(request.resource.data);
     }
 

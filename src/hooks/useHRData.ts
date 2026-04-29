@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
-import { db } from '../firebase';
 import { Employee, Factory } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { fetchCollection } from '../utils/firestore';
 
 export const useHRData = () => {
   const { profile } = useAuth();
@@ -17,18 +15,13 @@ export const useHRData = () => {
     const fetchData = async () => {
       try {
         const companyId = profile.companyId;
-        const [employeesRes, factoriesRes] = await Promise.all([
-          fetch(`/api/hr/employees?companyId=${companyId}&orderBy=name&orderDir=asc`),
-          fetch(`/api/core/factories?companyId=${companyId}`)
-        ]);
-
         const [employeesData, factoriesData] = await Promise.all([
-          employeesRes.json(),
-          factoriesRes.json()
+          fetchCollection('employees', companyId, { orderByField: 'name', orderDir: 'asc' }),
+          fetchCollection('factories', companyId)
         ]);
 
-        if (Array.isArray(employeesData)) setEmployees(employeesData);
-        if (Array.isArray(factoriesData)) setFactories(factoriesData);
+        if (Array.isArray(employeesData)) setEmployees(employeesData as any);
+        if (Array.isArray(factoriesData)) setFactories(factoriesData as any);
         
         setLoading(false);
       } catch (error) {

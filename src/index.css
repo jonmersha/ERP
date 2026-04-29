@@ -7,28 +7,28 @@
 }
 
 :root {
-  /* SAP Fiori Horizon / Quartz style */
-  --color-main: #0A6ED1;
-  --color-accent: #E9730C;
-  --color-bg: #F4F5F6;
-  --color-text: #1D2D3E;
-  --color-surface: #FFFFFF;
-  --color-shell: #354A5F;
-  --color-shell-text: #FFFFFF;
-  --color-shell-hover: rgba(255, 255, 255, 0.1);
-  --color-border: #D9D9D9;
+  /* Corporate green and yellow */
+  --color-main: #16a34a;
+  --color-accent: #eab308;
+  --color-bg: #f0fdf4;
+  --color-text: #111827;
+  --color-surface: #ffffff;
+  --color-shell: #064e3b;
+  --color-shell-text: #ffffff;
+  --color-shell-hover: rgba(6, 78, 59, 0.2);
+  --color-border: #d1d5db;
 }
 
 [data-theme='dark'] {
-  --color-main: #2B7CFF;
-  --color-accent: #FF8B1F;
-  --color-bg: #1C2228;
-  --color-text: #FAFAFA;
-  --color-surface: #29313A;
-  --color-shell: #141A21;
-  --color-shell-text: #FAFAFA;
+  --color-main: #22c55e;
+  --color-accent: #facc15;
+  --color-bg: #111827;
+  --color-text: #f9fafb;
+  --color-surface: #1f2937;
+  --color-shell: #030712;
+  --color-shell-text: #f9fafb;
   --color-shell-hover: rgba(255, 255, 255, 0.1);
-  --color-border: #4A535B;
+  --color-border: #374151;
 }
 
 body {

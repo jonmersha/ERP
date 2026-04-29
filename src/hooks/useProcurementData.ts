@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
-import { db } from '../firebase';
 import { Supplier, PurchaseOrder, RawMaterial, Factory, Warehouse } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { fetchCollection } from '../utils/firestore';
 
 export const useProcurementData = () => {
   const { profile } = useAuth();
@@ -20,27 +18,19 @@ export const useProcurementData = () => {
     const fetchData = async () => {
       try {
         const companyId = profile.companyId;
-        const [suppliersRes, ordersRes, materialsRes, factoriesRes, warehousesRes] = await Promise.all([
-          fetch(`/api/procurement/suppliers?companyId=${companyId}`),
-          fetch(`/api/procurement/purchase-orders?companyId=${companyId}&orderBy=createdAt&orderDir=desc`),
-          fetch(`/api/products/raw-materials?companyId=${companyId}`),
-          fetch(`/api/core/factories?companyId=${companyId}`),
-          fetch(`/api/core/warehouses?companyId=${companyId}`)
-        ]);
-
         const [suppliersData, ordersData, materialsData, factoriesData, warehousesData] = await Promise.all([
-          suppliersRes.json(),
-          ordersRes.json(),
-          materialsRes.json(),
-          factoriesRes.json(),
-          warehousesRes.json()
+          fetchCollection('suppliers', companyId),
+          fetchCollection('purchaseOrders', companyId, { orderByField: 'createdAt', orderDir: 'desc' }),
+          fetchCollection('rawMaterials', companyId),
+          fetchCollection('factories', companyId),
+          fetchCollection('warehouses', companyId)
         ]);
 
-        if (Array.isArray(suppliersData)) setSuppliers(suppliersData);
-        if (Array.isArray(ordersData)) setOrders(ordersData);
-        if (Array.isArray(materialsData)) setMaterials(materialsData);
-        if (Array.isArray(factoriesData)) setFactories(factoriesData);
-        if (Array.isArray(warehousesData)) setWarehouses(warehousesData);
+        if (Array.isArray(suppliersData)) setSuppliers(suppliersData as any);
+        if (Array.isArray(ordersData)) setOrders(ordersData as any);
+        if (Array.isArray(materialsData)) setMaterials(materialsData as any);
+        if (Array.isArray(factoriesData)) setFactories(factoriesData as any);
+        if (Array.isArray(warehousesData)) setWarehouses(warehousesData as any);
         
         setLoading(false);
       } catch (error) {
