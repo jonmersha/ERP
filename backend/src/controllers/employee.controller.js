@@ -3,14 +3,12 @@ import crypto from 'node:crypto';
 
 export const getAllEmployees = async (req, res) => {
   try {
-    const { companyId } = req.query;
-    let query = 'SELECT * FROM employees';
-    let params = [];
-    if (companyId) {
-      query += ' WHERE company_id = ?';
-      params.push(companyId);
+    const companyId = req.user?.company_id;
+    if (!companyId) {
+      return res.status(400).json({ error: 'User is not associated with a company' });
     }
-    const [rows] = await pool.query(query, params);
+
+    const [rows] = await pool.query('SELECT * FROM employees WHERE company_id = ?', [companyId]);
     
     // map snake_case to camelCase
     const mappedRows = rows.map(row => ({
@@ -29,7 +27,13 @@ export const getAllEmployees = async (req, res) => {
 
 export const createEmployee = async (req, res) => {
   try {
-    const { name, email, department, role, salary, factoryId, hireDate, companyId } = req.body;
+    const { name, email, department, role, salary, factoryId, hireDate } = req.body;
+    const companyId = req.user?.company_id;
+
+    if (!companyId) {
+      return res.status(400).json({ error: 'User is not associated with a company' });
+    }
+
     const id = crypto.randomUUID();
     await pool.query(
       'INSERT INTO employees (id, name, email, department, role, salary, factory_id, hire_date, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -46,10 +50,21 @@ export const updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, department, role, salary, factoryId, hireDate } = req.body;
-    await pool.query(
-      'UPDATE employees SET name = ?, email = ?, department = ?, role = ?, salary = ?, factory_id = ?, hire_date = ? WHERE id = ?',
-      [name, email, department, role, salary, factoryId, hireDate, id]
+    const companyId = req.user?.company_id;
+
+    if (!companyId) {
+      return res.status(400).json({ error: 'User is not associated with a company' });
+    }
+
+    const [result] = await pool.query(
+      'UPDATE employees SET name = ?, email = ?, department = ?, role = ?, salary = ?, factory_id = ?, hire_date = ? WHERE id = ? AND company_id = ?',
+      [name, email, department, role, salary, factoryId, hireDate, id, companyId]
     );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Employee not found or unauthorized' });
+    }
+
     res.json({ message: 'Employee updated' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update employee' });
@@ -59,7 +74,18 @@ export const updateEmployee = async (req, res) => {
 export const deleteEmployee = async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query('DELETE FROM employees WHERE id = ?', [id]);
+    const companyId = req.user?.company_id;
+
+    if (!companyId) {
+      return res.status(400).json({ error: 'User is not associated with a company' });
+    }
+
+    const [result] = await pool.query('DELETE FROM employees WHERE id = ? AND company_id = ?', [id, companyId]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Employee not found or unauthorized' });
+    }
+
     res.json({ message: 'Employee deleted' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete employee' });

@@ -1,19 +1,5 @@
 
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy as fsOrderBy, 
-  limit as fsLimit,
-  addDoc as fsAddDoc,
-  updateDoc as fsUpdateDoc,
-  deleteDoc as fsDeleteDoc,
-  doc as fsDoc,
-  onSnapshot as fsOnSnapshot
-} from 'firebase/firestore';
-import { db, auth } from '../firebase';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
+import { auth } from '../firebase';
 
 export interface FetchOptions {
   orderByField?: string;
