@@ -50,6 +50,21 @@ class ApiService {
     }
   }
 
+  async get<T>(endpoint: string): Promise<T> {
+    const headers = await this.getHeaders();
+    try {
+      const response = await fetch(`${this.getBaseUrl()}/${endpoint}`, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) throw new Error('Failed to get');
+      return await response.json();
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
   async put<T>(endpoint: string, data: any): Promise<T> {
     const headers = await this.getHeaders();
     try {
@@ -59,6 +74,21 @@ class ApiService {
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error('Failed to put');
+      return await response.json();
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async delete<T>(endpoint: string): Promise<T> {
+    const headers = await this.getHeaders();
+    try {
+      const response = await fetch(`${this.getBaseUrl()}/${endpoint}`, {
+        method: 'DELETE',
+        headers,
+      });
+      if (!response.ok) throw new Error('Failed to delete');
       return await response.json();
     } catch (error) {
       console.error(error);
