@@ -1,10 +1,9 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { auth } from '../firebase';
+import { apiService } from '../services/apiService';
 import { UserProfile, Company } from '../types';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 
 interface AuthContextType {
   user: User | null;
@@ -33,67 +32,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let unsubProfile: (() => void) | null = null;
-    let unsubCompany: (() => void) | null = null;
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       
-      // Cleanup previous listeners
-      if (unsubProfile) {
-        unsubProfile();
-        unsubProfile = null;
-      }
-      if (unsubCompany) {
-        unsubCompany();
-        unsubCompany = null;
-      }
-
       if (user) {
-        const profileRef = doc(db, 'users', user.uid);
-        unsubProfile = onSnapshot(profileRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const profileData = docSnap.data() as UserProfile;
-            setProfile({ ...profileData, id: docSnap.id, uid: docSnap.id });
+        console.log('User signed in. Fetching profile/company from backend.');
+        try {
+          const profile = await apiService.get<UserProfile>(`users/${user.uid}`);
+          setProfile(profile);
 
-            // Fetch company data
-            if (profileData.companyId) {
-              const companyRef = doc(db, 'companies', profileData.companyId);
-              unsubCompany = onSnapshot(companyRef, (companySnap) => {
-                if (companySnap.exists()) {
-                  setCompany(companySnap.data() as Company);
-                } else {
-                  setCompany(null);
-                }
-                setLoading(false);
-              }, (error) => {
-                setLoading(false);
-                handleFirestoreError(error, OperationType.GET, `companies/${profileData.companyId}`);
-              });
-            } else {
-              setCompany(null);
-              setLoading(false);
-            }
-          } else {
-            setProfile(null);
-            setCompany(null);
-            setLoading(false);
+          if (profile.companyId) {
+            const company = await apiService.get<Company>(`companies/${profile.companyId}`);
+            setCompany(company);
           }
-        }, (error) => {
-          setLoading(false);
-          handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
-        });
+        } catch (e) {
+          console.error("Failed to fetch profile/company", e);
+        }
       } else {
+        console.log('No user signed in');
         setProfile(null);
         setCompany(null);
-        setLoading(false);
       }
+      setLoading(false);
     });
 
     return () => {
       unsubscribe();
-      if (unsubProfile) unsubProfile();
-      if (unsubCompany) unsubCompany();
     };
   }, []);
 
