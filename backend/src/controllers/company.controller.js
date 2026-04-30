@@ -40,8 +40,14 @@ import crypto from 'node:crypto';
  */
 export const getAllCompanies = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM companies');
-    res.json(rows);
+    const { code } = req.query;
+    if (code) {
+      const [rows] = await pool.query('SELECT * FROM companies WHERE code = ?', [code]);
+      res.json(rows);
+    } else {
+      const [rows] = await pool.query('SELECT * FROM companies');
+      res.json(rows);
+    }
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch companies' });
   }
@@ -58,6 +64,16 @@ export const createCompany = async (req, res) => {
     res.status(201).json({ id: companyId });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create company' });
+  }
+};
+
+export const getCompany = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT * FROM companies WHERE id = ?', [id]);
+    res.json(rows[0] || null);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch company' });
   }
 };
 

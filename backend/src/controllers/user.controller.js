@@ -28,9 +28,17 @@ import crypto from 'node:crypto';
  */
 export const getUser = async (req, res) => {
   try {
-    const { uid } = req.params;
-    const [rows] = await pool.query('SELECT * FROM users WHERE uid = ?', [uid]);
-    res.json(rows[0] || null);
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT * FROM users WHERE uid = ?', [id]);
+    if (rows.length > 0) {
+      const user = rows[0];
+      // map snake_case to camelCase
+      user.companyId = user.company_id;
+      user.unitId = user.unit_id;
+      res.json(user);
+    } else {
+      res.json(null);
+    }
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user' });
   }
@@ -38,10 +46,13 @@ export const getUser = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { uid, email, name, roles, unit_id, company_id } = req.body;
+    const { uid, email, name, roles, unit_id, unitId, company_id, companyId } = req.body;
+    const finalUnitId = unit_id || unitId || null;
+    const finalCompanyId = company_id || companyId || null;
+    
     await pool.query(
       'INSERT INTO users (uid, email, name, roles, unit_id, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [uid, email, name, JSON.stringify(roles), unit_id, company_id]
+      [uid, email, name, JSON.stringify(roles), finalUnitId, finalCompanyId]
     );
     res.status(201).json({ uid });
   } catch (error) {
@@ -51,11 +62,15 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const { uid } = req.params;
-    const { email, name, roles, unit_id } = req.body;
+    const { id } = req.params;
+    const { email, name, roles, unit_id, unitId, company_id, companyId } = req.body;
+    const finalUnitId = unit_id || unitId || null;
+    const finalCompanyId = company_id || companyId || null;
+    
+    // Optionally also update company_id if provided. Currently not in the query below, adding it.
     await pool.query(
-      'UPDATE users SET email = ?, name = ?, roles = ?, unit_id = ? WHERE uid = ?',
-      [email, name, JSON.stringify(roles), unit_id, uid]
+      'UPDATE users SET email = ?, name = ?, roles = ?, unit_id = ?, company_id = ? WHERE uid = ?',
+      [email, name, JSON.stringify(roles), finalUnitId, finalCompanyId, id]
     );
     res.json({ message: 'User updated' });
   } catch (error) {
@@ -65,8 +80,8 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
-    const { uid } = req.params;
-    await pool.query('DELETE FROM users WHERE uid = ?', [uid]);
+    const { id } = req.params;
+    const [rows] = await pool.query('DELETE FROM users WHERE uid = ?', [id]);
     res.json({ message: 'User deleted' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete user' });
