@@ -32,9 +32,11 @@ export const createDeliveryNote = async (req, res) => {
   try {
     const { salesOrderId, outletId, dispatchDate, status, companyId } = req.body;
     const id = crypto.randomUUID();
+    const formattedDispatchDate = dispatchDate ? new Date(dispatchDate).toISOString().slice(0, 19).replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' ');
+
     await pool.query(
       'INSERT INTO delivery_notes (id, sales_order_id, outlet_id, dispatch_date, status, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, salesOrderId, outletId, dispatchDate || new Date(), status || 'dispatched', companyId]
+      [id, salesOrderId, outletId, formattedDispatchDate, status || 'dispatched', companyId]
     );
     res.status(201).json({ id });
   } catch (error) {

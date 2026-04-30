@@ -69,9 +69,11 @@ export const createInventory = async (req, res) => {
   try {
     const { id, unit_id, item_id, item_type, quantity, batch_number, expiry_date, company_id } = req.body;
     const inventoryId = id || crypto.randomUUID();
+    const formattedExpiryDate = expiry_date ? new Date(expiry_date).toISOString().split('T')[0] : null;
+
     await pool.query(
       'INSERT INTO inventory (id, unit_id, item_id, item_type, quantity, batch_number, expiry_date, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [inventoryId, unit_id, item_id, item_type, quantity, batch_number, expiry_date, company_id]
+      [inventoryId, unit_id, item_id, item_type, quantity, batch_number, formattedExpiryDate, company_id]
     );
     res.status(201).json({ id: inventoryId });
   } catch (error) {
@@ -83,9 +85,11 @@ export const updateInventory = async (req, res) => {
   try {
     const { id } = req.params;
     const { unit_id, item_id, item_type, quantity, batch_number, expiry_date } = req.body;
+    const formattedExpiryDate = expiry_date ? new Date(expiry_date).toISOString().split('T')[0] : null;
+
     await pool.query(
       'UPDATE inventory SET unit_id = ?, item_id = ?, item_type = ?, quantity = ?, batch_number = ?, expiry_date = ? WHERE id = ?',
-      [unit_id, item_id, item_type, quantity, batch_number, expiry_date, id]
+      [unit_id, item_id, item_type, quantity, batch_number, formattedExpiryDate, id]
     );
     res.json({ message: 'Inventory item updated' });
   } catch (error) {

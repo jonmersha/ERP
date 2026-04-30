@@ -98,6 +98,115 @@ import pool from './src/db.js';
 const initDb = async () => {
 try {
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS units (
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        location TEXT,
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_unit_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS warehouses (
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        location TEXT NOT NULL,
+        factory_id CHAR(36),
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_warehouse_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sales_outlets (
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        location TEXT NOT NULL,
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_outlet_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS suppliers (
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        contact VARCHAR(255),
+        email VARCHAR(255),
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_supplier_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS raw_materials (
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        unit VARCHAR(20) NOT NULL,
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_material_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS purchase_orders (
+        id CHAR(36) PRIMARY KEY,
+        supplier_id CHAR(36) NOT NULL,
+        factory_id CHAR(36),
+        status ENUM('draft', 'ordered', 'received', 'cancelled') DEFAULT 'draft',
+        total_amount DECIMAL(12, 2) NOT NULL,
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_po_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sales_orders (
+        id CHAR(36) PRIMARY KEY,
+        customer_id CHAR(36),
+        outlet_id CHAR(36),
+        status ENUM('draft', 'confirmed', 'shipped', 'delivered', 'cancelled') DEFAULT 'draft',
+        total_amount DECIMAL(12, 2) NOT NULL,
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_so_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS inventory (
+        id CHAR(36) PRIMARY KEY,
+        unit_id CHAR(36) NOT NULL,
+        item_id CHAR(36) NOT NULL,
+        item_type ENUM('product', 'material') NOT NULL,
+        quantity DECIMAL(12, 2) NOT NULL,
+        batch_number VARCHAR(100),
+        expiry_date DATE,
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_inv_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS production_runs (
+        id CHAR(36) PRIMARY KEY,
+        factory_id CHAR(36) NOT NULL,
+        product_id CHAR(36) NOT NULL,
+        recipe_id CHAR(36) NOT NULL,
+        quantity_planned DECIMAL(12, 2) NOT NULL,
+        quantity_produced DECIMAL(12, 2) DEFAULT 0,
+        status ENUM('scheduled', 'in_progress', 'completed', 'cancelled') DEFAULT 'scheduled',
+        start_date DATETIME,
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_run_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS companies (
         id CHAR(36) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,

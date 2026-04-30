@@ -35,9 +35,11 @@ export const createEmployee = async (req, res) => {
     }
 
     const id = crypto.randomUUID();
+    const formattedHireDate = hireDate ? new Date(hireDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+    
     await pool.query(
       'INSERT INTO employees (id, name, email, department, role, salary, factory_id, hire_date, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, name, email, department, role, salary, factoryId, hireDate || new Date(), companyId]
+      [id, name, email, department, role, salary, factoryId, formattedHireDate, companyId]
     );
     res.status(201).json({ id });
   } catch (error) {
@@ -56,9 +58,11 @@ export const updateEmployee = async (req, res) => {
       return res.status(400).json({ error: 'User is not associated with a company' });
     }
 
+    const formattedHireDate = hireDate ? new Date(hireDate).toISOString().split('T')[0] : null;
+
     const [result] = await pool.query(
       'UPDATE employees SET name = ?, email = ?, department = ?, role = ?, salary = ?, factory_id = ?, hire_date = ? WHERE id = ? AND company_id = ?',
-      [name, email, department, role, salary, factoryId, hireDate, id, companyId]
+      [name, email, department, role, salary, factoryId, formattedHireDate, id, companyId]
     );
 
     if (result.affectedRows === 0) {

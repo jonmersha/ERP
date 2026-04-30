@@ -32,9 +32,11 @@ export const createGRN = async (req, res) => {
   try {
     const { purchaseOrderId, warehouseId, receiptDate, status, companyId } = req.body;
     const id = crypto.randomUUID();
+    const formattedReceiptDate = receiptDate ? new Date(receiptDate).toISOString().slice(0, 19).replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' ');
+
     await pool.query(
       'INSERT INTO grns (id, purchase_order_id, warehouse_id, receipt_date, status, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, purchaseOrderId, warehouseId, receiptDate || new Date(), status || 'received', companyId]
+      [id, purchaseOrderId, warehouseId, formattedReceiptDate, status || 'received', companyId]
     );
     res.status(201).json({ id });
   } catch (error) {

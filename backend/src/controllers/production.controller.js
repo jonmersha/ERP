@@ -71,9 +71,11 @@ export const createProductionRun = async (req, res) => {
   try {
     const { id, factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, start_date, company_id } = req.body;
     const runId = id || crypto.randomUUID();
+    const formattedStartDate = start_date ? new Date(start_date).toISOString().slice(0, 19).replace('T', ' ') : null;
+
     await pool.query(
       'INSERT INTO production_runs (id, factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, start_date, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [runId, factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, start_date, company_id]
+      [runId, factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, formattedStartDate, company_id]
     );
     res.status(201).json({ id: runId });
   } catch (error) {
@@ -85,9 +87,11 @@ export const updateProductionRun = async (req, res) => {
   try {
     const { id } = req.params;
     const { factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, start_date } = req.body;
+    const formattedStartDate = start_date ? new Date(start_date).toISOString().slice(0, 19).replace('T', ' ') : null;
+
     await pool.query(
       'UPDATE production_runs SET factory_id = ?, product_id = ?, recipe_id = ?, quantity_planned = ?, quantity_produced = ?, status = ?, start_date = ? WHERE id = ?',
-      [factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, start_date, id]
+      [factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, formattedStartDate, id]
     );
     res.json({ message: 'Production run updated' });
   } catch (error) {
