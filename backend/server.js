@@ -14,6 +14,7 @@ import supplierRoutes from './src/routes/supplier.routes.js';
 import rawMaterialRoutes from './src/routes/rawMaterial.routes.js';
 import productRoutes from './src/routes/product.routes.js';
 import productionPlanRoutes from './src/routes/productionPlan.routes.js';
+import categoryRoutes from './src/routes/category.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 
@@ -65,7 +66,19 @@ app.use('/api/outlets', outletRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/rawMaterials', rawMaterialRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
 app.use('/api/productionPlans', productionPlanRoutes);
+
+import pool from './src/db.js';
+pool.query(`
+  CREATE TABLE IF NOT EXISTS categories (
+      id CHAR(36) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      company_id CHAR(36) NOT NULL,
+      CONSTRAINT fk_category_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB;
+`).then(() => console.log('Categories table ensured')).catch(console.error);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);

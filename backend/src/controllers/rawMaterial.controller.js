@@ -40,8 +40,20 @@ import crypto from 'node:crypto';
  */
 export const getAllRawMaterials = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM raw_materials');
-    res.json(rows);
+    const { companyId } = req.query;
+    let query = 'SELECT * FROM raw_materials';
+    let params = [];
+    if (companyId) {
+      query += ' WHERE company_id = ?';
+      params.push(companyId);
+    }
+    const [rows] = await pool.query(query, params);
+    
+    const mappedRows = rows.map(row => ({
+      ...row,
+      companyId: row.company_id
+    }));
+    res.json(mappedRows);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch raw materials' });
   }
@@ -49,11 +61,12 @@ export const getAllRawMaterials = async (req, res) => {
 
 export const createRawMaterial = async (req, res) => {
   try {
-    const { id, name, unit, company_id } = req.body;
+    const { id, name, unit, company_id, companyId } = req.body;
     const materialId = id || crypto.randomUUID();
+    const finalCompanyId = company_id || companyId;
     await pool.query(
       'INSERT INTO raw_materials (id, name, unit, company_id) VALUES (?, ?, ?, ?)',
-      [materialId, name, unit, company_id]
+      [materialId, name, unit, finalCompanyId]
     );
     res.status(201).json({ id: materialId });
   } catch (error) {

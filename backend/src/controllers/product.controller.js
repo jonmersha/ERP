@@ -63,11 +63,13 @@ export const getAllProducts = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   try {
-    const { id, name, category, package_size, unit, price, company_id } = req.body;
+    const { id, name, category, package_size, packageSize, unit, price, company_id, companyId } = req.body;
     const productId = id || crypto.randomUUID();
+    const finalPackageSize = package_size || packageSize;
+    const finalCompanyId = company_id || companyId;
     await pool.query(
       'INSERT INTO products (id, name, category, package_size, unit, price, company_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [productId, name, category, package_size, unit, price, company_id]
+      [productId, name, category, finalPackageSize, unit, price, finalCompanyId]
     );
     res.status(201).json({ id: productId });
   } catch (error) {
@@ -78,10 +80,11 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, package_size, unit, price } = req.body;
+    const { name, category, package_size, packageSize, unit, price } = req.body;
+    const finalPackageSize = package_size || packageSize;
     await pool.query(
       'UPDATE products SET name = ?, category = ?, package_size = ?, unit = ?, price = ? WHERE id = ?',
-      [name, category, package_size, unit, price, id]
+      [name, category, finalPackageSize, unit, price, id]
     );
     res.json({ message: 'Product updated' });
   } catch (error) {

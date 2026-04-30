@@ -61,11 +61,12 @@ export const getAllFactories = async (req, res) => {
 
 export const createFactory = async (req, res) => {
   try {
-    const { id, name, location, company_id } = req.body;
+    const { id, name, location, company_id, companyId } = req.body;
     const factoryId = id || crypto.randomUUID();
+    const finalCompanyId = company_id || companyId;
     await pool.query(
       'INSERT INTO factories (id, name, location, company_id) VALUES (?, ?, ?, ?)',
-      [factoryId, name, location, company_id]
+      [factoryId, name, location, finalCompanyId]
     );
     res.status(201).json({ id: factoryId });
   } catch (error) {

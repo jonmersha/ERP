@@ -62,11 +62,13 @@ export const getAllWarehouses = async (req, res) => {
 
 export const createWarehouse = async (req, res) => {
   try {
-    const { id, name, location, factory_id, company_id } = req.body;
+    const { id, name, location, factory_id, factoryId, company_id, companyId } = req.body;
     const warehouseId = id || crypto.randomUUID();
+    const finalFactoryId = factory_id || factoryId || null;
+    const finalCompanyId = company_id || companyId;
     await pool.query(
       'INSERT INTO warehouses (id, name, location, factory_id, company_id) VALUES (?, ?, ?, ?, ?)',
-      [warehouseId, name, location, factory_id, company_id]
+      [warehouseId, name, location, finalFactoryId, finalCompanyId]
     );
     res.status(201).json({ id: warehouseId });
   } catch (error) {
@@ -77,10 +79,11 @@ export const createWarehouse = async (req, res) => {
 export const updateWarehouse = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, location, factory_id } = req.body;
+    const { name, location, factory_id, factoryId } = req.body;
+    const finalFactoryId = factory_id || factoryId || null;
     await pool.query(
       'UPDATE warehouses SET name = ?, location = ?, factory_id = ? WHERE id = ?',
-      [name, location, factory_id, id]
+      [name, location, finalFactoryId, id]
     );
     res.json({ message: 'Warehouse updated' });
   } catch (error) {
