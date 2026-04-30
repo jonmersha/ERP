@@ -23,11 +23,14 @@ export interface FetchOptions {
 
 class ApiService {
   private getBaseUrl() {
+    if (typeof window !== 'undefined') {
+      return '/api';
+    }
     return process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') || 'http://localhost:4000/api';
   }
 
   private async getHeaders() {
-    const token = await auth.currentUser?.getIdToken(true);
+    const token = await auth.currentUser?.getIdToken();
     console.log('Using token:', token ? token.substring(0, 10) + '...' : 'null');
     return {
       'Content-Type': 'application/json',

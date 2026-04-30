@@ -17,6 +17,7 @@ import productionPlanRoutes from './src/routes/productionPlan.routes.js';
 import categoryRoutes from './src/routes/category.routes.js';
 import grnRoutes from './src/routes/grn.routes.js';
 import deliveryNoteRoutes from './src/routes/deliveryNote.routes.js';
+import employeeRoutes from './src/routes/employee.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 
@@ -73,11 +74,75 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/productionPlans', productionPlanRoutes);
 app.use('/api/grns', grnRoutes);
 app.use('/api/deliveryNotes', deliveryNoteRoutes);
+app.use('/api/employees', employeeRoutes);
 
 import pool from './src/db.js';
 
 const initDb = async () => {
 try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS companies (
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        address TEXT,
+        phone VARCHAR(20),
+        email VARCHAR(255),
+        owner_id VARCHAR(255) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+        uid VARCHAR(255) PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        roles JSON NOT NULL,
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_user_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS factories (
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        location TEXT NOT NULL,
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_factory_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS products (
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        package_size VARCHAR(50) NOT NULL,
+        unit VARCHAR(20),
+        price DECIMAL(12, 2) NOT NULL,
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_product_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS employees (
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        department VARCHAR(100),
+        role VARCHAR(100),
+        salary DECIMAL(12, 2),
+        factory_id CHAR(36),
+        hire_date DATE,
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_employee_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS categories (
         id CHAR(36) PRIMARY KEY,
