@@ -30,8 +30,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Apply authentication to all /api routes
-app.use('/api', authenticateToken);
+const PORT = 4000;
 
 const swaggerOptions = {
     definition: {
@@ -43,7 +42,7 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: 'http://localhost:4000',
+                url: `http://localhost:${PORT}`,
             },
         ],
     },
@@ -53,33 +52,46 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-const PORT = 4000;
+const apiRouter = express.Router();
+
+// Apply auth to all api routes
+apiRouter.use(authenticateToken);
+
+// Mount all routes on apiRouter
+apiRouter.use('/factories', factoryRoutes);
+apiRouter.use('/production', productionRoutes);
+apiRouter.use('/productionRuns', productionRoutes);
+apiRouter.use('/salesOrders', salesOrderRoutes);
+apiRouter.use('/purchaseOrders', purchaseOrderRoutes);
+apiRouter.use('/companies', companyRoutes);
+apiRouter.use('/inventory', inventoryRoutes);
+apiRouter.use('/sales', salesOrderRoutes);
+apiRouter.use('/procurement', purchaseOrderRoutes);
+apiRouter.use('/procurementPlans', purchaseOrderRoutes);
+apiRouter.use('/users', userRoutes);
+apiRouter.use('/warehouses', warehouseRoutes);
+apiRouter.use('/outlets', outletRoutes);
+apiRouter.use('/suppliers', supplierRoutes);
+apiRouter.use('/rawMaterials', rawMaterialRoutes);
+apiRouter.use('/products', productRoutes);
+apiRouter.use('/categories', categoryRoutes);
+apiRouter.use('/productionPlans', productionPlanRoutes);
+apiRouter.use('/grns', grnRoutes);
+apiRouter.use('/deliveryNotes', deliveryNoteRoutes);
+apiRouter.use('/employees', employeeRoutes);
+
+// Mount apiRouter on /api
+app.use('/api', apiRouter);
+
+// Catch-all for API 404s
+apiRouter.use((req, res) => {
+  console.log(`API 404 at backend: ${req.method} ${req.url}`);
+  res.status(404).json({ error: 'API route not found at backend' });
+});
 
 app.get('/', (req, res) => {
   res.send('Backend API Server running.');
 });
-
-app.use('/api/factories', factoryRoutes);
-app.use('/api/production', productionRoutes);
-app.use('/api/productionRuns', productionRoutes);
-app.use('/api/salesOrders', salesOrderRoutes);
-app.use('/api/purchaseOrders', purchaseOrderRoutes);
-app.use('/api/companies', companyRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/sales', salesOrderRoutes);
-app.use('/api/procurement', purchaseOrderRoutes);
-app.use('/api/procurementPlans', purchaseOrderRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/warehouses', warehouseRoutes);
-app.use('/api/outlets', outletRoutes);
-app.use('/api/suppliers', supplierRoutes);
-app.use('/api/rawMaterials', rawMaterialRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/productionPlans', productionPlanRoutes);
-app.use('/api/grns', grnRoutes);
-app.use('/api/deliveryNotes', deliveryNoteRoutes);
-app.use('/api/employees', employeeRoutes);
 
 import pool from './src/db.js';
 
@@ -93,9 +105,10 @@ try {
         address TEXT,
         phone VARCHAR(20),
         email VARCHAR(255),
+        logo_url TEXT,
         owner_id VARCHAR(255) NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+    ) ENGINE=InnoDB;
   `);
 
   await pool.query(`
@@ -103,10 +116,12 @@ try {
         uid VARCHAR(255) PRIMARY KEY,
         email VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
-        roles TEXT NOT NULL,
+        roles JSON NOT NULL,
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+        unit_id CHAR(36),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_user_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
   `);
 
   await pool.query(`
@@ -114,8 +129,9 @@ try {
         id CHAR(36) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         location TEXT NOT NULL,
-        company_id CHAR(36) NOT NULL
-    );
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_factory_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
   `);
 
   await pool.query(`
@@ -126,8 +142,9 @@ try {
         package_size VARCHAR(50) NOT NULL,
         unit VARCHAR(20),
         price DECIMAL(12, 2) NOT NULL,
-        company_id CHAR(36) NOT NULL
-    );
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_product_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
   `);
 
   await pool.query(`
@@ -140,8 +157,9 @@ try {
         salary DECIMAL(12, 2),
         factory_id CHAR(36),
         hire_date DATE,
-        company_id CHAR(36) NOT NULL
-    );
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_employee_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
   `);
 
   await pool.query(`
@@ -149,8 +167,9 @@ try {
         id CHAR(36) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         description TEXT,
-        company_id CHAR(36) NOT NULL
-    );
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_category_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
   `);
 
   await pool.query(`
@@ -160,11 +179,12 @@ try {
         material_id CHAR(36) NOT NULL,
         year INT NOT NULL,
         total_quantity DECIMAL(12, 2) NOT NULL,
-        quarterly_plans TEXT,
-        status TEXT DEFAULT 'planned',
+        quarterly_plans JSON,
+        status ENUM('planned', 'ordered', 'received', 'approved') DEFAULT 'planned',
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_procplan_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
   `);
 
   await pool.query(`
@@ -174,11 +194,12 @@ try {
         product_id CHAR(36) NOT NULL,
         year INT NOT NULL,
         total_quantity DECIMAL(12, 2) NOT NULL,
-        quarterly_plans TEXT,
-        status TEXT DEFAULT 'draft',
+        quarterly_plans JSON,
+        status ENUM('draft', 'approved') DEFAULT 'draft',
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_salesplan_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
   `);
 
   await pool.query(`
@@ -186,12 +207,13 @@ try {
         id CHAR(36) PRIMARY KEY,
         product_id CHAR(36) NOT NULL,
         name VARCHAR(255) NOT NULL,
-        bom TEXT NOT NULL,
-        processing_steps TEXT NOT NULL,
+        bom JSON NOT NULL,
+        processing_steps JSON NOT NULL,
         yield_percentage DECIMAL(5, 2),
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_recipe_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
   `);
 
   await pool.query(`
@@ -200,10 +222,11 @@ try {
         purchase_order_id CHAR(36) NOT NULL,
         warehouse_id CHAR(36) NOT NULL,
         receipt_date DATETIME NOT NULL,
-        status TEXT DEFAULT 'received',
+        status ENUM('received', 'inspected', 'rejected') DEFAULT 'received',
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_grn_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
   `);
 
   await pool.query(`
@@ -212,10 +235,11 @@ try {
         sales_order_id CHAR(36) NOT NULL,
         outlet_id CHAR(36) NOT NULL,
         dispatch_date DATETIME NOT NULL,
-        status TEXT DEFAULT 'dispatched',
+        status ENUM('dispatched', 'delivered', 'returned') DEFAULT 'dispatched',
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_dn_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
   `);
 
   await pool.query(`
@@ -225,11 +249,12 @@ try {
         product_id CHAR(36) NOT NULL,
         year INT NOT NULL,
         total_quantity DECIMAL(12, 2) NOT NULL,
-        quarterly_plans TEXT,
-        status TEXT DEFAULT 'draft',
+        quarterly_plans JSON,
+        status ENUM('draft', 'approved') DEFAULT 'draft',
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_prodplan_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
   `);
 
   } catch(err) { console.error('DB Init error:', err); }

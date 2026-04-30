@@ -1,32 +1,17 @@
-import sqlite3 from 'sqlite3';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+dotenv.config();
 
-const dbPath = join(__dirname, '../../database.sqlite');
-const db = new sqlite3.Database(dbPath);
-
-// Promisify for async/await
-const pool = {
-  query: (sql, params = []) => {
-    return new Promise((resolve, reject) => {
-      // Use run for non-SELECT, all for SELECT
-      const trimmedSql = sql.trim().toUpperCase();
-      if (trimmedSql.startsWith('SELECT') || trimmedSql.startsWith('SHOW') || trimmedSql.startsWith('PRAGMA')) {
-        db.all(sql, params, (err, rows) => {
-          if (err) reject(err);
-          else resolve([rows]);
-        });
-      } else {
-        db.run(sql, params, function(err) {
-          if (err) reject(err);
-          else resolve([{ affectedRows: this.changes, insertId: this.lastID }]);
-        });
-      }
-    });
-  }
-};
+const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST || 'localhost',
+  user: process.env.MYSQL_USER || 'root',
+  password: process.env.MYSQL_PASSWORD || '',
+  database: process.env.MYSQL_DATABASE || 'enterprise_db',
+  port: parseInt(process.env.MYSQL_PORT || '3306', 10),
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
 export default pool;
