@@ -13,6 +13,7 @@ import outletRoutes from './src/routes/outlet.routes.js';
 import supplierRoutes from './src/routes/supplier.routes.js';
 import rawMaterialRoutes from './src/routes/rawMaterial.routes.js';
 import productRoutes from './src/routes/product.routes.js';
+import productionPlanRoutes from './src/routes/productionPlan.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 
@@ -51,16 +52,20 @@ app.get('/', (req, res) => {
 
 app.use('/api/factories', factoryRoutes);
 app.use('/api/production', productionRoutes);
+app.use('/api/productionRuns', productionRoutes);
+app.use('/api/salesOrders', salesOrderRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/sales', salesOrderRoutes);
 app.use('/api/procurement', purchaseOrderRoutes);
+app.use('/api/procurementPlans', purchaseOrderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/outlets', outletRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/rawMaterials', rawMaterialRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/productionPlans', productionPlanRoutes);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);

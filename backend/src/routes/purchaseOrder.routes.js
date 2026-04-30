@@ -3,6 +3,7 @@ import { getAllPurchaseOrders, createPurchaseOrder, updatePurchaseOrder, deleteP
 
 const router = Router();
 
+router.get('/plans', getAllPurchaseOrders);
 router.get('/', getAllPurchaseOrders);
 router.post('/', createPurchaseOrder);
 router.put('/:id', updatePurchaseOrder);

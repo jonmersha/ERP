@@ -40,8 +40,26 @@ import crypto from 'node:crypto';
  */
 export const getInventory = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM inventory');
-    res.json(rows);
+    const { companyId } = req.query;
+    let query = 'SELECT * FROM inventory';
+    let params = [];
+    if (companyId) {
+      query += ' WHERE company_id = ?';
+      params.push(companyId);
+    }
+    const [rows] = await pool.query(query, params);
+    
+    // map snake_case to camelCase
+    const mappedRows = rows.map(row => ({
+      ...row,
+      companyId: row.company_id,
+      unitId: row.unit_id,
+      itemId: row.item_id,
+      itemType: row.item_type,
+      batchNumber: row.batch_number,
+      expiryDate: row.expiry_date
+    }));
+    res.json(mappedRows);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch inventory' });
   }

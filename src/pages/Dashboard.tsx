@@ -187,9 +187,9 @@ const Dashboard: React.FC = () => {
         const monthlyData: Record<string, number> = {};
         if (Array.isArray(productionPlansData)) {
           productionPlansData.forEach((plan: any) => {
-            const date = new Date(plan.startDate || plan.createdAt);
+            const date = new Date(plan.startDate || plan.createdAt || new Date());
             const month = date.toLocaleString('default', { month: 'short' });
-            monthlyData[month] = (monthlyData[month] || 0) + (plan.targetQuantity || 0);
+            monthlyData[month] = (monthlyData[month] || 0) + (plan.totalQuantity || plan.targetQuantity || 0);
           });
         }
         setPlanningStats(Object.entries(monthlyData).map(([name, value]) => ({ name, value })));

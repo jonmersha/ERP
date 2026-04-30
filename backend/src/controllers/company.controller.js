@@ -41,13 +41,22 @@ import crypto from 'node:crypto';
 export const getAllCompanies = async (req, res) => {
   try {
     const { code } = req.query;
+    let query = 'SELECT * FROM companies';
+    let params = [];
     if (code) {
-      const [rows] = await pool.query('SELECT * FROM companies WHERE code = ?', [code]);
-      res.json(rows);
-    } else {
-      const [rows] = await pool.query('SELECT * FROM companies');
-      res.json(rows);
+      query += ' WHERE code = ?';
+      params.push(code);
     }
+    const [rows] = await pool.query(query, params);
+    
+    const mappedRows = rows.map(row => ({
+      ...row,
+      logoUrl: row.logo_url,
+      bannerUrl: row.banner_url,
+      ownerId: row.owner_id,
+      createdAt: row.created_at
+    }));
+    res.json(mappedRows);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch companies' });
   }
@@ -77,7 +86,18 @@ export const getCompany = async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.query('SELECT * FROM companies WHERE id = ?', [id]);
-    res.json(rows[0] || null);
+    if (rows.length > 0) {
+      const row = rows[0];
+      res.json({
+        ...row,
+        logoUrl: row.logo_url,
+        bannerUrl: row.banner_url,
+        ownerId: row.owner_id,
+        createdAt: row.created_at
+      });
+    } else {
+      res.json(null);
+    }
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch company' });
   }

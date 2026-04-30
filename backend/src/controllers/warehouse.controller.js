@@ -40,8 +40,21 @@ import crypto from 'node:crypto';
  */
 export const getAllWarehouses = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM warehouses');
-    res.json(rows);
+    const { companyId } = req.query;
+    let query = 'SELECT * FROM warehouses';
+    let params = [];
+    if (companyId) {
+      query += ' WHERE company_id = ?';
+      params.push(companyId);
+    }
+    const [rows] = await pool.query(query, params);
+    
+    const mappedRows = rows.map(row => ({
+      ...row,
+      companyId: row.company_id,
+      factoryId: row.factory_id
+    }));
+    res.json(mappedRows);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch warehouses' });
   }

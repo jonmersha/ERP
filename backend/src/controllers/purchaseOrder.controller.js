@@ -40,8 +40,25 @@ import crypto from 'node:crypto';
  */
 export const getAllPurchaseOrders = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM purchase_orders');
-    res.json(rows);
+    const { companyId } = req.query;
+    let query = 'SELECT * FROM purchase_orders';
+    let params = [];
+    if (companyId) {
+      query += ' WHERE company_id = ?';
+      params.push(companyId);
+    }
+    const [rows] = await pool.query(query, params);
+    
+    // map snake_case to camelCase
+    const mappedRows = rows.map(row => ({
+      ...row,
+      companyId: row.company_id,
+      supplierId: row.supplier_id,
+      factoryId: row.factory_id,
+      totalAmount: row.total_amount,
+      createdAt: row.created_at
+    }));
+    res.json(mappedRows);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch purchase orders' });
   }

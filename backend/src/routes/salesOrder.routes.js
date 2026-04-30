@@ -3,6 +3,7 @@ import { getAllSalesOrders, createSalesOrder, updateSalesOrder, deleteSalesOrder
 
 const router = Router();
 
+router.get('/plans', getAllSalesOrders);
 router.get('/', getAllSalesOrders);
 router.post('/', createSalesOrder);
 router.put('/:id', updateSalesOrder);
