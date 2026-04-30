@@ -31,6 +31,6 @@ export const authenticateToken = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Error verifying token:', error);
-    res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    res.status(401).json({ error: 'Unauthorized: Invalid token', details: error.message });
   }
 };

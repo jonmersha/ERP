@@ -56,7 +56,8 @@ export const createUser = async (req, res) => {
     );
     res.status(201).json({ uid });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create user' });
+    console.error('Create user error:', error);
+    res.status(500).json({ error: 'Failed to create user', details: error.message });
   }
 };
 
@@ -74,7 +75,8 @@ export const updateUser = async (req, res) => {
     );
     res.json({ message: 'User updated' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update user' });
+    console.error('Update user error:', error);
+    res.status(500).json({ error: 'Failed to update user', details: error.message });
   }
 };
 

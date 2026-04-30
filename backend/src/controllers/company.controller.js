@@ -55,15 +55,21 @@ export const getAllCompanies = async (req, res) => {
 
 export const createCompany = async (req, res) => {
   try {
-    const { id, name, code, address, phone, email, logo_url, banner_url, owner_id } = req.body;
+    const { id, name, code, address, phone, email, logo_url, banner_url, owner_id, logoUrl, bannerUrl, ownerId } = req.body;
     const companyId = id || crypto.randomUUID();
+    
+    const finalLogoUrl = logo_url || logoUrl || null;
+    const finalBannerUrl = banner_url || bannerUrl || null;
+    const finalOwnerId = owner_id || ownerId || null;
+
     await pool.query(
       'INSERT INTO companies (id, name, code, address, phone, email, logo_url, banner_url, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [companyId, name, code, address, phone, email, logo_url, banner_url, owner_id]
+      [companyId, name, code, address, phone, email, finalLogoUrl, finalBannerUrl, finalOwnerId]
     );
     res.status(201).json({ id: companyId });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create company' });
+    console.error('Create company error:', error);
+    res.status(500).json({ error: 'Failed to create company', details: error.message });
   }
 };
 
@@ -80,13 +86,19 @@ export const getCompany = async (req, res) => {
 export const updateCompany = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, code, address, phone, email, logo_url, banner_url, owner_id } = req.body;
+    const { name, code, address, phone, email, logo_url, banner_url, owner_id, logoUrl, bannerUrl, ownerId } = req.body;
+    
+    const finalLogoUrl = logo_url || logoUrl || null;
+    const finalBannerUrl = banner_url || bannerUrl || null;
+    const finalOwnerId = owner_id || ownerId || null;
+
     await pool.query(
       'UPDATE companies SET name = ?, code = ?, address = ?, phone = ?, email = ?, logo_url = ?, banner_url = ?, owner_id = ? WHERE id = ?',
-      [name, code, address, phone, email, logo_url, banner_url, owner_id, id]
+      [name, code, address, phone, email, finalLogoUrl, finalBannerUrl, finalOwnerId, id]
     );
     res.json({ message: 'Company updated' });
   } catch (error) {
+    console.error('Update company error:', error);
     res.status(500).json({ error: 'Failed to update company' });
   }
 };
