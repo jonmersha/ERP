@@ -34,66 +34,55 @@ class ApiService {
     };
   }
 
-  async post<T>(endpoint: string, data: any): Promise<T> {
-    const headers = await this.getHeaders();
+  private async handleFetch(url: string, options: RequestInit) {
+    console.log(`Fetching: ${url}`, options);
     try {
-      const response = await fetch(`${this.getBaseUrl()}/${endpoint}`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to post');
+      const response = await fetch(url, options);
+      console.log(`Response status for ${url}:`, response.status);
+      if (!response.ok) {
+        const text = await response.text();
+        console.error(`Error details for ${url}:`, text);
+        throw new Error(`Failed with status ${response.status}: ${text}`);
+      }
       return await response.json();
     } catch (error) {
-      console.error(error);
+      console.error(`Catch error for ${url}:`, error);
       throw error;
     }
+  }
+
+  async post<T>(endpoint: string, data: any): Promise<T> {
+    const headers = await this.getHeaders();
+    return this.handleFetch(`${this.getBaseUrl()}/${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
   }
 
   async get<T>(endpoint: string): Promise<T> {
     const headers = await this.getHeaders();
-    try {
-      const response = await fetch(`${this.getBaseUrl()}/${endpoint}`, {
-        method: 'GET',
-        headers,
-      });
-      if (!response.ok) throw new Error('Failed to get');
-      return await response.json();
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+    return this.handleFetch(`${this.getBaseUrl()}/${endpoint}`, {
+      method: 'GET',
+      headers,
+    });
   }
 
   async put<T>(endpoint: string, data: any): Promise<T> {
     const headers = await this.getHeaders();
-    try {
-      const response = await fetch(`${this.getBaseUrl()}/${endpoint}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to put');
-      return await response.json();
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+    return this.handleFetch(`${this.getBaseUrl()}/${endpoint}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(data),
+    });
   }
 
   async delete<T>(endpoint: string): Promise<T> {
     const headers = await this.getHeaders();
-    try {
-      const response = await fetch(`${this.getBaseUrl()}/${endpoint}`, {
-        method: 'DELETE',
-        headers,
-      });
-      if (!response.ok) throw new Error('Failed to delete');
-      return await response.json();
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+    return this.handleFetch(`${this.getBaseUrl()}/${endpoint}`, {
+      method: 'DELETE',
+      headers,
+    });
   }
 
   async fetchCollection<T>(collectionName: string, companyId: string, options?: FetchOptions): Promise<T[]> {
