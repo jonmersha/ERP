@@ -77,14 +77,20 @@ class ApiService {
 
   async fetchCollection<T>(collectionName: string, companyId: string, options?: FetchOptions): Promise<T[]> {
     const headers = await this.getHeaders();
+    const url = `${this.getBaseUrl()}/${collectionName}?companyId=${companyId}`;
     try {
-      const response = await fetch(`${this.getBaseUrl()}/${collectionName}?companyId=${companyId}`, {
+      const response = await fetch(url, {
         headers,
       });
-      if (!response.ok) throw new Error('Failed to fetch');
+      console.log(`fetchCollection [${collectionName}] response:`, response.status);
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error(`fetchCollection failed for ${url}:`, response.status, errText);
+        return [];
+      }
       return await response.json();
     } catch (error) {
-      console.error(error);
+      console.error(`fetchCollection error for ${url}:`, error);
       return [];
     }
   }

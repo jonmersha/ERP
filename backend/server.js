@@ -25,6 +25,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 // Apply authentication to all /api routes
 app.use('/api', authenticateToken);
 
@@ -48,7 +53,7 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-const PORT = parseInt(process.env.PORT || '4000', 10);
+const PORT = 4000;
 
 app.get('/', (req, res) => {
   res.send('Backend API Server running.');
@@ -90,7 +95,7 @@ try {
         email VARCHAR(255),
         owner_id VARCHAR(255) NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB;
+    );
   `);
 
   await pool.query(`
@@ -98,11 +103,10 @@ try {
         uid VARCHAR(255) PRIMARY KEY,
         email VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
-        roles JSON NOT NULL,
+        roles TEXT NOT NULL,
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_user_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   await pool.query(`
@@ -110,9 +114,8 @@ try {
         id CHAR(36) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         location TEXT NOT NULL,
-        company_id CHAR(36) NOT NULL,
-        CONSTRAINT fk_factory_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+        company_id CHAR(36) NOT NULL
+    );
   `);
 
   await pool.query(`
@@ -123,9 +126,8 @@ try {
         package_size VARCHAR(50) NOT NULL,
         unit VARCHAR(20),
         price DECIMAL(12, 2) NOT NULL,
-        company_id CHAR(36) NOT NULL,
-        CONSTRAINT fk_product_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+        company_id CHAR(36) NOT NULL
+    );
   `);
 
   await pool.query(`
@@ -138,9 +140,8 @@ try {
         salary DECIMAL(12, 2),
         factory_id CHAR(36),
         hire_date DATE,
-        company_id CHAR(36) NOT NULL,
-        CONSTRAINT fk_employee_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+        company_id CHAR(36) NOT NULL
+    );
   `);
 
   await pool.query(`
@@ -148,9 +149,8 @@ try {
         id CHAR(36) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         description TEXT,
-        company_id CHAR(36) NOT NULL,
-        CONSTRAINT fk_category_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+        company_id CHAR(36) NOT NULL
+    );
   `);
 
   await pool.query(`
@@ -160,12 +160,11 @@ try {
         material_id CHAR(36) NOT NULL,
         year INT NOT NULL,
         total_quantity DECIMAL(12, 2) NOT NULL,
-        quarterly_plans JSON,
-        status ENUM('planned', 'ordered', 'received', 'approved') DEFAULT 'planned',
+        quarterly_plans TEXT,
+        status TEXT DEFAULT 'planned',
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_procplan_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   await pool.query(`
@@ -175,12 +174,11 @@ try {
         product_id CHAR(36) NOT NULL,
         year INT NOT NULL,
         total_quantity DECIMAL(12, 2) NOT NULL,
-        quarterly_plans JSON,
-        status ENUM('draft', 'approved') DEFAULT 'draft',
+        quarterly_plans TEXT,
+        status TEXT DEFAULT 'draft',
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_salesplan_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   await pool.query(`
@@ -188,13 +186,12 @@ try {
         id CHAR(36) PRIMARY KEY,
         product_id CHAR(36) NOT NULL,
         name VARCHAR(255) NOT NULL,
-        bom JSON NOT NULL,
-        processing_steps JSON NOT NULL,
+        bom TEXT NOT NULL,
+        processing_steps TEXT NOT NULL,
         yield_percentage DECIMAL(5, 2),
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_recipe_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   await pool.query(`
@@ -203,11 +200,10 @@ try {
         purchase_order_id CHAR(36) NOT NULL,
         warehouse_id CHAR(36) NOT NULL,
         receipt_date DATETIME NOT NULL,
-        status ENUM('received', 'inspected', 'rejected') DEFAULT 'received',
+        status TEXT DEFAULT 'received',
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_grn_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   await pool.query(`
@@ -216,18 +212,27 @@ try {
         sales_order_id CHAR(36) NOT NULL,
         outlet_id CHAR(36) NOT NULL,
         dispatch_date DATETIME NOT NULL,
-        status ENUM('dispatched', 'delivered', 'returned') DEFAULT 'dispatched',
+        status TEXT DEFAULT 'dispatched',
         company_id CHAR(36) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_dn_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
-  const [cols] = await pool.query("SHOW COLUMNS FROM production_plans LIKE 'quarterly_plans'");
-  if (cols.length === 0) {
-    await pool.query("ALTER TABLE production_plans ADD COLUMN quarterly_plans JSON");
-  }
-} catch(err) { console.error('DB Init error:', err); }
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS production_plans (
+        id CHAR(36) PRIMARY KEY,
+        factory_id CHAR(36) NOT NULL,
+        product_id CHAR(36) NOT NULL,
+        year INT NOT NULL,
+        total_quantity DECIMAL(12, 2) NOT NULL,
+        quarterly_plans TEXT,
+        status TEXT DEFAULT 'draft',
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  } catch(err) { console.error('DB Init error:', err); }
 };
 initDb();
 
