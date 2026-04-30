@@ -27,7 +27,8 @@ class ApiService {
   }
 
   private async getHeaders() {
-    const token = await auth.currentUser?.getIdToken();
+    const token = await auth.currentUser?.getIdToken(true);
+    console.log('Using token:', token ? token.substring(0, 10) + '...' : 'null');
     return {
       'Content-Type': 'application/json',
       Authorization: token ? `Bearer ${token}` : '',

@@ -1,3 +1,4 @@
+'use client';
 import * as React from 'react';
 import { Component, ErrorInfo, ReactNode } from 'react';
 
@@ -10,8 +11,8 @@ interface State {
   error: Error | null;
 }
 
-class ErrorBoundary extends (React.Component as any) {
-  constructor(props: any) {
+class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = {
       hasError: false,
@@ -19,11 +20,11 @@ class ErrorBoundary extends (React.Component as any) {
     };
   }
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: any, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
   }
 

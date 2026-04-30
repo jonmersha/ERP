@@ -1,10 +1,10 @@
 "use client";
 import React, { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { auth } from '../firebase';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import { apiService } from '../services/apiService';
 import { seedDatabase } from '../utils/seedData';
 import { motion, AnimatePresence } from 'motion/react';
 import { LogIn, ShieldCheck, Building2, Plus, Users, ArrowRight, MapPin, Phone, Mail, Image as ImageIcon } from 'lucide-react';
@@ -26,14 +26,21 @@ const Login: React.FC = () => {
   const router = useRouter();
 
   React.useEffect(() => {
-    if (!authLoading) {
-      if (user && profile?.companyId) {
-        router.push('/');
-      } else if (user && !profile?.companyId) {
-        setTempUser(user);
-        setStep('company-setup');
+    const checkProfile = async () => {
+      if (!authLoading && user) {
+        if (profile?.companyId) {
+          router.push('/');
+        } else {
+          // If profile is null or has no companyId, it might just be that the backend
+          // doesn't have it yet, OR authLoading was false but the profile fetch hasn't finished in AuthContext?
+          // AuthContext handles the fetching. If it's done (loading=false) and profile is still null,
+          // then the user needs setup.
+          setTempUser(user);
+          setStep('company-setup');
+        }
       }
-    }
+    };
+    checkProfile();
   }, [user, profile, authLoading, router]);
 
   const handleGoogleLogin = async () => {
@@ -42,22 +49,10 @@ const Login: React.FC = () => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      // Check if profile exists
-      const profileRef = doc(db, 'users', user.uid);
-      const profileSnap = await getDoc(profileRef);
-
-      if (!profileSnap.exists() || !profileSnap.data()?.companyId) {
-        setTempUser(user);
-        setStep('company-setup');
-      } else {
-        router.push('/');
-      }
+      // AuthContext will automatically trigger the profile fetch
     } catch (err: any) {
       console.error("Login error details:", err);
       if (err.code === 'auth/popup-closed-by-user') {
-        // Do not show an aggressive error for closing popup
         setError(null);
       } else {
         setError(err.message || 'Failed to login. Please check your browser console for details.');
@@ -91,12 +86,9 @@ const Login: React.FC = () => {
       let isNewCompany = false;
 
       if (companyMode === 'create') {
-        // Create new company
-        const companyRef = doc(collection(db, 'companies'));
+        // Create new company via API
         const newCompanyCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-        
-        await setDoc(companyRef, {
-          id: companyRef.id,
+        const companyData = {
           name: companyName,
           code: newCompanyCode,
           address: companyAddress,
@@ -104,46 +96,46 @@ const Login: React.FC = () => {
           email: companyEmail,
           logoUrl: companyLogo,
           ownerId: tempUser.uid,
-          createdAt: new Date().toISOString()
-        });
+        };
         
-        finalCompanyId = companyRef.id;
-        finalRoles = ['admin']; // Creator is admin
+        const createdCompany = await apiService.post<any>('companies', companyData);
+        finalCompanyId = createdCompany.id || createdCompany._id;
+        finalRoles = ['admin'];
         isNewCompany = true;
       } else {
-        // Join existing company
-        const q = query(collection(db, 'companies'), where('code', '==', companyCode.toUpperCase()));
-        const snap = await getDocs(q);
+        // Join existing company via API
+        // Assuming there's a search or join endpoint
+        const companies = await apiService.get<any[]>(`companies?code=${companyCode.toUpperCase()}`);
         
-        if (snap.empty) {
+        if (!companies || companies.length === 0) {
           throw new Error('Invalid company code. Please ask your administrator for the correct code.');
         }
         
-        finalCompanyId = snap.docs[0].id;
+        finalCompanyId = companies[0].id || companies[0]._id;
       }
 
-      // Create user profile BEFORE seeding database so security rules pass
-      const profileRef = doc(db, 'users', tempUser.uid);
-      await setDoc(profileRef, {
+      // Create/Update user profile via API
+      const profileData = {
         uid: tempUser.uid,
         email: tempUser.email,
         name: tempUser.displayName || 'User',
         roles: finalRoles,
         companyId: finalCompanyId,
-        createdAt: new Date().toISOString(),
-      });
+      };
 
-      // Seed database for new company after user profile is created
+      await apiService.post('users', profileData);
+
+      // Seed database for new company if needed (via API)
       if (isNewCompany) {
         try {
           await seedDatabase(finalCompanyId);
         } catch (seedError) {
-          console.error("Failed to seed database, but company was created", seedError);
-          // We don't throw here to avoid blocking login, but log the error
+          console.error("Failed to seed database", seedError);
         }
       }
 
-      router.push('/');
+      // Force a page reload or state update to trigger AuthContext refresh
+      window.location.href = '/';
     } catch (err: any) {
       console.error("Company setup error details:", err);
       setError(err.message || 'Failed to setup company. Please check your browser console for details.');

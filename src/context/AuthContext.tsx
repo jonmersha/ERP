@@ -32,21 +32,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AuthContext: mounting');
+    const timer = setTimeout(() => {
+      console.log('Auth loading timed out after 10s, forcing loading=false');
+      setLoading(false);
+    }, 10000); // 10 seconds safety timeout
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('AuthContext: onAuthStateChanged', user ? `user:${user.uid}` : 'no user');
       setUser(user);
       
       if (user) {
         console.log('User signed in. Fetching profile/company from backend.');
         try {
-          const profile = await apiService.get<UserProfile>(`users/${user.uid}`);
-          setProfile(profile);
+          // Add a check to fetch profile only if user exists
+          const profileData = await apiService.get<UserProfile>(`users/${user.uid}`);
+          console.log('AuthContext: Profile received', profileData);
+          if (profileData) {
+            setProfile(profileData);
 
-          if (profile.companyId) {
-            const company = await apiService.get<Company>(`companies/${profile.companyId}`);
-            setCompany(company);
+            if (profileData.companyId) {
+              console.log('AuthContext: Fetching company', profileData.companyId);
+              try {
+                const companyData = await apiService.get<Company>(`companies/${profileData.companyId}`);
+                console.log('AuthContext: Company received', companyData);
+                setCompany(companyData);
+              } catch (compErr) {
+                console.error("AuthContext: Failed to fetch company", compErr);
+              }
+            }
           }
         } catch (e) {
-          console.error("Failed to fetch profile/company", e);
+          console.error("AuthContext: Failed to fetch profile/company", e);
         }
       } else {
         console.log('No user signed in');
@@ -54,14 +71,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCompany(null);
       }
       setLoading(false);
+      clearTimeout(timer);
     });
 
     return () => {
       unsubscribe();
+      clearTimeout(timer);
     };
   }, []);
 
-  const isAdmin = profile?.roles?.includes('admin') || profile?.email === 'jonmersha@gmail.com';
+  const isAdmin = profile?.roles?.includes('admin') || user?.email === 'jonmersha@gmail.com';
 
   const hasRole = (role: string) => {
     if (isAdmin) return true;
