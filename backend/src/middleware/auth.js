@@ -1,9 +1,9 @@
 import admin from 'firebase-admin';
 import pool from '../db.js';
 
-// Initialize Firebase Admin (assuming default credentials work)
+// Initialize Firebase Admin with just the projectId (sufficient for verifying ID tokens)
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
+  projectId: "ai-studio-applet-webapp-717ba",
 });
 
 export const authenticateToken = async (req, res, next) => {
@@ -17,12 +17,17 @@ export const authenticateToken = async (req, res, next) => {
     const decodedToken = await admin.auth().verifyIdToken(token);
     
     // Look up user company_id
-    const [rows] = await pool.query('SELECT company_id FROM users WHERE uid = ?', [decodedToken.uid]);
-    if (rows.length === 0) {
-      return res.status(401).json({ error: 'Unauthorized: User not found' });
+    try {
+      const [rows] = await pool.query('SELECT company_id FROM users WHERE uid = ?', [decodedToken.uid]);
+      req.user = { 
+        ...decodedToken, 
+        company_id: rows.length > 0 ? rows[0].company_id : null 
+      };
+    } catch (dbError) {
+      console.error('DB error during auth:', dbError);
+      req.user = { ...decodedToken, company_id: null };
     }
     
-    req.user = { ...decodedToken, company_id: rows[0].company_id };
     next();
   } catch (error) {
     console.error('Error verifying token:', error);
