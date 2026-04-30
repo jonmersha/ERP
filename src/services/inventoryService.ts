@@ -1,6 +1,5 @@
 import { PurchaseOrder, SalesOrder, UserProfile } from '../types';
-
-const API_BASE = '/api/inventory';
+import { apiService } from './apiService';
 
 export const receivePurchaseOrder = async (
   selectedPO: PurchaseOrder, 
@@ -8,16 +7,7 @@ export const receivePurchaseOrder = async (
   notes: string, 
   profile: UserProfile | null
 ) => {
-  const response = await fetch(`${API_BASE}/receive-po`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ selectedPO, warehouseId, notes, profile }),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to receive purchase order');
-  }
-  return await response.json();
+  return await apiService.post('inventory/receive-po', { selectedPO, warehouseId, notes, profile });
 };
 
 export const transferProductionToWarehouse = async (
@@ -26,16 +16,7 @@ export const transferProductionToWarehouse = async (
   warehouseId: string,
   profile: UserProfile | null
 ) => {
-  const response = await fetch(`${API_BASE}/transfer-production`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ productId, quantity, warehouseId, profile }),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to transfer production');
-  }
-  return await response.json();
+  return await apiService.post('inventory/transfer-production', { productId, quantity, warehouseId, profile });
 };
 
 export const shipSalesOrder = async (
@@ -44,14 +25,5 @@ export const shipSalesOrder = async (
   notes: string, 
   profile: UserProfile | null
 ) => {
-  const response = await fetch(`${API_BASE}/ship-order`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ selectedSO, warehouseId, notes, profile }),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to ship sales order');
-  }
-  return await response.json();
+  return await apiService.post('inventory/ship-order', { selectedSO, warehouseId, notes, profile });
 };

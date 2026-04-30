@@ -12,7 +12,7 @@ import {
   doc as fsDoc,
   onSnapshot as fsOnSnapshot
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrors';
 
 export interface FetchOptions {
@@ -32,6 +32,38 @@ class ApiService {
       'Content-Type': 'application/json',
       Authorization: token ? `Bearer ${token}` : '',
     };
+  }
+
+  async post<T>(endpoint: string, data: any): Promise<T> {
+    const headers = await this.getHeaders();
+    try {
+      const response = await fetch(`${this.getBaseUrl()}/${endpoint}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to post');
+      return await response.json();
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async put<T>(endpoint: string, data: any): Promise<T> {
+    const headers = await this.getHeaders();
+    try {
+      const response = await fetch(`${this.getBaseUrl()}/${endpoint}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to put');
+      return await response.json();
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 
   async fetchCollection<T>(collectionName: string, companyId: string, options?: FetchOptions): Promise<T[]> {
