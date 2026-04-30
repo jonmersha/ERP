@@ -15,6 +15,8 @@ import rawMaterialRoutes from './src/routes/rawMaterial.routes.js';
 import productRoutes from './src/routes/product.routes.js';
 import productionPlanRoutes from './src/routes/productionPlan.routes.js';
 import categoryRoutes from './src/routes/category.routes.js';
+import grnRoutes from './src/routes/grn.routes.js';
+import deliveryNoteRoutes from './src/routes/deliveryNote.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 
@@ -55,6 +57,7 @@ app.use('/api/factories', factoryRoutes);
 app.use('/api/production', productionRoutes);
 app.use('/api/productionRuns', productionRoutes);
 app.use('/api/salesOrders', salesOrderRoutes);
+app.use('/api/purchaseOrders', purchaseOrderRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/sales', salesOrderRoutes);
@@ -68,53 +71,100 @@ app.use('/api/rawMaterials', rawMaterialRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/productionPlans', productionPlanRoutes);
+app.use('/api/grns', grnRoutes);
+app.use('/api/deliveryNotes', deliveryNoteRoutes);
 
 import pool from './src/db.js';
-pool.query(`
-  CREATE TABLE IF NOT EXISTS categories (
-      id CHAR(36) PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      description TEXT,
-      company_id CHAR(36) NOT NULL,
-      CONSTRAINT fk_category_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB;
-`).then(() => console.log('Categories table ensured')).catch(console.error);
 
-pool.query(`
-  CREATE TABLE IF NOT EXISTS procurement_plans (
-      id CHAR(36) PRIMARY KEY,
-      warehouse_id CHAR(36) NOT NULL,
-      material_id CHAR(36) NOT NULL,
-      year INT NOT NULL,
-      total_quantity DECIMAL(12, 2) NOT NULL,
-      quarterly_plans JSON,
-      status ENUM('planned', 'ordered', 'received', 'approved') DEFAULT 'planned',
-      company_id CHAR(36) NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_procplan_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB;
-`).then(() => console.log('Procurement plans table ensured')).catch(console.error);
+const initDb = async () => {
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS categories (
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        company_id CHAR(36) NOT NULL,
+        CONSTRAINT fk_category_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
 
-pool.query(`
-  CREATE TABLE IF NOT EXISTS sales_plans (
-      id CHAR(36) PRIMARY KEY,
-      factory_id CHAR(36) NOT NULL,
-      product_id CHAR(36) NOT NULL,
-      year INT NOT NULL,
-      total_quantity DECIMAL(12, 2) NOT NULL,
-      quarterly_plans JSON,
-      status ENUM('draft', 'approved') DEFAULT 'draft',
-      company_id CHAR(36) NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_salesplan_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB;
-`).then(() => console.log('Sales plans table ensured')).catch(console.error);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS procurement_plans (
+        id CHAR(36) PRIMARY KEY,
+        warehouse_id CHAR(36) NOT NULL,
+        material_id CHAR(36) NOT NULL,
+        year INT NOT NULL,
+        total_quantity DECIMAL(12, 2) NOT NULL,
+        quarterly_plans JSON,
+        status ENUM('planned', 'ordered', 'received', 'approved') DEFAULT 'planned',
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_procplan_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
 
-pool.query("SHOW COLUMNS FROM production_plans LIKE 'quarterly_plans'").then(([cols]) => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sales_plans (
+        id CHAR(36) PRIMARY KEY,
+        factory_id CHAR(36) NOT NULL,
+        product_id CHAR(36) NOT NULL,
+        year INT NOT NULL,
+        total_quantity DECIMAL(12, 2) NOT NULL,
+        quarterly_plans JSON,
+        status ENUM('draft', 'approved') DEFAULT 'draft',
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_salesplan_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS recipes (
+        id CHAR(36) PRIMARY KEY,
+        product_id CHAR(36) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        bom JSON NOT NULL,
+        processing_steps JSON NOT NULL,
+        yield_percentage DECIMAL(5, 2),
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_recipe_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS grns (
+        id CHAR(36) PRIMARY KEY,
+        purchase_order_id CHAR(36) NOT NULL,
+        warehouse_id CHAR(36) NOT NULL,
+        receipt_date DATETIME NOT NULL,
+        status ENUM('received', 'inspected', 'rejected') DEFAULT 'received',
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_grn_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS delivery_notes (
+        id CHAR(36) PRIMARY KEY,
+        sales_order_id CHAR(36) NOT NULL,
+        outlet_id CHAR(36) NOT NULL,
+        dispatch_date DATETIME NOT NULL,
+        status ENUM('dispatched', 'delivered', 'returned') DEFAULT 'dispatched',
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_dn_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  const [cols] = await pool.query("SHOW COLUMNS FROM production_plans LIKE 'quarterly_plans'");
   if (cols.length === 0) {
-    return pool.query("ALTER TABLE production_plans ADD COLUMN quarterly_plans JSON");
+    await pool.query("ALTER TABLE production_plans ADD COLUMN quarterly_plans JSON");
   }
-}).then(() => console.log('Production plans table altered')).catch(console.error);
+} catch(err) { console.error('DB Init error:', err); }
+};
+initDb();
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
