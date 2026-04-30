@@ -37,7 +37,7 @@ This guide explains how to deploy the Sheger ERP backend to a standalone server 
    # DATABASE_URL=mysql://erpuser:password@localhost:3306/erpsystem
    
    # Frontend Access
-   ALLOWED_ORIGINS=https://m.besheger.com,http://localhost:3000
+   ALLOWED_ORIGINS=http://localhost:4000,http://localhost:3000
    ```
 3. Update `app-config.json` to enable SQL mode:
    ```json
