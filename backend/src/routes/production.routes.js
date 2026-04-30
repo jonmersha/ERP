@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { getAllProductionRuns, createProductionRun, updateProductionRun, deleteProductionRun } from '../controllers/production.controller.js';
+
+const router = Router();
+
+router.get('/', getAllProductionRuns);
+router.post('/', createProductionRun);
+router.put('/:id', updateProductionRun);
+router.delete('/:id', deleteProductionRun);
+
+export default router;

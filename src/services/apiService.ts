@@ -22,54 +22,70 @@ export interface FetchOptions {
 }
 
 class ApiService {
-  async fetchCollection<T>(collectionName: string, companyId: string, options?: FetchOptions): Promise<T[]> {
-    let q = query(collection(db, collectionName), where('companyId', '==', companyId));
-    if (options?.orderByField) {
-      q = query(q, fsOrderBy(options.orderByField, options.orderDir || 'asc'));
-    }
-    if (options?.limitCount) {
-      q = query(q, fsLimit(options.limitCount));
-    }
-    
-    try {
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any as T));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, collectionName);
-      return []; // fallback if not thrown
-    }
+  private getBaseUrl() {
+    return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api';
   }
 
-  subscribeToCollection<T>(collectionName: string, companyId: string, callback: (data: T[]) => void) {
-    const q = query(collection(db, collectionName), where('companyId', '==', companyId));
-    return fsOnSnapshot(q, (snapshot) => {
-      callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any as T)));
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, collectionName);
-    });
+  private async getHeaders() {
+    const token = await auth.currentUser?.getIdToken();
+    return {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : '',
+    };
+  }
+
+  async fetchCollection<T>(collectionName: string, companyId: string, options?: FetchOptions): Promise<T[]> {
+    const headers = await this.getHeaders();
+    try {
+      const response = await fetch(`${this.getBaseUrl()}/${collectionName}?companyId=${companyId}`, {
+        headers,
+      });
+      if (!response.ok) throw new Error('Failed to fetch');
+      return await response.json();
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
 
   async addDocument(collectionName: string, data: any) {
+    const headers = await this.getHeaders();
     try {
-      return await fsAddDoc(collection(db, collectionName), data);
+      const response = await fetch(`${this.getBaseUrl()}/${collectionName}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(data),
+      });
+      return await response.json();
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, collectionName);
+      console.error(error);
     }
   }
 
   async updateDocument(collectionName: string, docId: string, data: any) {
+    const headers = await this.getHeaders();
     try {
-      return await fsUpdateDoc(fsDoc(db, collectionName, docId), data);
+      const response = await fetch(`${this.getBaseUrl()}/${collectionName}/${docId}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(data),
+      });
+      return await response.json();
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `${collectionName}/${docId}`);
+      console.error(error);
     }
   }
 
   async deleteDocument(collectionName: string, docId: string) {
+    const headers = await this.getHeaders();
     try {
-      return await fsDeleteDoc(fsDoc(db, collectionName, docId));
+      const response = await fetch(`${this.getBaseUrl()}/${collectionName}/${docId}`, {
+        method: 'DELETE',
+        headers,
+      });
+      return await response.json();
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `${collectionName}/${docId}`);
+      console.error(error);
     }
   }
 }

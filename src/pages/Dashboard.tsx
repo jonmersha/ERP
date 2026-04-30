@@ -665,12 +665,12 @@ const Dashboard: React.FC = () => {
                 <div>
                   <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">Production Progress</p>
                   <p className="text-2xl font-bold text-[var(--color-text)]">
-                    {selectedRun.quantityProduced.toLocaleString()} / {selectedRun.quantity.toLocaleString()}
+                    {((selectedRun.quantityProduced || 0)).toLocaleString()} / {((selectedRun.quantity || 0)).toLocaleString()}
                     <span className="text-sm text-[var(--color-text)]/40 ml-2">units</span>
                   </p>
                   {selectedRun.status !== 'completed' && (
                     <p className="text-xs text-[var(--color-main)]/60 mt-1">
-                      {(selectedRun.quantity - selectedRun.quantityProduced).toLocaleString()} units remaining
+                      {((selectedRun.quantity || 0) - (selectedRun.quantityProduced || 0)).toLocaleString()} units remaining
                     </p>
                   )}
                 </div>
