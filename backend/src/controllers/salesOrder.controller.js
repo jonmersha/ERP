@@ -66,29 +66,58 @@ export const getAllSalesOrders = async (req, res) => {
 
 export const createSalesOrder = async (req, res) => {
   try {
-    const { id, customer_id, outlet_id, status, total_amount, company_id } = req.body;
+    const { 
+      id, 
+      customerId, customer_id, 
+      outletId, outlet_id, 
+      status, 
+      totalAmount, total_amount, 
+      companyId, company_id 
+    } = req.body;
+
+    const finalCompanyId = companyId || company_id;
+    if (!finalCompanyId) {
+      return res.status(400).json({ error: 'companyId is required' });
+    }
+
     const orderId = id || crypto.randomUUID();
+    const finalCustomerId = customerId || customer_id;
+    const finalOutletId = outletId || outlet_id;
+    const finalTotalAmount = totalAmount || total_amount;
+
     await pool.query(
       'INSERT INTO sales_orders (id, customer_id, outlet_id, status, total_amount, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [orderId, customer_id, outlet_id, status, total_amount, company_id]
+      [orderId, finalCustomerId, finalOutletId, status || 'draft', finalTotalAmount || 0, finalCompanyId]
     );
     res.status(201).json({ id: orderId });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create sales order' });
+    console.error('Error creating sales order:', error);
+    res.status(500).json({ error: 'Failed to create sales order', details: error.message });
   }
 };
 
 export const updateSalesOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const { customer_id, outlet_id, status, total_amount } = req.body;
+    const { 
+      customerId, customer_id, 
+      outletId, outlet_id, 
+      status, 
+      totalAmount, total_amount 
+    } = req.body;
+
+    const finalCustomerId = customerId || customer_id;
+    const finalOutletId = outletId || outlet_id;
+    const finalTotalAmount = totalAmount || total_amount;
+
     await pool.query(
       'UPDATE sales_orders SET customer_id = ?, outlet_id = ?, status = ?, total_amount = ? WHERE id = ?',
-      [customer_id, outlet_id, status, total_amount, id]
+      [finalCustomerId, finalOutletId, status, finalTotalAmount, id]
     );
     res.json({ message: 'Sales order updated' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update sales order' });
+    console.error('Error updating sales order:', error);
+    res.status(500).json({ error: 'Failed to update sales order', details: error.message });
   }
 };
 
