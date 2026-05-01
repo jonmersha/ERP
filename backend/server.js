@@ -42,11 +42,24 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: `http://localhost:${PORT}`,
+                url: '/',
+                description: 'API Server',
             },
         ],
+        components: {
+          securitySchemes: {
+            bearerAuth: {
+              type: 'http',
+              scheme: 'bearer',
+              bearerFormat: 'JWT',
+            }
+          }
+        },
+        security: [{
+          bearerAuth: []
+        }]
     },
-    apis: ['./src/routes/*.js', './src/controllers/*.js'],
+    apis: ['./src/routes/*.js', './src/controllers/*.js', './server.js'],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);

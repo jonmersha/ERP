@@ -49,6 +49,7 @@ export const useProcurementData = () => {
     materials,
     factories,
     warehouses,
-    loading
+    loading,
+    refreshData: fetchData
   };
 };

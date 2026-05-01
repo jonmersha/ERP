@@ -11,7 +11,7 @@ import Badge from '../components/common/Badge';
 
 const Procurement: React.FC = () => {
   const { profile } = useAuth();
-  const { suppliers, orders, materials, factories, warehouses, loading } = useProcurementData();
+  const { suppliers, orders, materials, factories, warehouses, loading, refreshData } = useProcurementData();
   
   const [isPOModalOpen, setIsPOModalOpen] = useState(false);
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
@@ -30,7 +30,7 @@ const Procurement: React.FC = () => {
     factoryId: '',
     warehouseId: '',
     status: 'pending',
-    items: [{ itemId: '', quantity: 0, price: 0 }],
+    items: [{ itemId: '', quantity: 1, price: 0 }],
     createdAt: new Date().toISOString().split('T')[0]
   });
 
@@ -42,6 +42,10 @@ const Procurement: React.FC = () => {
 
   const handleCreatePO = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!profile?.companyId) {
+      alert("Missing profile or company ID");
+      return;
+    }
     setSubmitting(true);
     try {
       if (editingOrder) {
@@ -49,6 +53,7 @@ const Procurement: React.FC = () => {
       } else {
         await createPurchaseOrder(poForm, suppliers, profile);
       }
+      await refreshData();
       setIsPOModalOpen(false);
       setEditingOrder(null);
       setPoForm({
@@ -56,11 +61,12 @@ const Procurement: React.FC = () => {
         factoryId: '',
         warehouseId: '',
         status: 'pending',
-        items: [{ itemId: '', quantity: 0, price: 0 }],
+        items: [{ itemId: '', quantity: 1, price: 0 }],
         createdAt: new Date().toISOString().split('T')[0]
       });
     } catch (error) {
       console.error("Error saving purchase order:", error);
+      alert("Failed to save purchase order. See console for details.");
     } finally {
       setSubmitting(false);
     }
@@ -68,15 +74,30 @@ const Procurement: React.FC = () => {
 
   const handleCreateSupplier = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!profile?.companyId) {
+      alert("Missing profile or company ID");
+      return;
+    }
     setSubmitting(true);
     try {
       await createSupplier(supplierForm, profile);
+      await refreshData();
       setIsSupplierModalOpen(false);
       setSupplierForm({ name: '', contact: '', email: '' });
     } catch (error) {
       console.error("Error creating supplier:", error);
+      alert("Failed to create supplier. See console for details.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const onUpdateStatus = async (orderId: string, status: PurchaseOrder['status']) => {
+    try {
+      await updateOrderStatus(orderId, status);
+      await refreshData();
+    } catch (error) {
+      console.error("Error updating status:", error);
     }
   };
 
@@ -215,7 +236,7 @@ const Procurement: React.FC = () => {
                           {order.status === 'pending' && (
                             <>
                               <button 
-                                onClick={() => updateOrderStatus(order.id, 'approved')}
+                                onClick={() => onUpdateStatus(order.id, 'approved')}
                                 className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                                 title="Approve Order"
                               >
@@ -243,7 +264,7 @@ const Procurement: React.FC = () => {
                           )}
                           {order.status === 'approved' && (
                             <button 
-                              onClick={() => updateOrderStatus(order.id, 'shipped')}
+                              onClick={() => onUpdateStatus(order.id, 'shipped')}
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="Mark as Shipped"
                             >
@@ -252,7 +273,7 @@ const Procurement: React.FC = () => {
                           )}
                           {order.status !== 'cancelled' && order.status !== 'received' && (
                             <button 
-                              onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                              onClick={() => onUpdateStatus(order.id, 'cancelled')}
                               className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                               title="Cancel Order"
                             >

@@ -88,6 +88,13 @@ export const createPurchaseOrder = async (req, res) => {
     const finalTotalAmount = totalAmount || total_amount;
     const finalCompanyId = companyId || company_id;
 
+    console.log('Attempting to create purchase order:', { orderId, supplierId: finalSupplierId, companyId: finalCompanyId });
+
+    if (!finalCompanyId || !finalSupplierId) {
+      console.error('Missing required fields for PO creation');
+      return res.status(400).json({ error: 'companyId and supplierId are required' });
+    }
+
     await connection.query(
       'INSERT INTO purchase_orders (id, supplier_id, factory_id, warehouse_id, status, total_amount, company_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [orderId, finalSupplierId, finalFactoryId, finalWarehouseId, status || 'pending', finalTotalAmount, finalCompanyId]
@@ -103,11 +110,12 @@ export const createPurchaseOrder = async (req, res) => {
     }
 
     await connection.commit();
+    console.log('Purchase order created successfully:', orderId);
     res.status(201).json({ id: orderId });
   } catch (error) {
     await connection.rollback();
     console.error('Error creating purchase order:', error);
-    res.status(500).json({ error: 'Failed to create purchase order' });
+    res.status(500).json({ error: 'Failed to create purchase order', details: error.message });
   } finally {
     connection.release();
   }

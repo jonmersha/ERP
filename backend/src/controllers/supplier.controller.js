@@ -57,16 +57,24 @@ export const getAllSuppliers = async (req, res) => {
 export const createSupplier = async (req, res) => {
   try {
     const { id, name, contact, email, company_id, companyId } = req.body;
+    console.log('Attempting to create supplier:', { name, companyId: company_id || companyId });
+    
     const finalCompanyId = company_id || companyId;
+    if (!finalCompanyId) {
+      console.error('Missing companyId for supplier creation');
+      return res.status(400).json({ error: 'companyId is required' });
+    }
+
     const supplierId = id || crypto.randomUUID();
-    await pool.query(
+    const [result] = await pool.query(
       'INSERT INTO suppliers (id, name, contact, email, company_id) VALUES (?, ?, ?, ?, ?)',
       [supplierId, name, contact, email, finalCompanyId]
     );
+    console.log('Supplier created successfully:', supplierId);
     res.status(201).json({ id: supplierId });
   } catch (error) {
     console.error('Error creating supplier:', error);
-    res.status(500).json({ error: 'Failed to create supplier' });
+    res.status(500).json({ error: 'Failed to create supplier', details: error.message });
   }
 };
 
