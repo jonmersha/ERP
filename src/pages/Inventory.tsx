@@ -31,7 +31,8 @@ const Inventory: React.FC = () => {
     pendingSOs,
     grns,
     deliveryNotes,
-    loading
+    loading,
+    refreshData
   } = useInventoryData();
 
   const [activeTab, setActiveTab] = useState<'stock' | 'incoming' | 'outgoing' | 'history'>('stock');
@@ -54,6 +55,7 @@ const Inventory: React.FC = () => {
     setSubmitting(true);
     try {
       await receivePurchaseOrder(selectedPO, grnForm.warehouseId, grnForm.notes, profile);
+      await refreshData();
       setIsGRNModalOpen(false);
       setSelectedPO(null);
       setGrnForm({ warehouseId: '', notes: '' });
@@ -70,6 +72,7 @@ const Inventory: React.FC = () => {
     setSubmitting(true);
     try {
       await shipSalesOrder(selectedSO, dnForm.warehouseId, dnForm.notes, profile);
+      await refreshData();
       setIsDNModalOpen(false);
       setSelectedSO(null);
       setDnForm({ warehouseId: '', notes: '' });

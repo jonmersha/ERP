@@ -12,32 +12,31 @@ export const useProductionData = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchData = async () => {
     if (!profile?.companyId) return;
+    try {
+      const companyId = profile.companyId;
+      const [factoriesData, runsData, plansData, productsData, recipesData] = await Promise.all([
+        fetchCollection('factories', companyId),
+        fetchCollection('productionRuns', companyId, { orderByField: 'startDate', orderDir: 'desc' }),
+        fetchCollection('productionPlans', companyId),
+        fetchCollection('products', companyId),
+        fetchCollection('recipes', companyId)
+      ]);
 
-    const fetchData = async () => {
-      try {
-        const companyId = profile.companyId;
-        const [factoriesData, runsData, plansData, productsData, recipesData] = await Promise.all([
-          fetchCollection('factories', companyId),
-          fetchCollection('productionRuns', companyId, { orderByField: 'startDate', orderDir: 'desc' }),
-          fetchCollection('productionPlans', companyId),
-          fetchCollection('products', companyId),
-          fetchCollection('recipes', companyId)
-        ]);
+      if (Array.isArray(factoriesData)) setFactories(factoriesData as any);
+      if (Array.isArray(runsData)) setRuns(runsData as any);
+      if (Array.isArray(plansData)) setPlans(plansData as any);
+      if (Array.isArray(productsData)) setProducts(productsData as any);
+      if (Array.isArray(recipesData)) setRecipes(recipesData as any);
+    } catch (error) {
+      console.error("Error fetching production data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        if (Array.isArray(factoriesData)) setFactories(factoriesData as any);
-        if (Array.isArray(runsData)) setRuns(runsData as any);
-        if (Array.isArray(plansData)) setPlans(plansData as any);
-        if (Array.isArray(productsData)) setProducts(productsData as any);
-        if (Array.isArray(recipesData)) setRecipes(recipesData as any);
-      } catch (error) {
-        console.error("Error fetching production data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
@@ -49,6 +48,7 @@ export const useProductionData = () => {
     plans,
     products,
     recipes,
-    loading
+    loading,
+    refreshData: fetchData
   };
 };

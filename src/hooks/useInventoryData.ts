@@ -16,56 +16,55 @@ export const useInventoryData = () => {
   const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchData = async () => {
     if (!profile?.companyId) return;
+    try {
+      const companyId = profile.companyId;
+      
+      const [
+        invData, 
+        factoriesData, 
+        warehousesData, 
+        materialsData, 
+        productsData, 
+        poData, 
+        soData, 
+        grnsData, 
+        dnsData
+      ] = await Promise.all([
+        fetchCollection('inventory', companyId),
+        fetchCollection('factories', companyId),
+        fetchCollection('warehouses', companyId),
+        fetchCollection('rawMaterials', companyId),
+        fetchCollection('products', companyId),
+        fetchCollection('purchaseOrders', companyId),
+        fetchCollection('salesOrders', companyId),
+        fetchCollection('grns', companyId),
+        fetchCollection('deliveryNotes', companyId)
+      ]);
 
-    const fetchData = async () => {
-      try {
-        const companyId = profile.companyId;
-        
-        const [
-          invData, 
-          factoriesData, 
-          warehousesData, 
-          materialsData, 
-          productsData, 
-          poData, 
-          soData, 
-          grnsData, 
-          dnsData
-        ] = await Promise.all([
-          fetchCollection('inventory', companyId),
-          fetchCollection('factories', companyId),
-          fetchCollection('warehouses', companyId),
-          fetchCollection('rawMaterials', companyId),
-          fetchCollection('products', companyId),
-          fetchCollection('purchaseOrders', companyId),
-          fetchCollection('salesOrders', companyId),
-          fetchCollection('grns', companyId),
-          fetchCollection('deliveryNotes', companyId)
-        ]);
-
-        if (Array.isArray(invData)) setInventory(invData as any);
-        if (Array.isArray(factoriesData)) setFactories(factoriesData as any);
-        if (Array.isArray(warehousesData)) setWarehouses(warehousesData as any);
-        if (Array.isArray(materialsData)) setMaterials(materialsData as any);
-        if (Array.isArray(productsData)) setProducts(productsData as any);
-        if (Array.isArray(poData)) {
-          setPendingPOs(poData.filter((po: any) => ['approved', 'shipped'].includes(po.status)) as any);
-        }
-        if (Array.isArray(soData)) {
-          setPendingSOs(soData.filter((so: any) => ['paid', 'ready_to_ship'].includes(so.status)) as any);
-        }
-        if (Array.isArray(grnsData)) setGrns(grnsData as any);
-        if (Array.isArray(dnsData)) setDeliveryNotes(dnsData as any);
-
-      } catch (error) {
-        console.error("Error fetching inventory data:", error);
-      } finally {
-        setLoading(false);
+      if (Array.isArray(invData)) setInventory(invData as any);
+      if (Array.isArray(factoriesData)) setFactories(factoriesData as any);
+      if (Array.isArray(warehousesData)) setWarehouses(warehousesData as any);
+      if (Array.isArray(materialsData)) setMaterials(materialsData as any);
+      if (Array.isArray(productsData)) setProducts(productsData as any);
+      if (Array.isArray(poData)) {
+        setPendingPOs(poData.filter((po: any) => ['approved', 'shipped'].includes(po.status)) as any);
       }
-    };
+      if (Array.isArray(soData)) {
+        setPendingSOs(soData.filter((so: any) => ['paid', 'ready_to_ship'].includes(so.status)) as any);
+      }
+      if (Array.isArray(grnsData)) setGrns(grnsData as any);
+      if (Array.isArray(dnsData)) setDeliveryNotes(dnsData as any);
 
+    } catch (error) {
+      console.error("Error fetching inventory data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 30000); // Poll every 30 seconds
 
@@ -82,6 +81,7 @@ export const useInventoryData = () => {
     pendingSOs,
     grns,
     deliveryNotes,
-    loading
+    loading,
+    refreshData: fetchData
   };
 };

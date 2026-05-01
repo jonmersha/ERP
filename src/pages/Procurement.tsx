@@ -165,7 +165,7 @@ const Procurement: React.FC = () => {
                 factoryId: '',
                 warehouseId: '',
                 status: 'pending',
-                items: [{ itemId: '', quantity: 0, price: 0 }],
+                items: [{ itemId: '', quantity: 1, price: 0 }],
                 createdAt: new Date().toISOString().split('T')[0]
               });
               setIsPOModalOpen(true);

@@ -11,7 +11,7 @@ import Badge from '../components/common/Badge';
 
 const Production: React.FC = () => {
   const { profile } = useAuth();
-  const { factories, runs, plans, products, recipes, loading } = useProductionData();
+  const { factories, runs, plans, products, recipes, loading, refreshData } = useProductionData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRun, setSelectedRun] = useState<ProductionRun | null>(null);
   const [progressModal, setProgressModal] = useState<{isOpen: boolean, runId: string, quantity: number, target: number} | null>(null);
@@ -72,6 +72,7 @@ const Production: React.FC = () => {
     setSubmitting(true);
     try {
       await createProductionRun(form, profile);
+      await refreshData();
       setIsModalOpen(false);
       setForm({
         factoryId: '',
@@ -83,6 +84,28 @@ const Production: React.FC = () => {
       });
     } catch (error) {
       console.error("Error creating production run:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onUpdateProgress = async (runId: string, quantity: number, status: string) => {
+    try {
+      await updateProductionProgress(runId, quantity, status as any);
+      await refreshData();
+    } catch (error) {
+      console.error("Error updating production run:", error);
+    }
+  };
+
+  const onTransferToWarehouse = async (productId: string, quantity: number, warehouseId: string) => {
+    try {
+      setSubmitting(true);
+      await transferProductionToWarehouse(productId, quantity, warehouseId, profile);
+      await refreshData();
+      setTransferModal(null);
+    } catch (error) {
+      console.error("Error transferring production:", error);
     } finally {
       setSubmitting(false);
     }
@@ -290,7 +313,7 @@ const Production: React.FC = () => {
                       <div className="flex justify-end space-x-2">
                         {run.status === 'planned' && (
                           <button 
-                            onClick={() => updateProductionProgress(run.id, 0, 'in_progress')}
+                            onClick={() => onUpdateProgress(run.id, 0, 'in_progress')}
                             className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                             title="Start Production"
                           >
@@ -307,7 +330,7 @@ const Production: React.FC = () => {
                               <Clock size={18} />
                             </button>
                             <button 
-                              onClick={() => updateProductionProgress(run.id, run.quantity, 'completed')}
+                              onClick={() => onUpdateProgress(run.id, run.quantity, 'completed')}
                               className="p-2 text-[var(--color-main)] hover:bg-[var(--color-main)]/10 rounded-lg transition-colors"
                               title="Complete Production"
                             >
@@ -610,14 +633,9 @@ const Production: React.FC = () => {
           <button 
             onClick={async () => {
               if(progressModal) {
-                setSubmitting(true);
-                try {
-                  const newStatus = progressModal.quantity >= progressModal.target ? 'completed' : 'in_progress';
-                  await updateProductionProgress(progressModal.runId, progressModal.quantity, newStatus);
-                  setProgressModal(null);
-                } finally {
-                  setSubmitting(false);
-                }
+                const newStatus = progressModal.quantity >= progressModal.target ? 'completed' : 'in_progress';
+                await onUpdateProgress(progressModal.runId, progressModal.quantity, newStatus);
+                setProgressModal(null);
               }
             }}
             disabled={submitting}
@@ -657,13 +675,7 @@ const Production: React.FC = () => {
             onClick={async () => {
               const warehouseId = (document.getElementById('warehouse-select') as HTMLSelectElement).value;
               if(transferModal && warehouseId) {
-                setSubmitting(true);
-                try {
-                  await transferProductionToWarehouse(transferModal.productId, transferModal.quantity, warehouseId, profile);
-                  setTransferModal(null);
-                } finally {
-                  setSubmitting(false);
-                }
+                await onTransferToWarehouse(transferModal.productId, transferModal.quantity, warehouseId);
               }
             }}
             disabled={submitting}
