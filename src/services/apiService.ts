@@ -17,7 +17,9 @@ class ApiService {
 
   private async getHeaders() {
     const token = await auth.currentUser?.getIdToken();
-    console.log('Using token:', token ? token.substring(0, 10) + '...' : 'null');
+    if (token) {
+      console.log('DEBUG: Firebase ID Token for Swagger Authorization:', token);
+    }
     return {
       'Content-Type': 'application/json',
       Authorization: token ? `Bearer ${token}` : '',
