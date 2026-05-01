@@ -1,23 +1,19 @@
 import express from 'express';
 import cors from 'cors';
 import { authenticateToken } from './src/middleware/auth.js';
-import factoryRoutes from './src/routes/factory.routes.js';
-import productionRoutes from './src/routes/production.routes.js';
-import companyRoutes from './src/routes/company.routes.js';
-import inventoryRoutes from './src/routes/inventory.routes.js';
-import salesOrderRoutes from './src/routes/salesOrder.routes.js';
-import purchaseOrderRoutes from './src/routes/purchaseOrder.routes.js';
-import userRoutes from './src/routes/user.routes.js';
-import warehouseRoutes from './src/routes/warehouse.routes.js';
-import outletRoutes from './src/routes/outlet.routes.js';
-import supplierRoutes from './src/routes/supplier.routes.js';
-import rawMaterialRoutes from './src/routes/rawMaterial.routes.js';
-import productRoutes from './src/routes/product.routes.js';
-import productionPlanRoutes from './src/routes/productionPlan.routes.js';
-import categoryRoutes from './src/routes/category.routes.js';
+import procurementRoutes from './src/routes/procurement.routes.js';
+import salesRoutes from './src/routes/sales.routes.js';
+import productionGroupRoutes from './src/routes/productionGroup.routes.js';
 import grnRoutes from './src/routes/grn.routes.js';
 import deliveryNoteRoutes from './src/routes/deliveryNote.routes.js';
 import employeeRoutes from './src/routes/employee.routes.js';
+import productRoutes from './src/routes/product.routes.js';
+import categoryRoutes from './src/routes/category.routes.js';
+import inventoryRoutes from './src/routes/inventory.routes.js';
+import warehouseRoutes from './src/routes/warehouse.routes.js';
+import companyRoutes from './src/routes/company.routes.js';
+import userRoutes from './src/routes/user.routes.js';
+import factoryRoutes from './src/routes/factory.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 
@@ -58,35 +54,23 @@ const apiRouter = express.Router();
 apiRouter.use(authenticateToken);
 
 // Mount all routes on apiRouter
-apiRouter.use('/factories', factoryRoutes);
-apiRouter.use('/production', productionRoutes);
-apiRouter.use('/productionRuns', productionRoutes);
-apiRouter.use('/salesOrders', salesOrderRoutes);
-apiRouter.use('/purchaseOrders', purchaseOrderRoutes);
 apiRouter.use('/companies', companyRoutes);
-apiRouter.use('/sales/orders', salesOrderRoutes);
-apiRouter.use('/sales/outlets', outletRoutes);
-apiRouter.use('/sales', salesOrderRoutes);
-apiRouter.use('/procurement/suppliers', supplierRoutes);
-apiRouter.use('/procurement/purchaseOrders', purchaseOrderRoutes);
-apiRouter.use('/procurement/rawMaterials', rawMaterialRoutes);
-apiRouter.use('/procurement', purchaseOrderRoutes);
-apiRouter.use('/production/runs', productionRoutes);
-apiRouter.use('/production/plans', productionPlanRoutes);
-apiRouter.use('/production', productionRoutes);
-apiRouter.use('/inventory/warehouses', warehouseRoutes);
-apiRouter.use('/inventory', inventoryRoutes);
 apiRouter.use('/users', userRoutes);
-apiRouter.use('/warehouses', warehouseRoutes);
-apiRouter.use('/outlets', outletRoutes);
-apiRouter.use('/suppliers', supplierRoutes);
-apiRouter.use('/rawMaterials', rawMaterialRoutes);
+apiRouter.use('/factories', factoryRoutes);
 apiRouter.use('/products', productRoutes);
 apiRouter.use('/categories', categoryRoutes);
-apiRouter.use('/productionPlans', productionPlanRoutes);
+apiRouter.use('/employees', employeeRoutes);
+
+// Grouped Modules
+apiRouter.use('/procurement', procurementRoutes);
+apiRouter.use('/sales', salesRoutes);
+apiRouter.use('/production', productionGroupRoutes);
+apiRouter.use('/inventory', inventoryRoutes);
+apiRouter.use('/warehouses', warehouseRoutes); // For direct access
 apiRouter.use('/grns', grnRoutes);
 apiRouter.use('/deliveryNotes', deliveryNoteRoutes);
-apiRouter.use('/employees', employeeRoutes);
+
+apiRouter.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // Mount apiRouter on /api
 app.use('/api', apiRouter);
