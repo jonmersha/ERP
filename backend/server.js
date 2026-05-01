@@ -14,6 +14,10 @@ import warehouseRoutes from './src/routes/warehouse.routes.js';
 import companyRoutes from './src/routes/company.routes.js';
 import userRoutes from './src/routes/user.routes.js';
 import factoryRoutes from './src/routes/factory.routes.js';
+import supplierRoutes from './src/routes/supplier.routes.js';
+import purchaseOrderRoutes from './src/routes/purchaseOrder.routes.js';
+import rawMaterialRoutes from './src/routes/rawMaterial.routes.js';
+import outletRoutes from './src/routes/outlet.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 
@@ -66,7 +70,15 @@ apiRouter.use('/procurement', procurementRoutes);
 apiRouter.use('/sales', salesRoutes);
 apiRouter.use('/production', productionGroupRoutes);
 apiRouter.use('/inventory', inventoryRoutes);
-apiRouter.use('/warehouses', warehouseRoutes); // For direct access
+
+// Direct / Legacy aliases for fetchCollection compatibility
+apiRouter.use('/suppliers', supplierRoutes);
+apiRouter.use('/purchaseOrders', purchaseOrderRoutes);
+apiRouter.use('/rawMaterials', rawMaterialRoutes);
+apiRouter.use('/warehouses', warehouseRoutes);
+apiRouter.use('/outlets', outletRoutes);
+apiRouter.use('/inventoryItems', inventoryRoutes);
+
 apiRouter.use('/grns', grnRoutes);
 apiRouter.use('/deliveryNotes', deliveryNoteRoutes);
 
@@ -146,11 +158,24 @@ try {
         id CHAR(36) PRIMARY KEY,
         supplier_id CHAR(36) NOT NULL,
         factory_id CHAR(36),
-        status ENUM('draft', 'ordered', 'received', 'cancelled') DEFAULT 'draft',
+        warehouse_id CHAR(36),
+        status ENUM('pending', 'approved', 'shipped', 'received', 'cancelled') DEFAULT 'pending',
         total_amount DECIMAL(12, 2) NOT NULL,
         company_id CHAR(36) NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT fk_po_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS purchase_order_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        order_id CHAR(36) NOT NULL,
+        item_id CHAR(36) NOT NULL,
+        item_name VARCHAR(255),
+        quantity DECIMAL(12, 2) NOT NULL,
+        price DECIMAL(12, 2) NOT NULL,
+        CONSTRAINT fk_poi_order FOREIGN KEY (order_id) REFERENCES purchase_orders(id) ON DELETE CASCADE
     ) ENGINE=InnoDB;
   `);
 

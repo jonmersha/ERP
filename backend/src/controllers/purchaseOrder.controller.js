@@ -55,6 +55,7 @@ export const getAllPurchaseOrders = async (req, res) => {
       companyId: row.company_id,
       supplierId: row.supplier_id,
       factoryId: row.factory_id,
+      warehouseId: row.warehouse_id,
       totalAmount: row.total_amount,
       createdAt: row.created_at
     }));
@@ -65,29 +66,76 @@ export const getAllPurchaseOrders = async (req, res) => {
 };
 
 export const createPurchaseOrder = async (req, res) => {
+  const connection = await pool.getConnection();
   try {
-    const { id, supplier_id, factory_id, status, total_amount, company_id } = req.body;
+    await connection.beginTransaction();
+
+    const { 
+      id, 
+      supplierId, supplier_id, 
+      factoryId, factory_id,
+      warehouseId, warehouse_id,
+      status, 
+      totalAmount, total_amount, 
+      companyId, company_id,
+      items 
+    } = req.body;
+
     const orderId = id || crypto.randomUUID();
-    await pool.query(
-      'INSERT INTO purchase_orders (id, supplier_id, factory_id, status, total_amount, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [orderId, supplier_id, factory_id, status, total_amount, company_id]
+    const finalSupplierId = supplierId || supplier_id;
+    const finalFactoryId = factoryId || factory_id;
+    const finalWarehouseId = warehouseId || warehouse_id;
+    const finalTotalAmount = totalAmount || total_amount;
+    const finalCompanyId = companyId || company_id;
+
+    await connection.query(
+      'INSERT INTO purchase_orders (id, supplier_id, factory_id, warehouse_id, status, total_amount, company_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [orderId, finalSupplierId, finalFactoryId, finalWarehouseId, status || 'pending', finalTotalAmount, finalCompanyId]
     );
+
+    if (items && Array.isArray(items)) {
+      for (const item of items) {
+        await connection.query(
+          'INSERT INTO purchase_order_items (order_id, item_id, item_name, quantity, price) VALUES (?, ?, ?, ?, ?)',
+          [orderId, item.itemId || item.item_id, item.itemName || item.item_name, item.quantity, item.price]
+        );
+      }
+    }
+
+    await connection.commit();
     res.status(201).json({ id: orderId });
   } catch (error) {
+    await connection.rollback();
+    console.error('Error creating purchase order:', error);
     res.status(500).json({ error: 'Failed to create purchase order' });
+  } finally {
+    connection.release();
   }
 };
 
 export const updatePurchaseOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const { supplier_id, factory_id, status, total_amount } = req.body;
+    const { 
+      supplierId, supplier_id, 
+      factoryId, factory_id, 
+      warehouseId, warehouse_id, 
+      status, 
+      totalAmount, total_amount 
+    } = req.body;
+
+    const finalSupplierId = supplierId || supplier_id;
+    const finalFactoryId = factoryId || factory_id;
+    const finalWarehouseId = warehouseId || warehouse_id;
+    const finalTotalAmount = totalAmount || total_amount;
+
     await pool.query(
-      'UPDATE purchase_orders SET supplier_id = ?, factory_id = ?, status = ?, total_amount = ? WHERE id = ?',
-      [supplier_id, factory_id, status, total_amount, id]
+      'UPDATE purchase_orders SET supplier_id = ?, factory_id = ?, warehouse_id = ?, status = ?, total_amount = ? WHERE id = ?',
+      [finalSupplierId, finalFactoryId, finalWarehouseId, status, finalTotalAmount, id]
     );
     res.json({ message: 'Purchase order updated' });
   } catch (error) {
+    console.error('Error updating purchase order:', error);
     res.status(500).json({ error: 'Failed to update purchase order' });
   }
 };

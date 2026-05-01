@@ -6,6 +6,7 @@ import rawMaterialRoutes from './rawMaterial.routes.js';
 const router = Router();
 
 router.use('/suppliers', supplierRoutes);
+router.use('/orders', purchaseOrderRoutes);
 router.use('/purchaseOrders', purchaseOrderRoutes);
 router.use('/rawMaterials', rawMaterialRoutes);
 router.use('/', purchaseOrderRoutes);

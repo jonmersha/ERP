@@ -40,8 +40,15 @@ import crypto from 'node:crypto';
  */
 export const getAllSuppliers = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM suppliers');
-    res.json(rows);
+    const { companyId } = req.query;
+    let query = 'SELECT * FROM suppliers';
+    let params = [];
+    if (companyId) {
+      query += ' WHERE company_id = ?';
+      params.push(companyId);
+    }
+    const [rows] = await pool.query(query, params);
+    res.json(rows.map(row => ({ ...row, companyId: row.company_id })));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch suppliers' });
   }
@@ -49,14 +56,16 @@ export const getAllSuppliers = async (req, res) => {
 
 export const createSupplier = async (req, res) => {
   try {
-    const { id, name, contact, email, company_id } = req.body;
+    const { id, name, contact, email, company_id, companyId } = req.body;
+    const finalCompanyId = company_id || companyId;
     const supplierId = id || crypto.randomUUID();
     await pool.query(
       'INSERT INTO suppliers (id, name, contact, email, company_id) VALUES (?, ?, ?, ?, ?)',
-      [supplierId, name, contact, email, company_id]
+      [supplierId, name, contact, email, finalCompanyId]
     );
     res.status(201).json({ id: supplierId });
   } catch (error) {
+    console.error('Error creating supplier:', error);
     res.status(500).json({ error: 'Failed to create supplier' });
   }
 };
