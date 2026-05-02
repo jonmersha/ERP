@@ -104,7 +104,7 @@ const Procurement: React.FC = () => {
   const addPOItem = () => {
     setPoForm({
       ...poForm,
-      items: [...poForm.items, { itemId: '', quantity: 0, price: 0 }]
+      items: [...poForm.items, { itemId: '', quantity: 1, price: 0 }]
     });
   };
 
@@ -250,7 +250,7 @@ const Procurement: React.FC = () => {
                                     factoryId: order.factoryId || '',
                                     warehouseId: order.warehouseId || '',
                                     status: order.status,
-                                    items: order.items,
+                                    items: order.items || [{ itemId: '', quantity: 1, price: 0 }],
                                     createdAt: new Date(order.createdAt).toISOString().split('T')[0]
                                   });
                                   setIsPOModalOpen(true);

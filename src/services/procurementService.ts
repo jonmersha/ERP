@@ -11,6 +11,8 @@ export const createPurchaseOrder = async (
   
   return await apiService.post('procurement/orders', {
     ...poForm,
+    factoryId: poForm.factoryId || null,
+    warehouseId: poForm.warehouseId || null,
     supplierName: supplier?.name || 'Unknown',
     totalAmount,
     createdBy: profile?.uid,
@@ -29,6 +31,8 @@ export const updatePurchaseOrder = async (
   
   return await apiService.put(`procurement/orders/${orderId}`, {
     ...poForm,
+    factoryId: poForm.factoryId || null,
+    warehouseId: poForm.warehouseId || null,
     supplierName: supplier?.name || 'Unknown',
     totalAmount,
     createdAt: new Date(poForm.createdAt).toISOString()
