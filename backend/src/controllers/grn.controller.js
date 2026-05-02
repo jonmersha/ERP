@@ -30,17 +30,29 @@ export const getAllGRNs = async (req, res) => {
 
 export const createGRN = async (req, res) => {
   try {
-    const { purchaseOrderId, warehouseId, receiptDate, status, companyId } = req.body;
+    const { 
+      purchaseOrderId, purchase_order_id, 
+      warehouseId, warehouse_id, 
+      receiptDate, receipt_date, 
+      status, 
+      companyId, company_id 
+    } = req.body;
+    
+    const finalPurchaseOrderId = purchaseOrderId || purchase_order_id;
+    const finalWarehouseId = warehouseId || warehouse_id;
+    const finalReceiptDate = receiptDate || receipt_date;
+    const finalCompanyId = companyId || company_id;
+
     const id = crypto.randomUUID();
-    const formattedReceiptDate = receiptDate ? new Date(receiptDate).toISOString().slice(0, 19).replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const formattedReceiptDate = finalReceiptDate ? new Date(finalReceiptDate).toISOString().slice(0, 19).replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     await pool.query(
       'INSERT INTO grns (id, purchase_order_id, warehouse_id, receipt_date, status, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, purchaseOrderId, warehouseId, formattedReceiptDate, status || 'received', companyId]
+      [id, finalPurchaseOrderId, finalWarehouseId, formattedReceiptDate, status || 'received', finalCompanyId]
     );
     res.status(201).json({ id });
   } catch (error) {
     console.error('Create GRN error:', error);
-    res.status(500).json({ error: 'Failed to create GRN' });
+    res.status(500).json({ error: 'Failed to create GRN', details: error.message });
   }
 };

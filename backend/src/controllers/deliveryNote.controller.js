@@ -30,17 +30,29 @@ export const getAllDeliveryNotes = async (req, res) => {
 
 export const createDeliveryNote = async (req, res) => {
   try {
-    const { salesOrderId, outletId, dispatchDate, status, companyId } = req.body;
+    const { 
+      salesOrderId, sales_order_id, 
+      outletId, outlet_id, 
+      dispatchDate, dispatch_date, 
+      status, 
+      companyId, company_id 
+    } = req.body;
+    
+    const finalSalesOrderId = salesOrderId || sales_order_id;
+    const finalOutletId = outletId || outlet_id;
+    const finalDispatchDate = dispatchDate || dispatch_date;
+    const finalCompanyId = companyId || company_id;
+
     const id = crypto.randomUUID();
-    const formattedDispatchDate = dispatchDate ? new Date(dispatchDate).toISOString().slice(0, 19).replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const formattedDispatchDate = finalDispatchDate ? new Date(finalDispatchDate).toISOString().slice(0, 19).replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     await pool.query(
       'INSERT INTO delivery_notes (id, sales_order_id, outlet_id, dispatch_date, status, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, salesOrderId, outletId, formattedDispatchDate, status || 'dispatched', companyId]
+      [id, finalSalesOrderId, finalOutletId, formattedDispatchDate, status || 'dispatched', finalCompanyId]
     );
     res.status(201).json({ id });
   } catch (error) {
     console.error('Create Delivery Note error:', error);
-    res.status(500).json({ error: 'Failed to create Delivery Note' });
+    res.status(500).json({ error: 'Failed to create Delivery Note', details: error.message });
   }
 };

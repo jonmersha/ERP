@@ -39,30 +39,55 @@ export const getAllRecipes = async (req, res) => {
 
 export const createRecipe = async (req, res) => {
   try {
-    const { productId, name, bom, processingSteps, yieldPercentage, companyId } = req.body;
+    const { 
+      productId, product_id, 
+      name, 
+      bom, 
+      processingSteps, processing_steps, 
+      yieldPercentage, yield_percentage, 
+      companyId, company_id 
+    } = req.body;
+    
+    const finalProductId = productId || product_id;
+    const finalProcessingSteps = processingSteps || processing_steps;
+    const finalYieldPercentage = yieldPercentage !== undefined ? yieldPercentage : yield_percentage;
+    const finalCompanyId = companyId || company_id;
+
     const id = crypto.randomUUID();
     await pool.query(
       'INSERT INTO recipes (id, product_id, name, bom, processing_steps, yield_percentage, company_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [id, productId, name, JSON.stringify(bom || []), JSON.stringify(processingSteps || []), yieldPercentage || 100, companyId]
+      [id, finalProductId, name, JSON.stringify(bom || []), JSON.stringify(finalProcessingSteps || []), finalYieldPercentage || 100, finalCompanyId]
     );
     res.status(201).json({ id });
   } catch (error) {
     console.error('Create recipe error:', error);
-    res.status(500).json({ error: 'Failed to create recipe' });
+    res.status(500).json({ error: 'Failed to create recipe', details: error.message });
   }
 };
 
 export const updateRecipe = async (req, res) => {
   try {
     const { id } = req.params;
-    const { productId, name, bom, processingSteps, yieldPercentage } = req.body;
+    const { 
+      productId, product_id, 
+      name, 
+      bom, 
+      processingSteps, processing_steps, 
+      yieldPercentage, yield_percentage 
+    } = req.body;
+    
+    const finalProductId = productId || product_id;
+    const finalProcessingSteps = processingSteps || processing_steps;
+    const finalYieldPercentage = yieldPercentage !== undefined ? yieldPercentage : yield_percentage;
+
     await pool.query(
       'UPDATE recipes SET product_id = ?, name = ?, bom = ?, processing_steps = ?, yield_percentage = ? WHERE id = ?',
-      [productId, name, JSON.stringify(bom || []), JSON.stringify(processingSteps || []), yieldPercentage, id]
+      [finalProductId, name, JSON.stringify(bom || []), JSON.stringify(finalProcessingSteps || []), finalYieldPercentage, id]
     );
     res.json({ message: 'Recipe updated' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update recipe' });
+    console.error('Update recipe error:', error);
+    res.status(500).json({ error: 'Failed to update recipe', details: error.message });
   }
 };
 

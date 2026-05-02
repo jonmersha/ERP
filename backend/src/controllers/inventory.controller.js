@@ -67,33 +67,68 @@ export const getInventory = async (req, res) => {
 
 export const createInventory = async (req, res) => {
   try {
-    const { id, unit_id, item_id, item_type, quantity, batch_number, expiry_date, company_id } = req.body;
+    const { 
+      id, 
+      unitId, unit_id, 
+      itemId, item_id, 
+      itemType, item_type, 
+      quantity, 
+      batchNumber, batch_number, 
+      expiryDate, expiry_date, 
+      companyId, company_id 
+    } = req.body;
+    
     const inventoryId = id || crypto.randomUUID();
-    const formattedExpiryDate = expiry_date ? new Date(expiry_date).toISOString().split('T')[0] : null;
+    const finalExpiryDate = expiryDate || expiry_date;
+    const formattedExpiryDate = finalExpiryDate ? new Date(finalExpiryDate).toISOString().split('T')[0] : null;
 
     await pool.query(
       'INSERT INTO inventory (id, unit_id, item_id, item_type, quantity, batch_number, expiry_date, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [inventoryId, unit_id, item_id, item_type, quantity, batch_number, formattedExpiryDate, company_id]
+      [inventoryId, unitId || unit_id, itemId || item_id, itemType || item_type, quantity, batchNumber || batch_number, formattedExpiryDate, companyId || company_id]
     );
     res.status(201).json({ id: inventoryId });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to add inventory item' });
+    console.error('Inventory create error', error);
+    res.status(500).json({ error: 'Failed to add inventory item', details: error.message });
   }
 };
 
 export const updateInventory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { unit_id, item_id, item_type, quantity, batch_number, expiry_date } = req.body;
-    const formattedExpiryDate = expiry_date ? new Date(expiry_date).toISOString().split('T')[0] : null;
+    const { 
+      unitId, unit_id, 
+      itemId, item_id, 
+      itemType, item_type, 
+      quantity, 
+      batchNumber, batch_number, 
+      expiryDate, expiry_date 
+    } = req.body;
+    
+    // fetch existing
+    const [existing] = await pool.query('SELECT * FROM inventory WHERE id = ?', [id]);
+    if (existing.length === 0) return res.status(404).json({error: 'Not found'});
+    const current = existing[0];
+    
+    const finalExpiryDate = expiryDate || expiry_date || current.expiry_date;
+    const formattedExpiryDate = finalExpiryDate ? new Date(finalExpiryDate).toISOString().split('T')[0] : null;
 
     await pool.query(
       'UPDATE inventory SET unit_id = ?, item_id = ?, item_type = ?, quantity = ?, batch_number = ?, expiry_date = ? WHERE id = ?',
-      [unit_id, item_id, item_type, quantity, batch_number, formattedExpiryDate, id]
+      [
+        unitId || unit_id || current.unit_id, 
+        itemId || item_id || current.item_id, 
+        itemType || item_type || current.item_type, 
+        quantity !== undefined ? quantity : current.quantity, 
+        batchNumber || batch_number || current.batch_number, 
+        formattedExpiryDate, 
+        id
+      ]
     );
     res.json({ message: 'Inventory item updated' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update inventory item' });
+    console.error('Inventory update error', error);
+    res.status(500).json({ error: 'Failed to update inventory item', details: error.message });
   }
 };
 

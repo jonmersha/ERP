@@ -38,30 +38,58 @@ export const getAllProductionPlans = async (req, res) => {
 
 export const createProductionPlan = async (req, res) => {
   try {
-    const { factoryId, productId, year, totalQuantity, status, companyId, quarterlyPlans } = req.body;
+    const { 
+      factoryId, factory_id, 
+      productId, product_id, 
+      year, 
+      totalQuantity, total_quantity, 
+      status, 
+      companyId, company_id, 
+      quarterlyPlans, quarterly_plans 
+    } = req.body;
+    
+    const finalFactoryId = factoryId || factory_id;
+    const finalProductId = productId || product_id;
+    const finalTotalQuantity = totalQuantity || total_quantity;
+    const finalCompanyId = companyId || company_id;
+    const finalQuarterlyPlans = quarterlyPlans || quarterly_plans;
+
     const id = crypto.randomUUID();
     await pool.query(
       'INSERT INTO production_plans (id, factory_id, product_id, year, total_quantity, status, company_id, quarterly_plans) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, factoryId, productId, year, totalQuantity, status || 'planned', companyId, JSON.stringify(quarterlyPlans || [])]
+      [id, finalFactoryId, finalProductId, year, finalTotalQuantity, status || 'planned', finalCompanyId, JSON.stringify(finalQuarterlyPlans || [])]
     );
     res.status(201).json({ id });
   } catch (error) {
     console.error('Create production plan error:', error);
-    res.status(500).json({ error: 'Failed to create production plan' });
+    res.status(500).json({ error: 'Failed to create production plan', details: error.message });
   }
 };
 
 export const updateProductionPlan = async (req, res) => {
   try {
     const { id } = req.params;
-    const { factoryId, productId, year, totalQuantity, status, quarterlyPlans } = req.body;
+    const { 
+      factoryId, factory_id, 
+      productId, product_id, 
+      year, 
+      totalQuantity, total_quantity, 
+      status, 
+      quarterlyPlans, quarterly_plans 
+    } = req.body;
+    
+    const finalFactoryId = factoryId || factory_id;
+    const finalProductId = productId || product_id;
+    const finalTotalQuantity = totalQuantity || total_quantity;
+    const finalQuarterlyPlans = quarterlyPlans || quarterly_plans;
+
     await pool.query(
       'UPDATE production_plans SET factory_id = ?, product_id = ?, year = ?, total_quantity = ?, status = ?, quarterly_plans = ? WHERE id = ?',
-      [factoryId, productId, year, totalQuantity, status, JSON.stringify(quarterlyPlans || []), id]
+      [finalFactoryId, finalProductId, year, finalTotalQuantity, status, JSON.stringify(finalQuarterlyPlans || []), id]
     );
     res.json({ message: 'Production plan updated' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update production plan' });
+    res.status(500).json({ error: 'Failed to update production plan', details: error.message });
   }
 };
 
