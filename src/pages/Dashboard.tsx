@@ -18,7 +18,9 @@ import {
   Settings,
   ClipboardList,
   Truck,
-  Activity
+  Activity,
+  CheckCircle2,
+  Plus
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -74,12 +76,14 @@ const Dashboard: React.FC = () => {
   const [stats, setStats] = useState({
     factories: 0,
     warehouses: 0,
+    outlets: 0,
     orders: 0,
     revenue: 0,
     lowStock: 0
   });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [recentRuns, setRecentRuns] = useState<any[]>([]);
+  const [inventory, setInventory] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [allRuns, setAllRuns] = useState<any[]>([]);
   const [procurementStats, setProcurementStats] = useState<any[]>([]);
@@ -130,7 +134,8 @@ const Dashboard: React.FC = () => {
           fetchCollection('productionRuns', companyId, { limitCount: 3, orderByField: 'startDate', orderDir: 'desc' }),
           fetchCollection('productionRuns', companyId),
           fetchCollection('procurementPlans', companyId),
-          fetchCollection('productionPlans', companyId)
+          fetchCollection('productionPlans', companyId),
+          fetchCollection('outlets', companyId)
         ]);
 
         const [
@@ -143,7 +148,8 @@ const Dashboard: React.FC = () => {
           recentRunsData,
           allRunsData,
           procurementPlansData,
-          productionPlansData
+          productionPlansData,
+          outletsData
         ] = results.map(r => r.status === 'fulfilled' ? r.value : []);
 
         if (results.some(r => r.status === 'rejected')) {
@@ -157,12 +163,14 @@ const Dashboard: React.FC = () => {
         setStats({
           factories: Array.isArray(factoriesData) ? factoriesData.length : 0,
           warehouses: Array.isArray(warehousesData) ? warehousesData.length : 0,
+          outlets: Array.isArray(outletsData) ? outletsData.length : 0,
           orders: Array.isArray(ordersData) ? ordersData.length : 0,
           revenue: totalRevenue,
           lowStock: lowStockCount
         });
 
         setProducts(Array.isArray(productsData) ? productsData : []);
+        setInventory(Array.isArray(inventoryData) ? inventoryData : []);
         setRecentOrders(Array.isArray(recentOrdersData) ? recentOrdersData : []);
         setRecentRuns(Array.isArray(recentRunsData) ? recentRunsData : []);
         setAllRuns(Array.isArray(allRunsData) ? allRunsData : []);
@@ -281,6 +289,20 @@ const Dashboard: React.FC = () => {
           <h2 className="text-2xl font-serif font-bold text-[var(--color-main)]">Operational Overview</h2>
           <p className="text-[var(--color-text)]/40 mt-1 text-sm">Real-time performance metrics across all units</p>
         </div>
+        <div className="hidden md:flex items-center space-x-2">
+          <button 
+            onClick={() => router.push('/sales')}
+            className="flex items-center space-x-2 px-4 py-2 bg-[var(--color-main)] text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-sm"
+          >
+            <Plus size={14} className="mr-1" /> New Order
+          </button>
+          <button 
+            onClick={() => router.push('/production')}
+            className="flex items-center space-x-2 px-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] rounded-xl text-xs font-bold hover:bg-[var(--color-bg)] transition-all"
+          >
+            <Plus size={14} className="mr-1 text-[var(--color-main)]" /> New Run
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -315,6 +337,86 @@ const Dashboard: React.FC = () => {
           color="bg-[var(--color-accent)]" 
           onClick={() => router.push('/inventory')}
         />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Quick Product View */}
+        <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Quick Product View</h3>
+              <p className="text-sm text-[var(--color-text)]/40">Top performing and key products</p>
+            </div>
+            <Package className="text-[var(--color-main)]" size={24} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {products.slice(0, 4).map(product => {
+              const productInventory = inventory.filter(i => i.productId === product.id);
+              const totalStock = productInventory.reduce((sum, item) => sum + (item.quantity || 0), 0);
+              return (
+                <div key={product.id} className="p-4 rounded-2xl bg-[var(--color-bg)]/50 border border-[var(--color-text)]/5 transition-all hover:border-[var(--color-main)]/20">
+                  <p className="font-bold text-[var(--color-text)] text-sm truncate">{product.name}</p>
+                  <p className="text-xs text-[var(--color-text)]/40 mt-1">{product.category}</p>
+                  <div className="mt-3 flex justify-between items-end">
+                    <div>
+                      <p className="text-[10px] font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Stock</p>
+                      <p className={`text-sm font-bold ${totalStock < 100 ? 'text-rose-500' : 'text-[var(--color-text)]'}`}>{totalStock.toLocaleString()} {product.unit}</p>
+                    </div>
+                    <button 
+                      onClick={() => router.push('/inventory')}
+                      className="text-[10px] font-bold text-[var(--color-main)] hover:underline uppercase"
+                    >
+                      Manage
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Stock Alerts */}
+        <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Stock Alerts</h3>
+              <p className="text-sm text-[var(--color-text)]/40">Items requiring immediate attention</p>
+            </div>
+            <AlertTriangle className="text-rose-500" size={24} />
+          </div>
+          <div className="space-y-4">
+            {inventory.filter(i => i.quantity < 100).slice(0, 3).map((item, idx) => {
+              const product = products.find(p => p.id === item.productId);
+              return (
+                <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-rose-50/30 border border-rose-100">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600">
+                      <Package size={20} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-rose-900 text-sm">{product?.name || item.productName || 'Unknown'}</p>
+                      <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest">Low Stock: {item.quantity.toLocaleString()} remaining</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => router.push('/procurement')}
+                    className="px-4 py-1.5 bg-rose-600 text-white text-[10px] font-bold rounded-lg hover:bg-rose-700 transition-colors uppercase"
+                  >
+                    Restock
+                  </button>
+                </div>
+              );
+            })}
+            {inventory.filter(i => i.quantity < 100).length === 0 && (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle2 size={24} />
+                </div>
+                <p className="text-sm text-[var(--color-text)]/40">All inventory levels are optimal.</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -537,10 +639,10 @@ const Dashboard: React.FC = () => {
             <div className="space-y-2 cursor-pointer group" onClick={() => router.push('/sales')}>
               <div className="flex justify-between text-sm">
                 <span className="text-[var(--color-text)]/60 group-hover:text-amber-500 transition-colors">Retail Outlets</span>
-                <span className="font-bold">12</span>
+                <span className="font-bold">{stats.outlets}</span>
               </div>
               <div className="h-2 bg-[var(--color-bg)] rounded-full overflow-hidden">
-                <div className="h-full bg-amber-500" style={{ width: '85%' }}></div>
+                <div className="h-full bg-amber-500" style={{ width: `${Math.min(stats.outlets * 10, 100)}%` }}></div>
               </div>
             </div>
           </div>
