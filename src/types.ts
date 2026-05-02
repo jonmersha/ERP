@@ -167,8 +167,10 @@ export interface ProductionRun {
 
 export interface ProcurementPlan {
   id: string;
+  factoryId: string;
   warehouseId: string;
-  materialId: string;
+  productId?: string;
+  materialId?: string;
   year: number;
   totalQuantity: number;
   quarterlyPlans: QuarterlyPlan[];
@@ -310,3 +312,16 @@ export interface FinancialPlan {
   targetExpense: number;
   companyId: string;
 }
+
+export interface QualityCheck {
+  id: string;
+  referenceId: string;
+  referenceType: 'production_run' | 'grn' | 'inventory';
+  itemId: string;
+  inspectorId: string;
+  checkDate: string;
+  status: 'passed' | 'failed' | 'pending' | 'quarantined';
+  notes?: string;
+  companyId: string;
+}
+

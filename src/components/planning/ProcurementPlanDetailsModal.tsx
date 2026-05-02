@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProcurementPlan, RawMaterial } from '../../types';
+import { ProcurementPlan, RawMaterial, Product, Factory } from '../../types';
 import Modal from '../Modal';
 import { Edit, Trash2 } from 'lucide-react';
 
@@ -8,16 +8,19 @@ interface Props {
   onClose: () => void;
   plan: ProcurementPlan;
   material: RawMaterial | undefined;
+  product: Product | undefined;
+  factory: Factory | undefined;
   onSuccess: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-const ProcurementPlanDetailsModal: React.FC<Props> = ({ isOpen, onClose, plan, material, onSuccess, onEdit, onDelete }) => {
+const ProcurementPlanDetailsModal: React.FC<Props> = ({ isOpen, onClose, plan, material, product, factory, onSuccess, onEdit, onDelete }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Details: ${material?.name || 'Material'}`}>
+    <Modal isOpen={isOpen} onClose={onClose} title={`Details: ${product?.name || material?.name || 'Material/Product'}`}>
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
+          {factory && <p><span className="font-bold">Factory:</span> {factory.name}</p>}
           <p><span className="font-bold">Total Quantity:</span> {(plan.totalQuantity || 0).toLocaleString()}</p>
           <p><span className="font-bold">Status:</span> <span className="capitalize">{plan.status}</span></p>
         </div>

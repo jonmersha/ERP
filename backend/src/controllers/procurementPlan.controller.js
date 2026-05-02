@@ -16,7 +16,9 @@ export const getAllProcurementPlans = async (req, res) => {
     const mappedRows = rows.map(row => ({
       ...row,
       companyId: row.company_id,
+      factoryId: row.factory_id,
       warehouseId: row.warehouse_id,
+      productId: row.product_id,
       materialId: row.material_id,
       totalQuantity: row.total_quantity,
       quarterlyPlans: row.quarterly_plans,
@@ -38,7 +40,9 @@ export const getAllProcurementPlans = async (req, res) => {
 export const createProcurementPlan = async (req, res) => {
   try {
     const { 
-      warehouseId, warehouse_id, 
+      factoryId, factory_id,
+      warehouseId, warehouse_id,
+      productId, product_id, 
       materialId, material_id, 
       year, 
       totalQuantity, total_quantity, 
@@ -47,16 +51,18 @@ export const createProcurementPlan = async (req, res) => {
       quarterlyPlans, quarterly_plans 
     } = req.body;
     
-    const finalWarehouseId = warehouseId || warehouse_id;
-    const finalMaterialId = materialId || material_id;
+    const finalFactoryId = factoryId || factory_id || null;
+    const finalWarehouseId = warehouseId || warehouse_id || null;
+    const finalProductId = productId || product_id || null;
+    const finalMaterialId = materialId || material_id || null;
     const finalTotalQuantity = totalQuantity || total_quantity;
     const finalCompanyId = companyId || company_id;
     const finalQuarterlyPlans = quarterlyPlans || quarterly_plans;
 
     const id = crypto.randomUUID();
     await pool.query(
-      'INSERT INTO procurement_plans (id, warehouse_id, material_id, year, total_quantity, status, company_id, quarterly_plans) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, finalWarehouseId, finalMaterialId, year, finalTotalQuantity, status || 'planned', finalCompanyId, JSON.stringify(finalQuarterlyPlans || [])]
+      'INSERT INTO procurement_plans (id, factory_id, warehouse_id, product_id, material_id, year, total_quantity, status, company_id, quarterly_plans) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, finalFactoryId, finalWarehouseId, finalProductId, finalMaterialId, year, finalTotalQuantity, status || 'planned', finalCompanyId, JSON.stringify(finalQuarterlyPlans || [])]
     );
     res.status(201).json({ id });
   } catch (error) {
@@ -69,7 +75,9 @@ export const updateProcurementPlan = async (req, res) => {
   try {
     const { id } = req.params;
     const { 
+      factoryId, factory_id,
       warehouseId, warehouse_id, 
+      productId, product_id,
       materialId, material_id, 
       year, 
       totalQuantity, total_quantity, 
@@ -77,14 +85,16 @@ export const updateProcurementPlan = async (req, res) => {
       quarterlyPlans, quarterly_plans 
     } = req.body;
     
-    const finalWarehouseId = warehouseId || warehouse_id;
-    const finalMaterialId = materialId || material_id;
+    const finalFactoryId = factoryId || factory_id || null;
+    const finalWarehouseId = warehouseId || warehouse_id || null;
+    const finalProductId = productId || product_id || null;
+    const finalMaterialId = materialId || material_id || null;
     const finalTotalQuantity = totalQuantity || total_quantity;
     const finalQuarterlyPlans = quarterlyPlans || quarterly_plans;
 
     await pool.query(
-      'UPDATE procurement_plans SET warehouse_id = ?, material_id = ?, year = ?, total_quantity = ?, status = ?, quarterly_plans = ? WHERE id = ?',
-      [finalWarehouseId, finalMaterialId, year, finalTotalQuantity, status, JSON.stringify(finalQuarterlyPlans || []), id]
+      'UPDATE procurement_plans SET factory_id = ?, warehouse_id = ?, product_id = ?, material_id = ?, year = ?, total_quantity = ?, status = ?, quarterly_plans = ? WHERE id = ?',
+      [finalFactoryId, finalWarehouseId, finalProductId, finalMaterialId, year, finalTotalQuantity, status, JSON.stringify(finalQuarterlyPlans || []), id]
     );
     res.json({ message: 'Procurement plan updated' });
   } catch (error) {

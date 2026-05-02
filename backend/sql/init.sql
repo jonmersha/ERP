@@ -136,6 +136,20 @@ CREATE TABLE production_runs (
     CONSTRAINT fk_prun_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE quality_checks (
+    id CHAR(36) PRIMARY KEY,
+    reference_id CHAR(36) NOT NULL,
+    reference_type ENUM('production_run', 'grn', 'inventory') NOT NULL,
+    item_id CHAR(36) NOT NULL,
+    inspector_id CHAR(36) NOT NULL,
+    check_date DATETIME NOT NULL,
+    status ENUM('passed', 'failed', 'pending', 'quarantined') NOT NULL DEFAULT 'pending',
+    notes TEXT,
+    company_id CHAR(36) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_qc_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- 7. Orders & Finance
 CREATE TABLE purchase_orders (
     id CHAR(36) PRIMARY KEY,

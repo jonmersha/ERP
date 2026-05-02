@@ -22,10 +22,30 @@ import productionRoutes from './src/routes/production.routes.js';
 import productionPlanRoutes from './src/routes/productionPlan.routes.js';
 import outletRoutes from './src/routes/outlet.routes.js';
 import recipeRoutes from './src/routes/recipe.routes.js';
+import qualityRoutes from './src/routes/quality.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import pool from './src/db.js';
 
 const app = express();
+
+// Ensure quality_checks table exists
+pool.query(`
+  CREATE TABLE IF NOT EXISTS quality_checks (
+      id CHAR(36) PRIMARY KEY,
+      reference_id CHAR(36) NOT NULL,
+      reference_type ENUM('production_run', 'grn', 'inventory') NOT NULL,
+      item_id CHAR(36) NOT NULL,
+      inspector_id CHAR(36) NOT NULL,
+      check_date DATETIME NOT NULL,
+      status ENUM('passed', 'failed', 'pending', 'quarantined') NOT NULL DEFAULT 'pending',
+      notes TEXT,
+      company_id CHAR(36) NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_qc_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB;
+`).catch(console.error);
+
 app.use(cors());
 app.use(express.json());
 
@@ -99,6 +119,7 @@ apiRouter.use('/inventoryItems', inventoryRoutes);
 apiRouter.use('/productionRuns', productionRoutes);
 apiRouter.use('/productionPlans', productionPlanRoutes);
 apiRouter.use('/recipes', recipeRoutes);
+apiRouter.use('/quality', qualityRoutes);
 
 apiRouter.use('/grns', grnRoutes);
 apiRouter.use('/deliveryNotes', deliveryNoteRoutes);
@@ -322,8 +343,10 @@ try {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS procurement_plans (
         id CHAR(36) PRIMARY KEY,
-        warehouse_id CHAR(36) NOT NULL,
-        material_id CHAR(36) NOT NULL,
+        factory_id CHAR(36),
+        warehouse_id CHAR(36),
+        product_id CHAR(36),
+        material_id CHAR(36),
         year INT NOT NULL,
         total_quantity DECIMAL(12, 2) NOT NULL,
         quarterly_plans JSON,
@@ -333,6 +356,15 @@ try {
         CONSTRAINT fk_procplan_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
     ) ENGINE=InnoDB;
   `);
+
+  try {
+    await pool.query('ALTER TABLE procurement_plans ADD COLUMN factory_id CHAR(36) AFTER id');
+    await pool.query('ALTER TABLE procurement_plans ADD COLUMN product_id CHAR(36) AFTER warehouse_id');
+    await pool.query('ALTER TABLE procurement_plans MODIFY COLUMN warehouse_id CHAR(36) NULL');
+    await pool.query('ALTER TABLE procurement_plans MODIFY COLUMN material_id CHAR(36) NULL');
+  } catch (e) {
+    // ignores if already exists
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sales_plans (

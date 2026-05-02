@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ProcurementPlan, Warehouse, RawMaterial } from '../../types';
+import { ProcurementPlan, Warehouse, RawMaterial, Factory, Product } from '../../types';
 import { getProcurementPlans, deleteProcurementPlan } from '../../services/planningService';
 import { useAuth } from '../../context/AuthContext';
 import { Loader2, Plus, Info } from 'lucide-react';
@@ -9,9 +9,11 @@ import ProcurementPlanDetailsModal from './ProcurementPlanDetailsModal';
 interface Props {
   warehouses: Warehouse[];
   materials: RawMaterial[];
+  factories: Factory[];
+  products: Product[];
 }
 
-const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials }) => {
+const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials, factories, products }) => {
   const { profile } = useAuth();
   const [plans, setPlans] = useState<ProcurementPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,8 +63,9 @@ const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials }) => {
       <table className="w-full text-left">
         <thead>
           <tr className="text-[var(--color-text)]/40 text-sm">
+            <th className="pb-2">Factory</th>
             <th className="pb-2">Warehouse</th>
-            <th className="pb-2">Material</th>
+            <th className="pb-2">Item</th>
             <th className="pb-2">Year</th>
             <th className="pb-2">Total Quantity</th>
             <th className="pb-2">Status</th>
@@ -76,8 +79,13 @@ const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials }) => {
               className="border-t border-[var(--color-text)]/5 cursor-pointer hover:bg-[var(--color-text)]/5"
               onClick={() => setSelectedPlan(plan)}
             >
-              <td className="py-3">{warehouses.find(w => w.id === plan.warehouseId)?.name || plan.warehouseId}</td>
-              <td className="py-3">{materials.find(m => m.id === plan.materialId)?.name || plan.materialId}</td>
+              <td className="py-3">{factories.find(f => f.id === plan.factoryId)?.name || plan.factoryId || '-'}</td>
+              <td className="py-3">{warehouses.find(w => w.id === plan.warehouseId)?.name || plan.warehouseId || '-'}</td>
+              <td className="py-3">
+                {plan.productId 
+                  ? products.find(p => p.id === plan.productId)?.name || plan.productId 
+                  : materials.find(m => m.id === plan.materialId)?.name || plan.materialId || '-'}
+              </td>
               <td className="py-3">{plan.year}</td>
               <td className="py-3">{(plan.totalQuantity || 0).toLocaleString()}</td>
               <td className="py-3 capitalize">{plan.status}</td>
@@ -99,6 +107,8 @@ const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials }) => {
         onClose={() => { setIsModalOpen(false); setSelectedPlan(null); }} 
         warehouses={warehouses}
         materials={materials}
+        factories={factories}
+        products={products}
         onSuccess={fetchPlans}
         plan={selectedPlan || undefined}
       />
@@ -108,6 +118,8 @@ const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials }) => {
           onClose={() => setSelectedPlan(null)}
           plan={selectedPlan}
           material={materials.find(m => m.id === selectedPlan.materialId)}
+          factory={factories.find(f => f.id === selectedPlan.factoryId)}
+          product={products.find(p => p.id === selectedPlan.productId)}
           onSuccess={fetchPlans}
           onEdit={() => { setIsModalOpen(true); }}
           onDelete={() => { setPlanToDelete(selectedPlan); setSelectedPlan(null); }}
