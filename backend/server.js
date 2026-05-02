@@ -139,8 +139,6 @@ app.get('/', (req, res) => {
   res.send('Backend API Server running.');
 });
 
-import pool from './src/db.js';
-
 const initDb = async () => {
 try {
   await pool.query(`
