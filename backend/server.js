@@ -352,7 +352,6 @@ try {
         id CHAR(36) PRIMARY KEY,
         factory_id CHAR(36),
         warehouse_id CHAR(36),
-        product_id CHAR(36),
         material_id CHAR(36),
         year INT NOT NULL,
         total_quantity DECIMAL(12, 2) NOT NULL,
@@ -366,7 +365,6 @@ try {
 
   try {
     await pool.query('ALTER TABLE procurement_plans ADD COLUMN factory_id CHAR(36) AFTER id');
-    await pool.query('ALTER TABLE procurement_plans ADD COLUMN product_id CHAR(36) AFTER warehouse_id');
     await pool.query('ALTER TABLE procurement_plans MODIFY COLUMN warehouse_id CHAR(36) NULL');
     await pool.query('ALTER TABLE procurement_plans MODIFY COLUMN material_id CHAR(36) NULL');
   } catch (e) {
