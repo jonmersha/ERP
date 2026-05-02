@@ -56,8 +56,9 @@ export const getAllProductionRuns = async (req, res) => {
       factoryId: row.factory_id,
       productId: row.product_id,
       recipeId: row.recipe_id,
-      quantityPlanned: row.quantity_planned,
-      quantityProduced: row.quantity_produced,
+      quantityPlanned: typeof row.quantity_planned === 'string' ? parseFloat(row.quantity_planned) : row.quantity_planned,
+      quantityProduced: typeof row.quantity_produced === 'string' ? parseFloat(row.quantity_produced) : row.quantity_produced,
+      quantity: typeof row.quantity_planned === 'string' ? parseFloat(row.quantity_planned) : row.quantity_planned,
       startDate: row.start_date,
       createdAt: row.created_at
     }));
