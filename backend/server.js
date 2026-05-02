@@ -21,6 +21,7 @@ import salesOrderRoutes from './src/routes/salesOrder.routes.js';
 import productionRoutes from './src/routes/production.routes.js';
 import productionPlanRoutes from './src/routes/productionPlan.routes.js';
 import outletRoutes from './src/routes/outlet.routes.js';
+import recipeRoutes from './src/routes/recipe.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 
@@ -97,7 +98,7 @@ apiRouter.use('/outlets', outletRoutes);
 apiRouter.use('/inventoryItems', inventoryRoutes);
 apiRouter.use('/productionRuns', productionRoutes);
 apiRouter.use('/productionPlans', productionPlanRoutes);
-apiRouter.use('/recipes', productionRoutes); // recipes are handled by productionRoutes
+apiRouter.use('/recipes', recipeRoutes);
 
 apiRouter.use('/grns', grnRoutes);
 apiRouter.use('/deliveryNotes', deliveryNoteRoutes);
