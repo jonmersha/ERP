@@ -174,10 +174,10 @@ const Production: React.FC = () => {
           const factoryRuns = runs.filter(r => r.factoryId === factory.id);
           const activeRuns = factoryRuns.filter(r => r.status === 'in_progress');
           const factoryPlans = plans.filter(p => p.factoryId === factory.id);
-          const totalPlanned = factoryPlans.reduce((acc, p) => acc + (p.totalQuantity || 0), 0);
+          const totalPlanned = factoryPlans.reduce((acc, p) => acc + Number(p.totalQuantity || 0), 0);
           
-          const totalProduced = activeRuns.reduce((acc, r) => acc + (r.quantityProduced || 0), 0);
-          const totalTarget = activeRuns.reduce((acc, r) => acc + (r.quantity || 0), 0);
+          const totalProduced = activeRuns.reduce((acc, r) => acc + Number(r.quantityProduced || 0), 0);
+          const totalTarget = activeRuns.reduce((acc, r) => acc + Number(r.quantity || 0), 0);
           const productionRate = totalTarget > 0 ? Math.round((totalProduced / totalTarget) * 100) : 0;
 
           return (

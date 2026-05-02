@@ -93,8 +93,8 @@ const Dashboard: React.FC = () => {
         const product = products.find(p => p.id === run.productId);
         productSummary[run.productId] = { name: product?.name || run.productName || 'Unknown', actual: 0, target: 0 };
       }
-      productSummary[run.productId].actual += run.actualQuantity || 0;
-      productSummary[run.productId].target += run.targetQuantity || 0;
+      productSummary[run.productId].actual += Number(run.actualQuantity || 0);
+      productSummary[run.productId].target += Number(run.targetQuantity || 0);
     });
 
     return Object.values(productSummary).slice(0, 5);
@@ -151,7 +151,7 @@ const Dashboard: React.FC = () => {
         }
 
         // Update stats
-        const totalRevenue = Array.isArray(ordersData) ? ordersData.reduce((acc: number, doc: any) => acc + (doc.totalAmount || 0), 0) : 0;
+        const totalRevenue = Array.isArray(ordersData) ? ordersData.reduce((acc: number, doc: any) => acc + Number(doc.totalAmount || 0), 0) : 0;
         const lowStockCount = Array.isArray(inventoryData) ? inventoryData.filter((doc: any) => doc.quantity < 100).length : 0;
 
         setStats({
@@ -189,7 +189,7 @@ const Dashboard: React.FC = () => {
           productionPlansData.forEach((plan: any) => {
             const date = new Date(plan.startDate || plan.createdAt || new Date());
             const month = date.toLocaleString('default', { month: 'short' });
-            monthlyData[month] = (monthlyData[month] || 0) + (plan.totalQuantity || plan.targetQuantity || 0);
+            monthlyData[month] = Number(monthlyData[month] || 0) + Number(plan.totalQuantity || plan.targetQuantity || 0);
           });
         }
         setPlanningStats(Object.entries(monthlyData).map(([name, value]) => ({ name, value })));

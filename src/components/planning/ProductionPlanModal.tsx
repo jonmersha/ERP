@@ -143,7 +143,7 @@ const ProductionPlanModal: React.FC<Props> = ({ isOpen, onClose, factories, prod
                 <span className="font-bold">{q.quarter}</span>
                 <input type="number" value={q.quantity} onChange={e => {
                   const newQPlans = (form.quarterlyPlans || []).map((qp, i) => i === qIdx ? { ...qp, quantity: parseInt(e.target.value) || 0 } : qp);
-                  const newTotalQuantity = newQPlans.reduce((sum, q) => sum + q.quantity, 0);
+                  const newTotalQuantity = newQPlans.reduce((sum, q) => sum + Number(q.quantity || 0), 0);
                   setForm({...form, quarterlyPlans: newQPlans, totalQuantity: newTotalQuantity});
                 }} className="w-20 p-1 rounded border border-[var(--color-text)]/10 bg-[var(--color-surface)]" disabled={isApproved} />
               </div>
@@ -152,12 +152,12 @@ const ProductionPlanModal: React.FC<Props> = ({ isOpen, onClose, factories, prod
                   <input key={m.month} type="number" value={m.quantity} onChange={e => {
                     const newQPlans = (form.quarterlyPlans || []).map((qp, i) => {
                       if (i === qIdx) {
-                        const newMonthlyPlans = (qp.monthlyPlans || []).map((mp, j) => j === mIdx ? { ...mp, quantity: parseInt(e.target.value) || 0 } : mp);
-                        return { ...qp, monthlyPlans: newMonthlyPlans, quantity: newMonthlyPlans.reduce((sum, m) => sum + m.quantity, 0) };
+                        const newMonthlyPlans = (qp.monthlyPlans || []).map((mp, j) => j === mIdx ? { ...mp, quantity: Number(e.target.value) || 0 } : mp);
+                        return { ...qp, monthlyPlans: newMonthlyPlans, quantity: newMonthlyPlans.reduce((sum, m) => sum + Number(m.quantity || 0), 0) };
                       }
                       return qp;
                     });
-                    const newTotalQuantity = newQPlans.reduce((sum, q) => sum + q.quantity, 0);
+                    const newTotalQuantity = newQPlans.reduce((sum, q) => sum + Number(q.quantity || 0), 0);
                     setForm({...form, quarterlyPlans: newQPlans, totalQuantity: newTotalQuantity});
                   }} className="p-1 rounded border border-[var(--color-text)]/10 bg-[var(--color-surface)]" disabled={isApproved} />
                 ))}

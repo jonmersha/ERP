@@ -54,7 +54,7 @@ const HR: React.FC = () => {
     (emp.department?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
-  const totalPayroll = employees.reduce((sum, emp) => sum + emp.salary, 0);
+  const totalPayroll = employees.reduce((sum, emp) => sum + Number(emp.salary || 0), 0);
 
   if (loading) {
     return (

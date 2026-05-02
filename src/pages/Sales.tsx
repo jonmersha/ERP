@@ -101,7 +101,7 @@ const Sales: React.FC = () => {
     (order.id?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
-  const totalSales = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+  const totalSales = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
   const pendingOrders = orders.filter(o => o.status === 'pending').length;
 
   if (loading) {
@@ -370,7 +370,7 @@ const Sales: React.FC = () => {
             <div className="text-right flex-1 pr-4">
               <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Total Amount</p>
               <p className="text-2xl font-serif font-bold text-[var(--color-text)]">
-                ${form.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()}
+                ${form.items.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.price || 0)), 0).toLocaleString()}
               </p>
             </div>
             <button 
