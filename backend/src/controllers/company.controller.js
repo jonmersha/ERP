@@ -58,7 +58,8 @@ export const getAllCompanies = async (req, res) => {
     }));
     res.json(mappedRows);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch companies' });
+    console.error('Fetch companies error:', error);
+    res.status(500).json({ error: 'Failed to fetch companies', details: error.message });
   }
 };
 

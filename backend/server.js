@@ -29,23 +29,6 @@ import pool from './src/db.js';
 
 const app = express();
 
-// Ensure quality_checks table exists
-pool.query(`
-  CREATE TABLE IF NOT EXISTS quality_checks (
-      id CHAR(36) PRIMARY KEY,
-      reference_id CHAR(36) NOT NULL,
-      reference_type ENUM('production_run', 'grn', 'inventory') NOT NULL,
-      item_id CHAR(36) NOT NULL,
-      inspector_id CHAR(36) NOT NULL,
-      check_date DATETIME NOT NULL,
-      status ENUM('passed', 'failed', 'pending', 'quarantined') NOT NULL DEFAULT 'pending',
-      notes TEXT,
-      company_id CHAR(36) NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_qc_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB;
-`).catch(console.error);
-
 app.use(cors());
 app.use(express.json());
 
@@ -91,6 +74,17 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const apiRouter = express.Router();
 
+// Public health check
+app.get('/api/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ok', database: 'connected' });
+  } catch (err) {
+    console.error('Health check DB error:', err);
+    res.status(500).json({ status: 'error', database: 'disconnected', error: err.message });
+  }
+});
+
 // Apply auth to all api routes
 apiRouter.use(authenticateToken);
 
@@ -124,8 +118,6 @@ apiRouter.use('/quality', qualityRoutes);
 apiRouter.use('/grns', grnRoutes);
 apiRouter.use('/deliveryNotes', deliveryNoteRoutes);
 
-apiRouter.get('/health', (req, res) => res.json({ status: 'ok' }));
-
 // Mount apiRouter on /api
 app.use('/api', apiRouter);
 
@@ -141,6 +133,37 @@ app.get('/', (req, res) => {
 
 const initDb = async () => {
 try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS companies (
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        address TEXT,
+        phone VARCHAR(20),
+        email VARCHAR(255),
+        logo_url TEXT,
+        banner_url TEXT,
+        owner_id VARCHAR(255) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS quality_checks (
+        id CHAR(36) PRIMARY KEY,
+        reference_id CHAR(36) NOT NULL,
+        reference_type ENUM('production_run', 'grn', 'inventory') NOT NULL,
+        item_id CHAR(36) NOT NULL,
+        inspector_id CHAR(36) NOT NULL,
+        check_date DATETIME NOT NULL,
+        status ENUM('passed', 'failed', 'pending', 'quarantined') NOT NULL DEFAULT 'pending',
+        notes TEXT,
+        company_id CHAR(36) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_qc_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+  `).catch(console.error);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS units (
         id CHAR(36) PRIMARY KEY,
@@ -260,20 +283,6 @@ try {
         company_id CHAR(36) NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT fk_run_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS companies (
-        id CHAR(36) PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        code VARCHAR(50) UNIQUE NOT NULL,
-        address TEXT,
-        phone VARCHAR(20),
-        email VARCHAR(255),
-        logo_url TEXT,
-        owner_id VARCHAR(255) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB;
   `);
 
@@ -435,6 +444,7 @@ try {
   `);
 
   } catch(err) { console.error('DB Init error:', err); }
+  console.log('Database initialization completed.');
 };
 initDb();
 
