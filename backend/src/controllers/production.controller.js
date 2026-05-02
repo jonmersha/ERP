@@ -69,33 +69,84 @@ export const getAllProductionRuns = async (req, res) => {
 
 export const createProductionRun = async (req, res) => {
   try {
-    const { id, factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, start_date, company_id } = req.body;
+    const { 
+      id, 
+      factoryId, factory_id, 
+      productId, product_id, 
+      recipeId, recipe_id, 
+      quantityPlanned, quantity_planned, quantity, 
+      quantityProduced, quantity_produced, 
+      status, 
+      startDate, start_date, 
+      companyId, company_id 
+    } = req.body;
+    
     const runId = id || crypto.randomUUID();
-    const formattedStartDate = start_date ? new Date(start_date).toISOString().slice(0, 19).replace('T', ' ') : null;
+    const finalStartDate = startDate || start_date;
+    const formattedStartDate = finalStartDate ? new Date(finalStartDate).toISOString().slice(0, 19).replace('T', ' ') : null;
+    const finalQuantityPlanned = quantityPlanned || quantity_planned || quantity || 0;
 
     await pool.query(
       'INSERT INTO production_runs (id, factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, start_date, company_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [runId, factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, formattedStartDate, company_id]
+      [
+        runId, 
+        factoryId || factory_id || null, 
+        productId || product_id || null, 
+        recipeId || recipe_id || null, 
+        finalQuantityPlanned, 
+        quantityProduced || quantity_produced || 0, 
+        status, 
+        formattedStartDate, 
+        companyId || company_id
+      ]
     );
     res.status(201).json({ id: runId });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create production run' });
+    console.error('Error creating production run:', error);
+    res.status(500).json({ error: 'Failed to create production run', details: error.message });
   }
 };
 
 export const updateProductionRun = async (req, res) => {
   try {
     const { id } = req.params;
-    const { factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, start_date } = req.body;
-    const formattedStartDate = start_date ? new Date(start_date).toISOString().slice(0, 19).replace('T', ' ') : null;
+    const { 
+      factoryId, factory_id, 
+      productId, product_id, 
+      recipeId, recipe_id, 
+      quantityPlanned, quantity_planned, 
+      quantityProduced, quantity_produced, 
+      status, 
+      startDate, start_date 
+    } = req.body;
+    
+    // First, fetch the existing record to handle partial updates
+    const [existing] = await pool.query('SELECT * FROM production_runs WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'Production run not found' });
+    }
+    const current = existing[0];
+    
+    const finalStartDate = startDate || start_date || current.start_date;
+    const formattedStartDate = finalStartDate ? new Date(finalStartDate).toISOString().slice(0, 19).replace('T', ' ') : null;
 
     await pool.query(
       'UPDATE production_runs SET factory_id = ?, product_id = ?, recipe_id = ?, quantity_planned = ?, quantity_produced = ?, status = ?, start_date = ? WHERE id = ?',
-      [factory_id, product_id, recipe_id, quantity_planned, quantity_produced, status, formattedStartDate, id]
+      [
+        factoryId || factory_id || current.factory_id, 
+        productId || product_id || current.product_id, 
+        recipeId || recipe_id || current.recipe_id, 
+        quantityPlanned !== undefined ? quantityPlanned : (quantity_planned !== undefined ? quantity_planned : current.quantity_planned), 
+        quantityProduced !== undefined ? quantityProduced : (quantity_produced !== undefined ? quantity_produced : current.quantity_produced), 
+        status || current.status, 
+        formattedStartDate, 
+        id
+      ]
     );
     res.json({ message: 'Production run updated' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update production run' });
+    console.error('Error updating production run:', error);
+    res.status(500).json({ error: 'Failed to update production run', details: error.message });
   }
 };
 
