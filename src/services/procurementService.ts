@@ -6,7 +6,7 @@ export const createPurchaseOrder = async (
   suppliers: Supplier[], 
   profile: UserProfile | null
 ) => {
-  const totalAmount = poForm.items.reduce((sum: number, item: PurchaseOrderItem) => sum + (item.quantity * item.price), 0);
+  const totalAmount = poForm.items.reduce((sum: number, item: any) => sum + (Number(item.quantity) * Number(item.price)), 0);
   const supplier = suppliers.find(s => s.id === poForm.supplierId);
   
   return await apiService.post('procurement/orders', {
@@ -26,7 +26,7 @@ export const updatePurchaseOrder = async (
   poForm: any, 
   suppliers: Supplier[]
 ) => {
-  const totalAmount = poForm.items.reduce((sum: number, item: PurchaseOrderItem) => sum + (item.quantity * item.price), 0);
+  const totalAmount = poForm.items.reduce((sum: number, item: any) => sum + (Number(item.quantity) * Number(item.price)), 0);
   const supplier = suppliers.find(s => s.id === poForm.supplierId);
   
   return await apiService.put(`procurement/orders/${orderId}`, {

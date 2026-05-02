@@ -40,8 +40,21 @@ import crypto from 'node:crypto';
  */
 export const getAllOutlets = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM sales_outlets');
-    res.json(rows);
+    const { companyId } = req.query;
+    let query = 'SELECT * FROM sales_outlets';
+    let params = [];
+    if (companyId) {
+      query += ' WHERE company_id = ?';
+      params.push(companyId);
+    }
+    const [rows] = await pool.query(query, params);
+    
+    // map snake_case to camelCase
+    const mappedRows = rows.map(row => ({
+      ...row,
+      companyId: row.company_id
+    }));
+    res.json(mappedRows);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch outlets' });
   }
@@ -49,11 +62,12 @@ export const getAllOutlets = async (req, res) => {
 
 export const createOutlet = async (req, res) => {
   try {
-    const { id, name, location, company_id } = req.body;
+    const { id, name, location, company_id, companyId } = req.body;
     const outletId = id || crypto.randomUUID();
+    const finalCompanyId = company_id || companyId;
     await pool.query(
       'INSERT INTO sales_outlets (id, name, location, company_id) VALUES (?, ?, ?, ?)',
-      [outletId, name, location, company_id]
+      [outletId, name, location, finalCompanyId]
     );
     res.status(201).json({ id: outletId });
   } catch (error) {

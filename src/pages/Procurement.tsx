@@ -103,7 +103,7 @@ const Procurement: React.FC = () => {
             <Badge color="emerald" label="Optimal" className="text-[10px]" />
           </div>
           <p className="text-sm font-medium text-[var(--color-text)]/40 uppercase tracking-widest">Total Spend</p>
-          <h3 className="text-3xl font-light text-[var(--color-text)] mt-1">${orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}</h3>
+          <h3 className="text-3xl font-light text-[var(--color-text)] mt-1">${orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0).toLocaleString()}</h3>
         </div>
         <div className="bg-[var(--color-surface)] p-6 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
           <div className="flex justify-between items-start mb-4">

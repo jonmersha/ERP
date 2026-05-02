@@ -27,9 +27,10 @@ const MasterData: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [outlets, setOutlets] = useState<any[]>([]);
 
   // UI States
-  const [activeTab, setActiveTab] = useState<'factories' | 'warehouses' | 'products' | 'raw' | 'categories'>('factories');
+  const [activeTab, setActiveTab] = useState<'factories' | 'warehouses' | 'products' | 'raw' | 'categories' | 'outlets'>('factories');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -40,18 +41,20 @@ const MasterData: React.FC = () => {
   const [productForm, setProductForm] = useState({ name: '', category: '', packageSize: '', unit: '', price: 0 });
   const [rawForm, setRawForm] = useState({ name: '', unit: 'kg' as RawMaterial['unit'] });
   const [categoryForm, setCategoryForm] = useState({ name: '', description: '' });
+  const [outletForm, setOutletForm] = useState({ name: '', location: '' });
 
   const fetchData = async () => {
     if (!profile?.companyId) return;
     try {
       const companyId = profile.companyId;
       
-      const [factoriesData, warehousesData, productsData, rawMaterialsData, categoriesData] = await Promise.all([
+      const [factoriesData, warehousesData, productsData, rawMaterialsData, categoriesData, outletsData] = await Promise.all([
         fetchCollection<Factory>('factories', companyId),
         fetchCollection<Warehouse>('warehouses', companyId),
         fetchCollection<Product>('products', companyId),
         fetchCollection<RawMaterial>('rawMaterials', companyId),
         fetchCollection<Category>('categories', companyId),
+        fetchCollection<any>('outlets', companyId),
       ]);
 
       setFactories(factoriesData);
@@ -59,6 +62,7 @@ const MasterData: React.FC = () => {
       setProducts(productsData);
       setRawMaterials(rawMaterialsData);
       setCategories(categoriesData);
+      setOutlets(outletsData);
     } catch (error) {
       console.error("Error fetching master data:", error);
     }
@@ -78,6 +82,7 @@ const MasterData: React.FC = () => {
       case 'products': setProductForm({ name: item.name, category: item.category, packageSize: item.packageSize, unit: item.unit, price: item.price }); break;
       case 'raw': setRawForm({ name: item.name, unit: item.unit }); break;
       case 'categories': setCategoryForm({ name: item.name, description: item.description }); break;
+      case 'outlets': setOutletForm({ name: item.name, location: item.location }); break;
     }
     setIsModalOpen(true);
   };
@@ -93,7 +98,8 @@ const MasterData: React.FC = () => {
         warehouses: 'warehouses',
         products: 'products',
         raw: 'rawMaterials',
-        categories: 'categories'
+        categories: 'categories',
+        outlets: 'outlets'
       };
 
       const colName = collectionMapping[activeTab];
@@ -101,7 +107,9 @@ const MasterData: React.FC = () => {
         ... (activeTab === 'factories' ? factoryForm : 
              activeTab === 'warehouses' ? warehouseForm :
              activeTab === 'products' ? {...productForm, price: Number(productForm.price)} :
-             activeTab === 'raw' ? rawForm : categoryForm),
+             activeTab === 'raw' ? rawForm : 
+             activeTab === 'outlets' ? outletForm :
+             categoryForm),
         companyId: profile.companyId
       };
       
@@ -126,6 +134,7 @@ const MasterData: React.FC = () => {
       setProductForm({ name: '', category: '', packageSize: '', unit: '', price: 0 });
       setRawForm({ name: '', unit: 'kg' });
       setCategoryForm({ name: '', description: '' });
+      setOutletForm({ name: '', location: '' });
     } catch (error) {
       console.error("Error saving item:", error);
     } finally {
@@ -142,7 +151,8 @@ const MasterData: React.FC = () => {
           warehouses: 'warehouses',
           products: 'products',
           rawMaterials: 'rawMaterials',
-          categories: 'categories'
+          categories: 'categories',
+          outlets: 'outlets'
         };
         await apiService.deleteDocument(collectionMapping[tab], id);
         await fetchData();
@@ -182,6 +192,7 @@ const MasterData: React.FC = () => {
         {[
           { id: 'factories', label: 'Factories', icon: FactoryIcon },
           { id: 'warehouses', label: 'Warehouses', icon: WarehouseIcon },
+          { id: 'outlets', label: 'Outlets', icon: Store },
           { id: 'products', label: 'Products', icon: Package },
           { id: 'raw', label: 'Raw Materials', icon: Database },
           { id: 'categories', label: 'Categories', icon: Tag },
@@ -261,6 +272,16 @@ const MasterData: React.FC = () => {
                   <td className="px-6 py-4 text-right flex justify-end space-x-2">
                     <button onClick={() => handleEdit(c)} className="p-2 text-[var(--color-main)] hover:bg-[var(--color-main)]/10 rounded-lg"><Edit2 size={18} /></button>
                     <button onClick={() => handleDelete(c.id, 'categories')} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={18} /></button>
+                  </td>
+                </tr>
+              ))}
+              {activeTab === 'outlets' && outlets.map(o => (
+                <tr key={o.id} className="hover:bg-[var(--color-text)]/[0.02] transition-colors">
+                  <td className="px-6 py-4 font-bold text-[var(--color-text)]">{o.name}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--color-text)]/60">{o.location}</td>
+                  <td className="px-6 py-4 text-right flex justify-end space-x-2">
+                    <button onClick={() => handleEdit(o)} className="p-2 text-[var(--color-main)] hover:bg-[var(--color-main)]/10 rounded-lg"><Edit2 size={18} /></button>
+                    <button onClick={() => handleDelete(o.id, 'outlets')} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={18} /></button>
                   </td>
                 </tr>
               ))}
@@ -359,6 +380,18 @@ const MasterData: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Description</label>
                 <textarea value={categoryForm.description} onChange={e => setCategoryForm({...categoryForm, description: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 h-24 text-[var(--color-text)]" />
+              </div>
+            </>
+          )}
+          {activeTab === 'outlets' && (
+            <>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Outlet Name</label>
+                <input required value={outletForm.name} onChange={e => setOutletForm({...outletForm, name: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Location</label>
+                <input required value={outletForm.location} onChange={e => setOutletForm({...outletForm, location: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
               </div>
             </>
           )}

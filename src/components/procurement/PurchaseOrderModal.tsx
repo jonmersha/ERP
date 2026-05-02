@@ -90,7 +90,7 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, order
     }
   };
 
-  const totalAmount = form.items.reduce((sum: number, item: any) => sum + (item.quantity * item.price), 0);
+  const totalAmount = form.items.reduce((sum: number, item: any) => sum + (Number(item.quantity) * Number(item.price)), 0);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={order ? 'Edit Purchase Order' : 'New Purchase Order'}>
