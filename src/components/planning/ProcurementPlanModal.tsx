@@ -10,18 +10,16 @@ interface Props {
   warehouses: Warehouse[];
   materials: RawMaterial[];
   factories: Factory[];
-  products: Product[];
   onSuccess: () => void;
   plan?: ProcurementPlan;
 }
 
-const ProcurementPlanModal: React.FC<Props> = ({ isOpen, onClose, warehouses, materials, factories, products, onSuccess, plan }) => {
+const ProcurementPlanModal: React.FC<Props> = ({ isOpen, onClose, warehouses, materials, factories, onSuccess, plan }) => {
   const { profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<Omit<ProcurementPlan, 'id' | 'companyId'>>({
     factoryId: '',
     warehouseId: '',
-    productId: '',
     materialId: '',
     year: new Date().getFullYear(),
     totalQuantity: 0,
@@ -40,7 +38,6 @@ const ProcurementPlanModal: React.FC<Props> = ({ isOpen, onClose, warehouses, ma
         setForm({
           factoryId: plan.factoryId || '',
           warehouseId: plan.warehouseId || '',
-          productId: plan.productId || '',
           materialId: plan.materialId || '',
           year: plan.year || new Date().getFullYear(),
           totalQuantity: plan.totalQuantity || 0,
@@ -56,7 +53,6 @@ const ProcurementPlanModal: React.FC<Props> = ({ isOpen, onClose, warehouses, ma
         setForm({
           factoryId: '',
           warehouseId: '',
-          productId: '',
           materialId: '',
           year: new Date().getFullYear(),
           totalQuantity: 0,
@@ -128,16 +124,10 @@ const ProcurementPlanModal: React.FC<Props> = ({ isOpen, onClose, warehouses, ma
             <option value="">Select Ordering Warehouse</option>
             {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
           </select>
-          <div className="grid grid-cols-2 gap-4">
-            <select className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.productId || ''} onChange={e => setForm({...form, productId: e.target.value, materialId: ''})} disabled={isApproved}>
-              <option value="">Select Product (Optional)</option>
-              {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-            <select className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.materialId || ''} onChange={e => setForm({...form, materialId: e.target.value, productId: ''})} disabled={isApproved}>
-              <option value="">Select Material (Optional)</option>
-              {materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
-          </div>
+          <select className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.materialId || ''} onChange={e => setForm({...form, materialId: e.target.value})} disabled={isApproved} required>
+            <option value="">Select Raw Material</option>
+            {materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
           <input type="number" placeholder="Year" className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.year} onChange={e => setForm({...form, year: parseInt(e.target.value) || 0})} required disabled={isApproved} />
           <div className="flex space-x-2">
             <input type="number" placeholder="Total Annual Quantity" className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.totalQuantity} onChange={e => setForm({...form, totalQuantity: parseInt(e.target.value) || 0})} required disabled={isApproved} />

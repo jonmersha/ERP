@@ -10,10 +10,9 @@ interface Props {
   warehouses: Warehouse[];
   materials: RawMaterial[];
   factories: Factory[];
-  products: Product[];
 }
 
-const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials, factories, products }) => {
+const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials, factories }) => {
   const { profile } = useAuth();
   const [plans, setPlans] = useState<ProcurementPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +64,7 @@ const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials, factories
           <tr className="text-[var(--color-text)]/40 text-sm">
             <th className="pb-2">Factory</th>
             <th className="pb-2">Warehouse</th>
-            <th className="pb-2">Item</th>
+            <th className="pb-2">Raw Material</th>
             <th className="pb-2">Year</th>
             <th className="pb-2">Total Quantity</th>
             <th className="pb-2">Status</th>
@@ -82,9 +81,7 @@ const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials, factories
               <td className="py-3">{factories.find(f => f.id === plan.factoryId)?.name || plan.factoryId || '-'}</td>
               <td className="py-3">{warehouses.find(w => w.id === plan.warehouseId)?.name || plan.warehouseId || '-'}</td>
               <td className="py-3">
-                {plan.productId 
-                  ? products.find(p => p.id === plan.productId)?.name || plan.productId 
-                  : materials.find(m => m.id === plan.materialId)?.name || plan.materialId || '-'}
+                {materials.find(m => m.id === plan.materialId)?.name || plan.materialId || '-'}
               </td>
               <td className="py-3">{plan.year}</td>
               <td className="py-3">{(plan.totalQuantity || 0).toLocaleString()}</td>
@@ -108,7 +105,6 @@ const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials, factories
         warehouses={warehouses}
         materials={materials}
         factories={factories}
-        products={products}
         onSuccess={fetchPlans}
         plan={selectedPlan || undefined}
       />
@@ -119,7 +115,6 @@ const ProcurementPlanList: React.FC<Props> = ({ warehouses, materials, factories
           plan={selectedPlan}
           material={materials.find(m => m.id === selectedPlan.materialId)}
           factory={factories.find(f => f.id === selectedPlan.factoryId)}
-          product={products.find(p => p.id === selectedPlan.productId)}
           onSuccess={fetchPlans}
           onEdit={() => { setIsModalOpen(true); }}
           onDelete={() => { setPlanToDelete(selectedPlan); setSelectedPlan(null); }}
