@@ -116,7 +116,7 @@ const ProcurementPlanModal: React.FC<Props> = ({ isOpen, onClose, warehouses, ma
           <button onClick={onClose} className="text-[var(--color-text)]"><X size={24} /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <select className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.factoryId || ''} onChange={e => setForm({...form, factoryId: e.target.value})} required disabled={isApproved}>
+          <select className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.factoryId || ''} onChange={e => setForm({...form, factoryId: e.target.value})} disabled={isApproved}>
             <option value="">Select Factory (Optional)</option>
             {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
