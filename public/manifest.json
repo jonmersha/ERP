@@ -1,19 +1,19 @@
 {
-  "name": "Sheger ERP",
-  "short_name": "Sheger",
-  "description": "Sheger Enterprise Resource Planning",
+  "name": "ERP Management System",
+  "short_name": "ERP System",
+  "description": "Comprehensive ERP Management System",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/icon-192x192.png",
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
