@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { useProcurementData } from '../hooks/useProcurementData';
+import { useProcurementData } from '../../hooks/useProcurementData';
 import { 
   ShoppingCart, 
   Users, 
@@ -16,9 +16,9 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import SupplierModal from '../components/procurement/SupplierModal';
-import PurchaseOrderModal from '../components/procurement/PurchaseOrderModal';
-import Badge from '../components/common/Badge';
+import SupplierModal from './SupplierModal';
+import PurchaseOrderModal from './PurchaseOrderModal';
+import Badge from '../common/Badge';
 
 const Procurement: React.FC = () => {
   const { suppliers, orders, materials, factories, warehouses, loading, refreshData } = useProcurementData();

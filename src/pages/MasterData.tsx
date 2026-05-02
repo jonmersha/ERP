@@ -12,7 +12,8 @@ import {
   Trash2, 
   Loader2,
   ShieldAlert,
-  Edit2
+  Edit2,
+  Store
 } from 'lucide-react';
 import Modal from '../components/Modal';
 import { apiService } from '../services/apiService';
