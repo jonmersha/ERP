@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShoppingCart, Package, DollarSign, Plus, Trash2 } from 'lucide-react';
+import { ShoppingCart, Package, Plus, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface OrderItem {
@@ -11,7 +11,7 @@ interface OrderItem {
   price: number;
 }
 
-export default function ProcurementPage() {
+export default function Page() {
   const [items, setItems] = useState<OrderItem[]>([
     { id: '1', name: 'Raw Material A', quantity: 100, price: 5.5 },
     { id: '2', name: 'Packaging Box', quantity: 500, price: 0.8 },
@@ -125,16 +125,6 @@ export default function ProcurementPage() {
                 </td>
               </motion.tr>
             ))}
-            {items.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                  <div className="flex flex-col items-center gap-2">
-                    <Package className="w-12 h-12 text-gray-200" />
-                    <p>No items in the procurement order.</p>
-                  </div>
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
