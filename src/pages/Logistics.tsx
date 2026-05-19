@@ -4,8 +4,10 @@ import { getShipments, addShipment } from '../services/logisticsService';
 import { useAuth } from '../context/AuthContext';
 import { Loader2, Plus, Truck } from 'lucide-react';
 import Modal from '../components/Modal';
+import { useTranslation } from 'react-i18next';
 
 const Logistics: React.FC = () => {
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,7 @@ const Logistics: React.FC = () => {
             className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-4 py-2 rounded-xl"
           >
             <Plus size={16} />
-            <span>Track Shipment</span>
+            <span>{t('Track Shipment')}</span>
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -80,7 +82,7 @@ const Logistics: React.FC = () => {
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Track Shipment">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={t('Track Shipment')}>
         <div className="space-y-4 text-[var(--color-text)]">
           <input
             type="text"
@@ -93,7 +95,7 @@ const Logistics: React.FC = () => {
             onClick={handleAddShipment}
             className="w-full bg-[var(--color-main)] text-white p-3 rounded-xl"
           >
-            Save Shipment
+            {t('Save Shipment')}
           </button>
         </div>
       </Modal>

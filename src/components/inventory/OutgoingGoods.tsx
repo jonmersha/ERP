@@ -1,6 +1,7 @@
 import React from 'react';
 import { Package, Clock, ArrowUpRight } from 'lucide-react';
 import { SalesOrder } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 interface OutgoingGoodsProps {
   pendingSOs: SalesOrder[];
@@ -8,6 +9,8 @@ interface OutgoingGoodsProps {
 }
 
 const OutgoingGoods: React.FC<OutgoingGoodsProps> = ({ pendingSOs, onShip }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 overflow-hidden">
       <div className="p-6 border-b border-[var(--color-text)]/5">
@@ -42,7 +45,7 @@ const OutgoingGoods: React.FC<OutgoingGoodsProps> = ({ pendingSOs, onShip }) => 
                   className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors"
                 >
                   <ArrowUpRight size={16} />
-                  <span>Ship Items</span>
+                  <span>{t('Ship Items')}</span>
                 </button>
               </div>
             </div>

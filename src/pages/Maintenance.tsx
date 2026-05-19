@@ -4,8 +4,10 @@ import { getMaintenanceLogs, addMaintenanceLog } from '../services/maintenanceSe
 import { useAuth } from '../context/AuthContext';
 import { Loader2, Plus, Wrench } from 'lucide-react';
 import Modal from '../components/Modal';
+import { useTranslation } from 'react-i18next';
 
 const Maintenance: React.FC = () => {
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ const Maintenance: React.FC = () => {
             className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-4 py-2 rounded-xl"
           >
             <Plus size={16} />
-            <span>Log Maintenance</span>
+            <span>{t('Log Maintenance')}</span>
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -81,7 +83,7 @@ const Maintenance: React.FC = () => {
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Log Maintenance">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={t('Log Maintenance')}>
         <div className="space-y-4 text-[var(--color-text)]">
           <input
             type="text"
@@ -108,7 +110,7 @@ const Maintenance: React.FC = () => {
             onClick={handleAddLog}
             className="w-full bg-[var(--color-main)] text-white p-3 rounded-xl"
           >
-            Save Log
+            {t('Save Log')}
           </button>
         </div>
       </Modal>

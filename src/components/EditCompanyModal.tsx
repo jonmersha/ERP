@@ -3,6 +3,7 @@ import { Company } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, Building2, MapPin, Phone, Mail, Image as ImageIcon } from 'lucide-react';
 import { apiService } from '../services/apiService';
+import { useTranslation } from 'react-i18next';
 
 interface EditCompanyModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface EditCompanyModalProps {
 }
 
 const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, company }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: company.name,
     address: company.address || '',
@@ -234,7 +236,7 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
                   onClick={onClose}
                   className="flex-1 px-6 py-4 rounded-2xl font-bold text-[var(--color-text)]/60 hover:bg-[var(--color-text)]/5 transition-colors"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </button>
                 <button
                   type="submit"
@@ -244,7 +246,7 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <span>Save Changes</span>
+                    <span>{t('Save Changes')}</span>
                   )}
                 </button>
               </div>

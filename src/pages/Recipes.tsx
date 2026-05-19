@@ -5,8 +5,10 @@ import { useAuth } from '../context/AuthContext';
 import { useInventoryData } from '../hooks/useInventoryData';
 import { Loader2, Plus, BookOpen } from 'lucide-react';
 import Modal from '../components/Modal';
+import { useTranslation } from 'react-i18next';
 
 const Recipes: React.FC = () => {
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const { products, materials, loading: inventoryLoading } = useInventoryData();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -127,14 +129,14 @@ const Recipes: React.FC = () => {
               className="flex items-center space-x-2 bg-[var(--color-text)]/10 text-[var(--color-text)] px-4 py-2 rounded-xl hover:bg-[var(--color-text)]/20 disabled:opacity-50"
             >
               {generating ? <Loader2 size={16} className="animate-spin" /> : <BookOpen size={16} />}
-              <span>Auto-Generate Missing</span>
+              <span>{t('Auto-Generate')}</span>
             </button>
             <button 
               onClick={() => setIsModalOpen(true)}
               className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-4 py-2 rounded-xl"
             >
               <Plus size={16} />
-              <span>New Recipe</span>
+              <span>{t('New Recipe')}</span>
             </button>
           </div>
         </div>
@@ -153,7 +155,7 @@ const Recipes: React.FC = () => {
           ))}
         </div>
       </div>
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Recipe">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={t('New Recipe')}>
         <div className="space-y-4 text-[var(--color-text)]">
           <input
             type="text"
@@ -204,7 +206,7 @@ const Recipes: React.FC = () => {
             onClick={handleAddRecipe}
             className="w-full bg-[var(--color-main)] text-white p-3 rounded-xl"
           >
-            Save Recipe
+            {t('Save Recipe')}
           </button>
         </div>
       </Modal>

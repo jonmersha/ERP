@@ -6,8 +6,10 @@ import { Users as UsersIcon, Shield, Mail, Search, Loader2, CheckCircle, XCircle
 import Modal from '../components/Modal';
 import { apiService } from '../services/apiService';
 import { fetchCollection } from '../utils/firestore';
+import { useTranslation } from 'react-i18next';
 
 const Users: React.FC = () => {
+  const { t } = useTranslation();
   const { isAdmin, profile } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [company, setCompany] = useState<Company | null>(null);
@@ -165,7 +167,7 @@ const Users: React.FC = () => {
                       }}
                       className="text-[var(--color-main)] font-bold hover:underline"
                     >
-                      Manage Roles
+                      {t('Manage Roles')}
                     </button>
                   </td>
                 </tr>
@@ -213,7 +215,7 @@ const Users: React.FC = () => {
               type="submit"
               className="w-full bg-[var(--color-main)] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[var(--color-main)]/90 disabled:opacity-50 transition-all"
             >
-              {submitting ? 'Updating...' : 'Save Changes'}
+              {submitting ? t('Updating') : t('Save Changes')}
             </button>
           </form>
         )}

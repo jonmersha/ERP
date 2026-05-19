@@ -4,6 +4,7 @@ import { createPurchaseOrder, updatePurchaseOrder } from '../../services/procure
 import { useAuth } from '../../context/AuthContext';
 import { X, Loader2, Plus, Minus, Trash2 } from 'lucide-react';
 import Modal from '../Modal';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface Props {
 }
 
 const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, order, suppliers, materials, factories, warehouses }) => {
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<any>({
@@ -159,7 +161,7 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, order
               className="flex items-center space-x-1 text-xs text-[var(--color-main)] font-bold"
             >
               <Plus size={14} />
-              <span>Add Item</span>
+              <span>{t('Add Item')}</span>
             </button>
           </div>
 
@@ -223,7 +225,7 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, order
           className="w-full bg-[var(--color-main)] text-white py-4 rounded-xl font-bold flex items-center justify-center space-x-2 mt-4"
         >
           {loading && <Loader2 size={16} className="animate-spin" />}
-          <span>{order ? 'Update Purchase Order' : 'Create Purchase Order'}</span>
+          <span>{order ? t('Update Purchase Order') : t('Create Purchase Order')}</span>
         </button>
       </form>
     </Modal>
