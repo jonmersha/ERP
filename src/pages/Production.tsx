@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Factory as FactoryIcon, Play, CheckCircle, Clock, Plus, Settings, Loader2, ArrowRight, Search, Filter, TrendingUp, AlertCircle } from 'lucide-react';
 import Modal from '../components/Modal';
 import Badge from '../components/common/Badge';
-import { useTranslation } from "react-i18next";
 
 const Production: React.FC = () => {
   const { profile } = useAuth();
@@ -124,15 +123,15 @@ const Production: React.FC = () => {
     <div className="space-y-8">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Production')}</h2>
-          <p className="text-[var(--color-text)]/40 mt-1">{t('Manufacturing schedules and factory output')}</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Production</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">Manufacturing schedules and factory output</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
           className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[var(--color-main)]/90 transition-all w-full md:w-auto justify-center"
         >
           <Plus size={20} />
-          <span className="font-bold">{t('New Production Run')}</span>
+          <span className="font-bold">New Production Run</span>
         </button>
       </header>
 
@@ -143,30 +142,30 @@ const Production: React.FC = () => {
             <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
               <Clock size={24} />
             </div>
-            <Badge variant="info">{t('Active')}</Badge>
+            <Badge variant="info">Active</Badge>
           </div>
           <p className="text-3xl font-bold text-[var(--color-text)]">{stats.active}</p>
-          <p className="text-sm text-[var(--color-text)]/40 mt-1">{t('Runs currently in progress')}</p>
+          <p className="text-sm text-[var(--color-text)]/40 mt-1">Runs currently in progress</p>
         </div>
         <div className="bg-[var(--color-surface)] p-6 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-500">
               <TrendingUp size={24} />
             </div>
-            <Badge variant="warning">{t('Planned')}</Badge>
+            <Badge variant="warning">Planned</Badge>
           </div>
           <p className="text-3xl font-bold text-[var(--color-text)]">{stats.planned}</p>
-          <p className="text-sm text-[var(--color-text)]/40 mt-1">{t('Scheduled for future')}</p>
+          <p className="text-sm text-[var(--color-text)]/40 mt-1">Scheduled for future</p>
         </div>
         <div className="bg-[var(--color-surface)] p-6 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-500">
               <CheckCircle size={24} />
             </div>
-            <Badge variant="success">{t('Today')}</Badge>
+            <Badge variant="success">Today</Badge>
           </div>
           <p className="text-3xl font-bold text-[var(--color-text)]">{stats.completedToday}</p>
-          <p className="text-sm text-[var(--color-text)]/40 mt-1">{t('Completed in last 24h')}</p>
+          <p className="text-sm text-[var(--color-text)]/40 mt-1">Completed in last 24h</p>
         </div>
       </div>
 
@@ -199,22 +198,22 @@ const Production: React.FC = () => {
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">{t('Planned Plan')}</span>
-                  <span className="font-bold text-[var(--color-text)]">{totalPlanned.toLocaleString()} {t('units')}</span>
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">Planned Plan</span>
+                  <span className="font-bold text-[var(--color-text)]">{totalPlanned.toLocaleString()} units</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">{t('Production Rate')}</span>
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">Production Rate</span>
                   <span className="font-bold text-emerald-500">{productionRate}%</span>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">{t('Total Finished')}</span>
-                  <span className="font-bold text-[var(--color-text)]">{totalProduced.toLocaleString()} {t('units')}</span>
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">Total Finished</span>
+                  <span className="font-bold text-[var(--color-text)]">{totalProduced.toLocaleString()} units</span>
                 </div>
 
                 <div className="pt-4 border-t border-[var(--color-text)]/5 flex justify-between items-center">
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">{t('Active Runs')}</span>
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">Active Runs</span>
                   <span className="font-bold text-[var(--color-main)]">{activeRuns.length}</span>
                 </div>
               </div>
@@ -225,13 +224,13 @@ const Production: React.FC = () => {
 
       <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 overflow-hidden">
         <div className="p-6 border-b border-[var(--color-text)]/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">{t('Manufacturing Schedule')}</h3>
+          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">Manufacturing Schedule</h3>
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
               <input 
                 type="text"
-                placeholder={t('Search runs...')}
+                placeholder="Search runs..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-sm w-full md:w-64"
@@ -244,10 +243,10 @@ const Production: React.FC = () => {
                 onChange={e => setStatusFilter(e.target.value)}
                 className="bg-transparent text-sm focus:outline-none text-[var(--color-text)]/60 font-medium"
               >
-                <option value="all">{t('All Status')}</option>
-                <option value="planned">{t('Planned')}</option>
-                <option value="in_progress">{t('In Progress')}</option>
-                <option value="completed">{t('Completed')}</option>
+                <option value="all">All Status</option>
+                <option value="planned">Planned</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
               </select>
             </div>
           </div>
@@ -256,13 +255,13 @@ const Production: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[var(--color-bg)]/50 text-[10px] font-bold text-[var(--color-text)]/40 uppercase tracking-widest">
-                <th className="px-6 py-4">{t('Run ID')}</th>
-                <th className="px-6 py-4">{t('Product & Recipe')}</th>
-                <th className="px-6 py-4">{t('Factory')}</th>
-                <th className="px-6 py-4">{t('Progress')}</th>
-                <th className="px-6 py-4">{t('Start Date')}</th>
-                <th className="px-6 py-4">{t('Status')}</th>
-                <th className="px-6 py-4 text-right">{t('Actions')}</th>
+                <th className="px-6 py-4">Run ID</th>
+                <th className="px-6 py-4">Product & Recipe</th>
+                <th className="px-6 py-4">Factory</th>
+                <th className="px-6 py-4">Progress</th>
+                <th className="px-6 py-4">Start Date</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-text)]/5 text-sm">
@@ -295,9 +294,9 @@ const Production: React.FC = () => {
                         <span className="text-xs font-bold text-[var(--color-text)]/60 w-8">{progress}%</span>
                       </div>
                       <div className="text-[10px] text-[var(--color-text)]/30 mt-1 flex justify-between">
-                        <span>{(run.quantityProduced || 0).toLocaleString()} / {(run.quantity || 0).toLocaleString()} {t('units')}</span>
+                        <span>{(run.quantityProduced || 0).toLocaleString()} / {(run.quantity || 0).toLocaleString()} units</span>
                         {run.status !== 'completed' && (
-                          <span className="text-[var(--color-main)]/60">{((run.quantity || 0) - (run.quantityProduced || 0)).toLocaleString()} {t('left')}</span>
+                          <span className="text-[var(--color-main)]/60">{((run.quantity || 0) - (run.quantityProduced || 0)).toLocaleString()} left</span>
                         )}
                       </div>
                     </td>
@@ -316,7 +315,7 @@ const Production: React.FC = () => {
                           <button 
                             onClick={() => onUpdateProgress(run.id, 0, 'in_progress')}
                             className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                            title={t('Start Production')}
+                            title="Start Production"
                           >
                             <Play size={18} />
                           </button>
@@ -326,14 +325,14 @@ const Production: React.FC = () => {
                             <button 
                               onClick={() => setProgressModal({isOpen: true, runId: run.id, quantity: run.quantityProduced, target: run.quantity})}
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title={t('Update Progress')}
+                              title="Update Progress"
                             >
                               <Clock size={18} />
                             </button>
                             <button 
                               onClick={() => onUpdateProgress(run.id, run.quantity, 'completed')}
                               className="p-2 text-[var(--color-main)] hover:bg-[var(--color-main)]/10 rounded-lg transition-colors"
-                              title={t('Complete Production')}
+                              title="Complete Production"
                             >
                               <CheckCircle size={18} />
                             </button>
@@ -343,7 +342,7 @@ const Production: React.FC = () => {
                           <button 
                             onClick={() => setTransferModal({isOpen: true, runId: run.id, productId: run.productId, quantity: run.quantityProduced})}
                             className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                            title={t('Transfer to Warehouse')}
+                            title="Transfer to Warehouse"
                           >
                             <ArrowRight size={18} />
                           </button>
@@ -351,7 +350,7 @@ const Production: React.FC = () => {
                         <button 
                           onClick={() => setSelectedRun(run)}
                           className="p-2 text-[var(--color-text)]/20 hover:text-[var(--color-text)]/40 rounded-lg transition-colors"
-                          title={t('View Details')}
+                          title="View Details"
                         >
                           <Settings size={18} />
                         </button>
@@ -365,8 +364,8 @@ const Production: React.FC = () => {
                   <td colSpan={7} className="px-6 py-12 text-center text-[var(--color-text)]/40">
                     <div className="flex flex-col items-center">
                       <AlertCircle size={48} className="mb-4 opacity-20" />
-                      <p className="font-medium">{t('No production runs found')}</p>
-                      <p className="text-xs">{t('Try adjusting your search or filters')}</p>
+                      <p className="font-medium">No production runs found</p>
+                      <p className="text-xs">Try adjusting your search or filters</p>
                     </div>
                   </td>
                 </tr>
@@ -376,16 +375,16 @@ const Production: React.FC = () => {
         </div>
       </div>
 
-      <Modal isOpen={!!selectedRun} onClose={() => setSelectedRun(null)} title={t('Production Run Details')}>
+      <Modal isOpen={!!selectedRun} onClose={() => setSelectedRun(null)} title="Production Run Details">
         {selectedRun && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5">
-                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">{t('Run ID')}</p>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">Run ID</p>
                 <p className="font-mono font-bold text-[var(--color-main)]">#{selectedRun.id.slice(0, 12)}</p>
               </div>
               <div className="p-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5">
-                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">{t('Status')}</p>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">Status</p>
                 <Badge variant={
                   selectedRun.status === 'completed' ? 'success' : 
                   selectedRun.status === 'in_progress' ? 'info' : 'warning'
@@ -401,7 +400,7 @@ const Production: React.FC = () => {
                   <FactoryIcon size={24} />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">{t('Factory')}</p>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">Factory</p>
                   <p className="font-bold text-[var(--color-text)]">
                     {factories.find(f => f.id === selectedRun.factoryId)?.name || 'Unknown Factory'}
                   </p>
@@ -413,7 +412,7 @@ const Production: React.FC = () => {
                   <TrendingUp size={24} />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">{t('Product')}</p>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">Product</p>
                   <p className="font-bold text-[var(--color-text)]">
                     {products.find(p => p.id === selectedRun.productId)?.name || 'Unknown Product'}
                   </p>
@@ -426,7 +425,7 @@ const Production: React.FC = () => {
                     <Settings size={24} />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">{t('Recipe')}</p>
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">Recipe</p>
                     <p className="font-bold text-[var(--color-text)]">
                       {recipes.find(r => r.id === selectedRun.recipeId)?.name || 'Unknown Recipe'}
                     </p>
@@ -438,15 +437,15 @@ const Production: React.FC = () => {
             <div className="bg-[var(--color-bg)] p-6 rounded-3xl border border-[var(--color-text)]/5">
               <div className="flex justify-between items-end mb-4">
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">{t('Production Progress')}</p>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">Production Progress</p>
                   <p className="text-2xl font-bold text-[var(--color-text)]">
                     {(selectedRun.quantityProduced || 0).toLocaleString()} / {(selectedRun.quantity || 0).toLocaleString()}
-                    <span className="text-sm text-[var(--color-text)]/40 ml-2">{t('units')}</span>
+                    <span className="text-sm text-[var(--color-text)]/40 ml-2">units</span>
                   </p>
                   {selectedRun.status !== 'completed' && (
                     <p className="text-xs text-[var(--color-main)]/60 mt-1">
-                      {((selectedRun.quantity || 0) - (selectedRun.quantityProduced || 0)).toLocaleString()} {t('units remaining')}
-                                                              </p>
+                      {((selectedRun.quantity || 0) - (selectedRun.quantityProduced || 0)).toLocaleString()} units remaining
+                    </p>
                   )}
                 </div>
                 <p className="text-xl font-bold text-[var(--color-main)]">
@@ -464,11 +463,11 @@ const Production: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">{t('Start Date')}</p>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">Start Date</p>
                 <p className="font-medium text-[var(--color-text)]">{new Date(selectedRun.startDate).toLocaleDateString()}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">{t('Last Updated')}</p>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">Last Updated</p>
                 <p className="font-medium text-[var(--color-text)]">
                   {selectedRun.updatedAt ? new Date(selectedRun.updatedAt).toLocaleString() : 'N/A'}
                 </p>
@@ -477,7 +476,7 @@ const Production: React.FC = () => {
 
             {selectedRun.recipeId && recipes.find(r => r.id === selectedRun.recipeId)?.processingSteps && (
               <div className="space-y-3">
-                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">{t('Processing Steps')}</p>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">Processing Steps</p>
                 <div className="space-y-2">
                   {recipes.find(r => r.id === selectedRun.recipeId)?.processingSteps.sort((a, b) => a.order - b.order).map((step, i) => (
                     <div key={i} className="flex items-center space-x-3 p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5">
@@ -486,7 +485,7 @@ const Production: React.FC = () => {
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-[var(--color-text)]">{step.description}</p>
-                        <p className="text-[10px] text-[var(--color-text)]/40">{step.durationMinutes} {t('minutes')}</p>
+                        <p className="text-[10px] text-[var(--color-text)]/40">{step.durationMinutes} minutes</p>
                       </div>
                     </div>
                   ))}
@@ -499,8 +498,8 @@ const Production: React.FC = () => {
                 onClick={() => setSelectedRun(null)}
                 className="flex-1 px-6 py-3 rounded-2xl font-bold text-[var(--color-text)]/60 hover:bg-[var(--color-text)]/5 transition-all"
               >
-                {t('Close')}
-                                            </button>
+                Close
+              </button>
               {selectedRun.status !== 'completed' && (
                 <button 
                   onClick={() => {
@@ -514,25 +513,25 @@ const Production: React.FC = () => {
                   }}
                   className="flex-1 bg-[var(--color-main)] text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
                 >
-                  {t('Update Progress')}
-                                                  </button>
+                  Update Progress
+                </button>
               )}
             </div>
           </div>
         )}
       </Modal>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={t('New Production Run')}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="New Production Run">
         <form onSubmit={handleCreate} className="space-y-6">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Target Factory')}</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Target Factory</label>
             <select 
               required
               value={form.factoryId}
               onChange={e => setForm({ ...form, factoryId: e.target.value })}
               className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
             >
-              <option value="">{t('Select Factory')}</option>
+              <option value="">Select Factory</option>
               {factories.map(f => (
                 <option key={f.id} value={f.id}>{f.name}</option>
               ))}
@@ -540,27 +539,27 @@ const Production: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Product')}</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Product</label>
               <select 
                 required
                 value={form.productId}
                 onChange={e => setForm({ ...form, productId: e.target.value, recipeId: '' })}
                 className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               >
-                <option value="">{t('Select Product')}</option>
+                <option value="">Select Product</option>
                 {products.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Recipe (Optional)')}</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Recipe (Optional)</label>
               <select 
                 value={form.recipeId}
                 onChange={e => setForm({ ...form, recipeId: e.target.value })}
                 className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               >
-                <option value="">{t('Select Recipe')}</option>
+                <option value="">Select Recipe</option>
                 {recipes.filter(r => r.productId === form.productId).map(r => (
                   <option key={r.id} value={r.id}>{r.name}</option>
                 ))}
@@ -569,7 +568,7 @@ const Production: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Target Quantity')}</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Target Quantity</label>
               <input 
                 type="number"
                 required
@@ -580,7 +579,7 @@ const Production: React.FC = () => {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Start Date')}</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Start Date</label>
               <input 
                 type="date"
                 required
@@ -600,10 +599,10 @@ const Production: React.FC = () => {
         </form>
       </Modal>
 
-      <Modal isOpen={!!progressModal?.isOpen} onClose={() => setProgressModal(null)} title={t('Update Progress')}>
+      <Modal isOpen={!!progressModal?.isOpen} onClose={() => setProgressModal(null)} title="Update Progress">
         <div className="space-y-6">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Produced Quantity')}</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Produced Quantity</label>
             <div className="relative">
               <input 
                 type="number"
@@ -620,7 +619,7 @@ const Production: React.FC = () => {
           
           <div className="bg-[var(--color-bg)] p-4 rounded-2xl border border-[var(--color-text)]/5">
             <div className="flex justify-between text-xs font-bold text-[var(--color-text)]/40 uppercase mb-2">
-              <span>{t('Completion')}</span>
+              <span>Completion</span>
               <span>{progressModal?.target && progressModal.target > 0 ? Math.round(((progressModal?.quantity || 0) / progressModal.target) * 100) : 0}%</span>
             </div>
             <div className="h-2 bg-[var(--color-surface)] rounded-full overflow-hidden">
@@ -647,27 +646,27 @@ const Production: React.FC = () => {
         </div>
       </Modal>
 
-      <Modal isOpen={!!transferModal?.isOpen} onClose={() => setTransferModal(null)} title={t('Transfer to Warehouse')}>
+      <Modal isOpen={!!transferModal?.isOpen} onClose={() => setTransferModal(null)} title="Transfer to Warehouse">
         <div className="space-y-6">
           <div className="p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
             <div className="flex items-center space-x-3 text-emerald-600">
               <CheckCircle size={20} />
-              <span className="font-bold">{t('Production Completed')}</span>
+              <span className="font-bold">Production Completed</span>
             </div>
             <p className="text-sm text-emerald-600/70 mt-1">
-              {t('Ready to transfer')} {transferModal?.quantity} {t('units to inventory.')}
-                                      </p>
+              Ready to transfer {transferModal?.quantity} units to inventory.
+            </p>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Destination Warehouse')}</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Destination Warehouse</label>
             <select 
               id="warehouse-select"
               className="w-full p-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5 text-[var(--color-text)] font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20"
             >
-              <option value="">{t('Select Warehouse')}</option>
+              <option value="">Select Warehouse</option>
               {factories.map(f => (
-                <option key={f.id} value={f.id}>{f.name} {t('Warehouse')}</option>
+                <option key={f.id} value={f.id}>{f.name} Warehouse</option>
               ))}
             </select>
           </div>

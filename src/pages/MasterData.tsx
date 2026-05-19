@@ -18,7 +18,6 @@ import {
 import Modal from '../components/Modal';
 import { apiService } from '../services/apiService';
 import { fetchCollection } from '../utils/firestore';
-import { useTranslation } from "react-i18next";
 
 const MasterData: React.FC = () => {
   const { profile, isAdmin } = useAuth();
@@ -168,8 +167,8 @@ const MasterData: React.FC = () => {
     return (
       <div className="h-[60vh] flex flex-col items-center justify-center space-y-4">
         <ShieldAlert size={64} className="text-rose-500" />
-        <h2 className="text-2xl font-serif font-bold text-[var(--color-text)]">{t('Access Restricted')}</h2>
-        <p className="text-[var(--color-text)]/40">{t('Only administrators and managers can access structural data management.')}</p>
+        <h2 className="text-2xl font-serif font-bold text-[var(--color-text)]">Access Restricted</h2>
+        <p className="text-[var(--color-text)]/40">Only administrators and managers can access structural data management.</p>
       </div>
     );
   }
@@ -178,15 +177,15 @@ const MasterData: React.FC = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Master Data')}</h2>
-          <p className="text-[var(--color-text)]/40 mt-1">{t('Manage structural entities and product definitions')}</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Master Data</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">Manage structural entities and product definitions</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
           className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
         >
           <Plus size={20} />
-          <span className="font-bold">{t('Add')} {activeTab.slice(0, -1)}</span>
+          <span className="font-bold">Add {activeTab.slice(0, -1)}</span>
         </button>
       </header>
 
@@ -217,9 +216,9 @@ const MasterData: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-[var(--color-bg)]/50 text-xs uppercase tracking-widest text-[var(--color-text)]/40 font-bold">
-                <th className="px-6 py-4">{t('Name')}</th>
-                <th className="px-6 py-4">{t('Details')}</th>
-                <th className="px-6 py-4 text-right">{t('Actions')}</th>
+                <th className="px-6 py-4">Name</th>
+                <th className="px-6 py-4">Details</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-text)]/5">
@@ -260,7 +259,7 @@ const MasterData: React.FC = () => {
               {activeTab === 'raw' && rawMaterials.map(r => (
                 <tr key={r.id} className="hover:bg-[var(--color-text)]/[0.02] transition-colors">
                   <td className="px-6 py-4 font-bold text-[var(--color-text)]">{r.name}</td>
-                  <td className="px-6 py-4 text-sm text-[var(--color-text)]/60">{t('Unit:')} {r.unit}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--color-text)]/60">Unit: {r.unit}</td>
                   <td className="px-6 py-4 text-right flex justify-end space-x-2">
                     <button onClick={() => handleEdit(r)} className="p-2 text-[var(--color-main)] hover:bg-[var(--color-main)]/10 rounded-lg"><Edit2 size={18} /></button>
                     <button onClick={() => handleDelete(r.id, 'rawMaterials')} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={18} /></button>
@@ -297,11 +296,11 @@ const MasterData: React.FC = () => {
           {activeTab === 'factories' && (
             <>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Factory Name')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Factory Name</label>
                 <input required value={factoryForm.name} onChange={e => setFactoryForm({...factoryForm, name: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Location')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Location</label>
                 <input required value={factoryForm.location} onChange={e => setFactoryForm({...factoryForm, location: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
               </div>
             </>
@@ -309,17 +308,17 @@ const MasterData: React.FC = () => {
           {activeTab === 'warehouses' && (
             <>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Warehouse Name')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Warehouse Name</label>
                 <input required value={warehouseForm.name} onChange={e => setWarehouseForm({...warehouseForm, name: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Location')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Location</label>
                 <input required value={warehouseForm.location} onChange={e => setWarehouseForm({...warehouseForm, location: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Associated Factory')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Associated Factory</label>
                 <select required value={warehouseForm.factoryId} onChange={e => setWarehouseForm({...warehouseForm, factoryId: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]">
-                  <option value="">{t('Select Factory')}</option>
+                  <option value="">Select Factory</option>
                   {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                 </select>
               </div>
@@ -328,30 +327,30 @@ const MasterData: React.FC = () => {
           {activeTab === 'products' && (
             <>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Product Name')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Product Name</label>
                 <input required value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Category')}</label>
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Category</label>
                   <select required value={productForm.category} onChange={e => setProductForm({...productForm, category: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]">
-                    <option value="">{t('Select Category')}</option>
+                    <option value="">Select Category</option>
                     {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Price ($)')}</label>
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Price ($)</label>
                   <input type="number" required value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value === '' ? 0 : Number(e.target.value)})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Package Size')}</label>
-                  <input required value={productForm.packageSize} onChange={e => setProductForm({...productForm, packageSize: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" placeholder={t('e.g. 500ml, 1kg')} />
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Package Size</label>
+                  <input required value={productForm.packageSize} onChange={e => setProductForm({...productForm, packageSize: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" placeholder="e.g. 500ml, 1kg" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Base Unit')}</label>
-                  <input required value={productForm.unit} onChange={e => setProductForm({...productForm, unit: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" placeholder={t('e.g. Bottle, Box')} />
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Base Unit</label>
+                  <input required value={productForm.unit} onChange={e => setProductForm({...productForm, unit: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" placeholder="e.g. Bottle, Box" />
                 </div>
               </div>
             </>
@@ -359,16 +358,16 @@ const MasterData: React.FC = () => {
           {activeTab === 'raw' && (
             <>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Material Name')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Material Name</label>
                 <input required value={rawForm.name} onChange={e => setRawForm({...rawForm, name: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Unit')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Unit</label>
                 <select required value={rawForm.unit} onChange={e => setRawForm({...rawForm, unit: e.target.value as any})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]">
-                  <option value="kg">{t('Kilogram (kg)')}</option>
-                  <option value="liter">{t('Liter (l)')}</option>
-                  <option value="unit">{t('Unit (pcs)')}</option>
-                  <option value="bag">{t('Bag')}</option>
+                  <option value="kg">Kilogram (kg)</option>
+                  <option value="liter">Liter (l)</option>
+                  <option value="unit">Unit (pcs)</option>
+                  <option value="bag">Bag</option>
                 </select>
               </div>
             </>
@@ -376,11 +375,11 @@ const MasterData: React.FC = () => {
           {activeTab === 'categories' && (
             <>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Category Name')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Category Name</label>
                 <input required value={categoryForm.name} onChange={e => setCategoryForm({...categoryForm, name: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Description')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Description</label>
                 <textarea value={categoryForm.description} onChange={e => setCategoryForm({...categoryForm, description: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 h-24 text-[var(--color-text)]" />
               </div>
             </>
@@ -388,11 +387,11 @@ const MasterData: React.FC = () => {
           {activeTab === 'outlets' && (
             <>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Outlet Name')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Outlet Name</label>
                 <input required value={outletForm.name} onChange={e => setOutletForm({...outletForm, name: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Location')}</label>
+                <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Location</label>
                 <input required value={outletForm.location} onChange={e => setOutletForm({...outletForm, location: e.target.value})} className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 text-[var(--color-text)]" />
               </div>
             </>

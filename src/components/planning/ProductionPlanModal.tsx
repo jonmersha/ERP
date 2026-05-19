@@ -3,7 +3,6 @@ import { Factory, Product, ProductionPlan, QuarterlyPlan } from '../../types';
 import { addProductionPlan, updateProductionPlan } from '../../services/planningService';
 import { useAuth } from '../../context/AuthContext';
 import { X, Loader2 } from 'lucide-react';
-import { useTranslation } from "react-i18next";
 
 interface Props {
   isOpen: boolean;
@@ -114,30 +113,30 @@ const ProductionPlanModal: React.FC<Props> = ({ isOpen, onClose, factories, prod
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <select className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.factoryId} onChange={e => setForm({...form, factoryId: e.target.value})} required disabled={isApproved}>
-            <option value="">{t('Select Factory')}</option>
+            <option value="">Select Factory</option>
             {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
           <select className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.productId} onChange={e => setForm({...form, productId: e.target.value})} required disabled={isApproved}>
-            <option value="">{t('Select Product')}</option>
+            <option value="">Select Product</option>
             {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <input type="number" placeholder={t('Year')} className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.year} onChange={e => setForm({...form, year: parseInt(e.target.value) || 0})} required disabled={isApproved} />
+          <input type="number" placeholder="Year" className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.year} onChange={e => setForm({...form, year: parseInt(e.target.value) || 0})} required disabled={isApproved} />
           <div className="flex space-x-2">
-            <input type="number" placeholder={t('Total Annual Quantity')} className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.totalQuantity} onChange={e => setForm({...form, totalQuantity: parseInt(e.target.value) || 0})} required disabled={isApproved} />
+            <input type="number" placeholder="Total Annual Quantity" className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.totalQuantity} onChange={e => setForm({...form, totalQuantity: parseInt(e.target.value) || 0})} required disabled={isApproved} />
             {!isApproved && (
               <button type="button" onClick={() => handleAutoDistribute(form.totalQuantity)} className="bg-[var(--color-text)]/10 px-4 rounded-xl font-medium hover:bg-[var(--color-text)]/20 whitespace-nowrap text-[var(--color-text)]">
-                {t('Auto-Distribute')}
-                                            </button>
+                Auto-Distribute
+              </button>
             )}
           </div>
           <select className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)] text-[var(--color-text)]" value={form.status} onChange={e => setForm({...form, status: e.target.value as 'planned' | 'in_progress' | 'completed' | 'approved'})} required disabled={isApproved}>
-            <option value="planned">{t('Planned')}</option>
-            <option value="in_progress">{t('In Progress')}</option>
-            <option value="completed">{t('Completed')}</option>
-            <option value="approved">{t('Approved')}</option>
+            <option value="planned">Planned</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="approved">Approved</option>
           </select>
           
-          <div className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mt-4">{t('Quarterly Breakdown')}</div>
+          <div className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mt-4">Quarterly Breakdown</div>
           {(form.quarterlyPlans || []).map((q, qIdx) => (
             <div key={q.quarter} className="p-4 bg-[var(--color-bg)] rounded-xl space-y-2">
               <div className="flex justify-between">

@@ -4,7 +4,6 @@ import { createPurchaseOrder, updatePurchaseOrder } from '../../services/procure
 import { useAuth } from '../../context/AuthContext';
 import { X, Loader2, Plus, Minus, Trash2 } from 'lucide-react';
 import Modal from '../Modal';
-import { useTranslation } from "react-i18next";
 
 interface Props {
   isOpen: boolean;
@@ -98,54 +97,54 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, order
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">{t('Supplier')}</label>
+            <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">Supplier</label>
             <select 
               required
               className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)]"
               value={form.supplierId}
               onChange={e => setForm({...form, supplierId: e.target.value})}
             >
-              <option value="">{t('Select Supplier')}</option>
+              <option value="">Select Supplier</option>
               {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">{t('Status')}</label>
+            <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">Status</label>
             <select 
               className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)]"
               value={form.status}
               onChange={e => setForm({...form, status: e.target.value})}
             >
-              <option value="pending">{t('Pending')}</option>
-              <option value="approved">{t('Approved')}</option>
-              <option value="shipped">{t('Shipped')}</option>
-              <option value="received">{t('Received')}</option>
-              <option value="cancelled">{t('Cancelled')}</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="shipped">Shipped</option>
+              <option value="received">Received</option>
+              <option value="cancelled">Cancelled</option>
             </select>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">{t('Factory')}</label>
+            <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">Factory</label>
             <select 
               className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)]"
               value={form.factoryId}
               onChange={e => setForm({...form, factoryId: e.target.value})}
             >
-              <option value="">{t('Select Factory')}</option>
+              <option value="">Select Factory</option>
               {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">{t('Destination Warehouse')}</label>
+            <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">Destination Warehouse</label>
             <select 
               required
               className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)]"
               value={form.warehouseId}
               onChange={e => setForm({...form, warehouseId: e.target.value})}
             >
-              <option value="">{t('Select Warehouse')}</option>
+              <option value="">Select Warehouse</option>
               {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
             </select>
           </div>
@@ -153,14 +152,14 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, order
 
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h4 className="text-sm font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Order Items')}</h4>
+            <h4 className="text-sm font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Order Items</h4>
             <button 
               type="button" 
               onClick={addItem}
               className="flex items-center space-x-1 text-xs text-[var(--color-main)] font-bold"
             >
               <Plus size={14} />
-              <span>{t('Add Item')}</span>
+              <span>Add Item</span>
             </button>
           </div>
 
@@ -168,19 +167,19 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, order
             {form.items.map((item: any, index: number) => (
               <div key={index} className="flex flex-col md:flex-row items-end space-y-2 md:space-y-0 md:space-x-2 bg-[var(--color-text)]/5 p-4 rounded-xl relative">
                 <div className="flex-1 w-full">
-                  <label className="block text-[10px] font-bold text-[var(--color-text)]/40 uppercase mb-1">{t('Material')}</label>
+                  <label className="block text-[10px] font-bold text-[var(--color-text)]/40 uppercase mb-1">Material</label>
                   <select 
                     required
                     className="w-full p-2 rounded-lg border border-[var(--color-text)]/10 bg-[var(--color-surface)] text-sm"
                     value={item.itemId}
                     onChange={e => updateItem(index, 'itemId', e.target.value)}
                   >
-                    <option value="">{t('Select Material')}</option>
+                    <option value="">Select Material</option>
                     {materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                   </select>
                 </div>
                 <div className="w-full md:w-24">
-                  <label className="block text-[10px] font-bold text-[var(--color-text)]/40 uppercase mb-1">{t('Qty')}</label>
+                  <label className="block text-[10px] font-bold text-[var(--color-text)]/40 uppercase mb-1">Qty</label>
                   <input 
                     type="number" 
                     required
@@ -190,7 +189,7 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, order
                   />
                 </div>
                 <div className="w-full md:w-24">
-                  <label className="block text-[10px] font-bold text-[var(--color-text)]/40 uppercase mb-1">{t('Price')}</label>
+                  <label className="block text-[10px] font-bold text-[var(--color-text)]/40 uppercase mb-1">Price</label>
                   <input 
                     type="number" 
                     required
@@ -214,7 +213,7 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, order
         </div>
 
         <div className="pt-4 border-t border-[var(--color-text)]/5 flex justify-between items-center">
-          <span className="text-sm font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Total Amount')}</span>
+          <span className="text-sm font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Total Amount</span>
           <span className="text-2xl font-serif font-bold text-[var(--color-main)]">${totalAmount.toLocaleString()}</span>
         </div>
 

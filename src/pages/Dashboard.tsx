@@ -55,7 +55,7 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: any; tre
       {trend !== undefined && (
         <div className={`flex items-center space-x-1 text-xs font-medium mt-1 ${trend >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
           {trend >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-          <span>{Math.abs(trend)}{t('% vs last month')}</span>
+          <span>{Math.abs(trend)}% vs last month</span>
         </div>
       )}
     </div>
@@ -65,7 +65,6 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: any; tre
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Modal from '../components/Modal';
-import { useTranslation } from "react-i18next";
 
 const Dashboard: React.FC = () => {
   const { isAdmin, profile, company } = useAuth();
@@ -266,7 +265,7 @@ const Dashboard: React.FC = () => {
                 className="text-xs text-[var(--color-main)] hover:underline flex items-center space-x-1"
               >
                 <Settings size={14} />
-                <span>{t('Settings')}</span>
+                <span>Settings</span>
               </button>
             </div>
           )}
@@ -283,28 +282,28 @@ const Dashboard: React.FC = () => {
 
       <header className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-serif font-bold text-[var(--color-main)]">{t('Operational Overview')}</h2>
-          <p className="text-[var(--color-text)]/40 mt-1 text-sm">{t('Real-time performance metrics across all units')}</p>
+          <h2 className="text-2xl font-serif font-bold text-[var(--color-main)]">Operational Overview</h2>
+          <p className="text-[var(--color-text)]/40 mt-1 text-sm">Real-time performance metrics across all units</p>
         </div>
         <div className="hidden md:flex items-center space-x-2">
           <button 
             onClick={() => router.push('/sales')}
             className="flex items-center space-x-2 px-4 py-2 bg-[var(--color-main)] text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-sm"
           >
-            <Plus size={14} className="mr-1" /> {t('New Order')}
-                                </button>
+            <Plus size={14} className="mr-1" /> New Order
+          </button>
           <button 
             onClick={() => router.push('/production')}
             className="flex items-center space-x-2 px-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] rounded-xl text-xs font-bold hover:bg-[var(--color-bg)] transition-all"
           >
-            <Plus size={14} className="mr-1 text-[var(--color-main)]" /> {t('New Run')}
-                                </button>
+            <Plus size={14} className="mr-1 text-[var(--color-main)]" /> New Run
+          </button>
         </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          title={t('Active Factories')} 
+          title="Active Factories" 
           value={stats.factories} 
           icon={FactoryIcon} 
           trend={12}
@@ -312,7 +311,7 @@ const Dashboard: React.FC = () => {
           onClick={() => router.push('/production')}
         />
         <StatCard 
-          title={t('Total Revenue')} 
+          title="Total Revenue" 
           value={`$${stats.revenue.toLocaleString()}`} 
           icon={TrendingUp} 
           trend={8}
@@ -320,7 +319,7 @@ const Dashboard: React.FC = () => {
           onClick={() => router.push('/finance')}
         />
         <StatCard 
-          title={t('Sales Orders')} 
+          title="Sales Orders" 
           value={stats.orders} 
           icon={ShoppingCart} 
           trend={-3}
@@ -328,7 +327,7 @@ const Dashboard: React.FC = () => {
           onClick={() => router.push('/sales')}
         />
         <StatCard 
-          title={t('Low Stock Items')} 
+          title="Low Stock Items" 
           value={stats.lowStock} 
           icon={AlertTriangle} 
           color="bg-[var(--color-accent)]" 
@@ -341,8 +340,8 @@ const Dashboard: React.FC = () => {
         <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">{t('Quick Product View')}</h3>
-              <p className="text-sm text-[var(--color-text)]/40">{t('Top performing and key products')}</p>
+              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Quick Product View</h3>
+              <p className="text-sm text-[var(--color-text)]/40">Top performing and key products</p>
             </div>
             <Package className="text-[var(--color-main)]" size={24} />
           </div>
@@ -356,15 +355,15 @@ const Dashboard: React.FC = () => {
                   <p className="text-xs text-[var(--color-text)]/40 mt-1">{product.category}</p>
                   <div className="mt-3 flex justify-between items-end">
                     <div>
-                      <p className="text-[10px] font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Stock')}</p>
+                      <p className="text-[10px] font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Stock</p>
                       <p className={`text-sm font-bold ${totalStock < 100 ? 'text-rose-500' : 'text-[var(--color-text)]'}`}>{totalStock.toLocaleString()} {product.unit}</p>
                     </div>
                     <button 
                       onClick={() => router.push('/inventory')}
                       className="text-[10px] font-bold text-[var(--color-main)] hover:underline uppercase"
                     >
-                      {t('Manage')}
-                                                  </button>
+                      Manage
+                    </button>
                   </div>
                 </div>
               );
@@ -376,8 +375,8 @@ const Dashboard: React.FC = () => {
         <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">{t('Stock Alerts')}</h3>
-              <p className="text-sm text-[var(--color-text)]/40">{t('Items requiring immediate attention')}</p>
+              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Stock Alerts</h3>
+              <p className="text-sm text-[var(--color-text)]/40">Items requiring immediate attention</p>
             </div>
             <AlertTriangle className="text-rose-500" size={24} />
           </div>
@@ -392,15 +391,15 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <p className="font-bold text-rose-900 text-sm">{product?.name || item.productName || 'Unknown'}</p>
-                      <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest">{t('Low Stock:')} {item.quantity.toLocaleString()} {t('remaining')}</p>
+                      <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest">Low Stock: {item.quantity.toLocaleString()} remaining</p>
                     </div>
                   </div>
                   <button 
                     onClick={() => router.push('/procurement')}
                     className="px-4 py-1.5 bg-rose-600 text-white text-[10px] font-bold rounded-lg hover:bg-rose-700 transition-colors uppercase"
                   >
-                    {t('Restock')}
-                                            </button>
+                    Restock
+                  </button>
                 </div>
               );
             })}
@@ -409,7 +408,7 @@ const Dashboard: React.FC = () => {
                 <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <CheckCircle2 size={24} />
                 </div>
-                <p className="text-sm text-[var(--color-text)]/40">{t('All inventory levels are optimal.')}</p>
+                <p className="text-sm text-[var(--color-text)]/40">All inventory levels are optimal.</p>
               </div>
             )}
           </div>
@@ -421,8 +420,8 @@ const Dashboard: React.FC = () => {
         <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">{t('Production Progress')}</h3>
-              <p className="text-sm text-[var(--color-text)]/40">{t('Actual vs Target Quantity by Product')}</p>
+              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Production Progress</h3>
+              <p className="text-sm text-[var(--color-text)]/40">Actual vs Target Quantity by Product</p>
             </div>
             <Activity className="text-[var(--color-main)]" size={24} />
           </div>
@@ -447,8 +446,8 @@ const Dashboard: React.FC = () => {
         <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">{t('Procurement Status')}</h3>
-              <p className="text-sm text-[var(--color-text)]/40">{t('Distribution of material plans')}</p>
+              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Procurement Status</h3>
+              <p className="text-sm text-[var(--color-text)]/40">Distribution of material plans</p>
             </div>
             <Truck className="text-[var(--color-main)]" size={24} />
           </div>
@@ -490,8 +489,8 @@ const Dashboard: React.FC = () => {
         <div className="lg:col-span-3 bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">{t('Planning Trend')}</h3>
-              <p className="text-sm text-[var(--color-text)]/40">{t('Monthly target production volume')}</p>
+              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Planning Trend</h3>
+              <p className="text-sm text-[var(--color-text)]/40">Monthly target production volume</p>
             </div>
             <ClipboardList className="text-[var(--color-main)]" size={24} />
           </div>
@@ -514,16 +513,16 @@ const Dashboard: React.FC = () => {
           {/* Recent Sales Orders */}
           <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
             <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">{t('Recent Sales Orders')}</h3>
+              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Recent Sales Orders</h3>
               <button 
                 onClick={() => router.push('/sales')}
                 className="text-sm font-medium text-[var(--color-main)] hover:underline"
               >
-                {t('View All')}
-                                            </button>
+                View All
+              </button>
             </div>
             <div className="space-y-4">
-              {recentOrders.length === 0 && <p className="text-sm text-[var(--color-text)]/40">{t('No recent sales orders.')}</p>}
+              {recentOrders.length === 0 && <p className="text-sm text-[var(--color-text)]/40">No recent sales orders.</p>}
               {recentOrders.map((order) => (
                 <div 
                   key={order.id} 
@@ -536,7 +535,7 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <p className="font-medium text-[var(--color-text)]">{order.outletName || 'Unknown Outlet'}</p>
-                      <p className="text-xs text-[var(--color-text)]/40">{order.items?.length || 0} {t('items •')} {new Date(order.createdAt).toLocaleDateString()}</p>
+                      <p className="text-xs text-[var(--color-text)]/40">{order.items?.length || 0} items • {new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -556,16 +555,16 @@ const Dashboard: React.FC = () => {
           {/* Recent Production Runs */}
           <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
             <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">{t('Manufacturing Schedule')}</h3>
+              <h3 className="text-xl font-serif font-bold text-[var(--color-text)]">Manufacturing Schedule</h3>
               <button 
                 onClick={() => router.push('/production')}
                 className="text-sm font-medium text-[var(--color-main)] hover:underline"
               >
-                {t('View All')}
-                                            </button>
+                View All
+              </button>
             </div>
             <div className="space-y-4">
-              {recentRuns.length === 0 && <p className="text-sm text-[var(--color-text)]/40">{t('No recent production runs.')}</p>}
+              {recentRuns.length === 0 && <p className="text-sm text-[var(--color-text)]/40">No recent production runs.</p>}
                 {recentRuns.map((run) => {
                   const progress = run.quantity > 0 ? Math.round((run.quantityProduced / run.quantity) * 100) : 0;
                   return (
@@ -584,12 +583,12 @@ const Dashboard: React.FC = () => {
                         </p>
                         <div className="flex items-center space-x-2 mt-0.5">
                           <p className="text-[10px] font-bold text-[var(--color-text)]/40 uppercase tracking-widest">
-                            {(run.quantityProduced || 0).toLocaleString()} / {(run.quantity || 0).toLocaleString()} {t('units')}
-                                                                    </p>
+                            {(run.quantityProduced || 0).toLocaleString()} / {(run.quantity || 0).toLocaleString()} units
+                          </p>
                           {run.status !== 'completed' && (
                             <span className="text-[10px] font-bold text-[var(--color-main)] uppercase tracking-widest">
-                              • {((run.quantity || 0) - (run.quantityProduced || 0)).toLocaleString()} {t('left')}
-                                                                          </span>
+                              • {((run.quantity || 0) - (run.quantityProduced || 0)).toLocaleString()} left
+                            </span>
                           )}
                         </div>
                       </div>
@@ -613,11 +612,11 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 p-8">
-          <h3 className="text-xl font-serif font-bold text-[var(--color-text)] mb-8">{t('Unit Distribution')}</h3>
+          <h3 className="text-xl font-serif font-bold text-[var(--color-text)] mb-8">Unit Distribution</h3>
           <div className="space-y-6">
             <div className="space-y-2 cursor-pointer group" onClick={() => router.push('/production')}>
               <div className="flex justify-between text-sm">
-                <span className="text-[var(--color-text)]/60 group-hover:text-[var(--color-main)] transition-colors">{t('Factories')}</span>
+                <span className="text-[var(--color-text)]/60 group-hover:text-[var(--color-main)] transition-colors">Factories</span>
                 <span className="font-bold">{stats.factories}</span>
               </div>
               <div className="h-2 bg-[var(--color-bg)] rounded-full overflow-hidden">
@@ -626,7 +625,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="space-y-2 cursor-pointer group" onClick={() => router.push('/inventory')}>
               <div className="flex justify-between text-sm">
-                <span className="text-[var(--color-text)]/60 group-hover:text-blue-600 transition-colors">{t('Warehouses')}</span>
+                <span className="text-[var(--color-text)]/60 group-hover:text-blue-600 transition-colors">Warehouses</span>
                 <span className="font-bold">{stats.warehouses}</span>
               </div>
               <div className="h-2 bg-[var(--color-bg)] rounded-full overflow-hidden">
@@ -635,7 +634,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="space-y-2 cursor-pointer group" onClick={() => router.push('/sales')}>
               <div className="flex justify-between text-sm">
-                <span className="text-[var(--color-text)]/60 group-hover:text-amber-500 transition-colors">{t('Retail Outlets')}</span>
+                <span className="text-[var(--color-text)]/60 group-hover:text-amber-500 transition-colors">Retail Outlets</span>
                 <span className="font-bold">{stats.outlets}</span>
               </div>
               <div className="h-2 bg-[var(--color-bg)] rounded-full overflow-hidden">
@@ -645,9 +644,9 @@ const Dashboard: React.FC = () => {
           </div>
           
           <div className="mt-12 p-6 rounded-2xl bg-[var(--color-main)] text-white">
-            <h4 className="font-bold mb-2">{t('System Status')}</h4>
+            <h4 className="font-bold mb-2">System Status</h4>
             <p className="text-xs text-white/70 leading-relaxed">
-              {t('All systems operational. Last sync:')} {new Date().toLocaleTimeString()}
+              All systems operational. Last sync: {new Date().toLocaleTimeString()}
             </p>
           </div>
         </div>
@@ -656,17 +655,17 @@ const Dashboard: React.FC = () => {
       <Modal 
         isOpen={!!selectedOrder} 
         onClose={() => setSelectedOrder(null)} 
-        title={t('Sales Order Details')}
+        title="Sales Order Details"
       >
         {selectedOrder && (
           <div className="space-y-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Order ID')}</p>
+                <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Order ID</p>
                 <p className="text-lg font-mono font-bold text-[var(--color-main)]">#{selectedOrder.id?.slice(0, 8)}</p>
               </div>
               <div className="text-right">
-                <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Status')}</p>
+                <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Status</p>
                 <span className={`inline-block mt-1 text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full ${
                   selectedOrder.status === 'delivered' ? 'text-emerald-600 bg-emerald-50' : 
                   selectedOrder.status === 'shipped' ? 'text-blue-600 bg-blue-50' : 'text-amber-600 bg-amber-50'
@@ -678,23 +677,23 @@ const Dashboard: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Customer Outlet')}</p>
+                <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Customer Outlet</p>
                 <p className="font-bold text-[var(--color-text)]">{selectedOrder.outletName || 'Unknown Outlet'}</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Order Date')}</p>
+                <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Order Date</p>
                 <p className="font-bold text-[var(--color-text)]">{new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Order Items')}</p>
+              <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Order Items</p>
               <div className="space-y-2">
                 {selectedOrder.items?.map((item: any, index: number) => (
                   <div key={index} className="flex justify-between items-center p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5">
                     <div>
                       <p className="font-bold text-sm text-[var(--color-text)]">{item.productName}</p>
-                      <p className="text-xs text-[var(--color-text)]/40">{t('Qty:')} {item.quantity} × ${item.price.toLocaleString()}</p>
+                      <p className="text-xs text-[var(--color-text)]/40">Qty: {item.quantity} × ${item.price.toLocaleString()}</p>
                     </div>
                     <p className="font-bold text-[var(--color-text)]">${(item.quantity * item.price).toLocaleString()}</p>
                   </div>
@@ -703,7 +702,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             <div className="pt-4 border-t border-[var(--color-text)]/5 flex justify-between items-center">
-              <p className="text-sm font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Total Amount')}</p>
+              <p className="text-sm font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Total Amount</p>
               <p className="text-2xl font-serif font-bold text-[var(--color-text)]">
                 ${(selectedOrder.totalAmount || 0).toLocaleString()}
               </p>
@@ -716,8 +715,8 @@ const Dashboard: React.FC = () => {
               }}
               className="w-full bg-[var(--color-main)] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
             >
-              {t('Go to Sales Management')}
-                                      </button>
+              Go to Sales Management
+            </button>
           </div>
         )}
       </Modal>
@@ -725,17 +724,17 @@ const Dashboard: React.FC = () => {
       <Modal 
         isOpen={!!selectedRun} 
         onClose={() => setSelectedRun(null)} 
-        title={t('Production Run Details')}
+        title="Production Run Details"
       >
         {selectedRun && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5">
-                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">{t('Run ID')}</p>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">Run ID</p>
                 <p className="font-mono font-bold text-[var(--color-main)]">#{selectedRun.id.slice(0, 12)}</p>
               </div>
               <div className="p-4 bg-[var(--color-bg)] rounded-2xl border border-[var(--color-text)]/5">
-                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">{t('Status')}</p>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">Status</p>
                 <div className={`inline-block mt-1 text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full ${
                   selectedRun.status === 'completed' ? 'text-emerald-600 bg-emerald-50' : 
                   selectedRun.status === 'in_progress' ? 'text-blue-600 bg-blue-50' : 'text-amber-600 bg-amber-50'
@@ -751,7 +750,7 @@ const Dashboard: React.FC = () => {
                   <FactoryIcon size={24} />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">{t('Product')}</p>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40">Product</p>
                   <p className="font-bold text-[var(--color-text)]">
                     {products.find(p => p.id === selectedRun.productId)?.name || selectedRun.productName || 'Unknown Product'}
                   </p>
@@ -762,15 +761,15 @@ const Dashboard: React.FC = () => {
             <div className="bg-[var(--color-bg)] p-6 rounded-3xl border border-[var(--color-text)]/5">
               <div className="flex justify-between items-end mb-4">
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">{t('Production Progress')}</p>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">Production Progress</p>
                   <p className="text-2xl font-bold text-[var(--color-text)]">
                     {((selectedRun.quantityProduced || 0)).toLocaleString()} / {((selectedRun.quantity || 0)).toLocaleString()}
-                    <span className="text-sm text-[var(--color-text)]/40 ml-2">{t('units')}</span>
+                    <span className="text-sm text-[var(--color-text)]/40 ml-2">units</span>
                   </p>
                   {selectedRun.status !== 'completed' && (
                     <p className="text-xs text-[var(--color-main)]/60 mt-1">
-                      {((selectedRun.quantity || 0) - (selectedRun.quantityProduced || 0)).toLocaleString()} {t('units remaining')}
-                                                              </p>
+                      {((selectedRun.quantity || 0) - (selectedRun.quantityProduced || 0)).toLocaleString()} units remaining
+                    </p>
                   )}
                 </div>
                 <p className="text-xl font-bold text-[var(--color-main)]">
@@ -787,11 +786,11 @@ const Dashboard: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">{t('Start Date')}</p>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">Start Date</p>
                 <p className="font-medium text-[var(--color-text)]">{new Date(selectedRun.startDate).toLocaleDateString()}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">{t('Last Updated')}</p>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text)]/40 mb-1">Last Updated</p>
                 <p className="font-medium text-[var(--color-text)]">
                   {selectedRun.updatedAt ? new Date(selectedRun.updatedAt).toLocaleString() : 'N/A'}
                 </p>
@@ -805,8 +804,8 @@ const Dashboard: React.FC = () => {
               }}
               className="w-full bg-[var(--color-main)] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
             >
-              {t('Go to Production Management')}
-                                      </button>
+              Go to Production Management
+            </button>
           </div>
         )}
       </Modal>

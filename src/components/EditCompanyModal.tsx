@@ -3,7 +3,6 @@ import { Company } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, Building2, MapPin, Phone, Mail, Image as ImageIcon } from 'lucide-react';
 import { apiService } from '../services/apiService';
-import { useTranslation } from "react-i18next";
 
 interface EditCompanyModalProps {
   isOpen: boolean;
@@ -123,8 +122,8 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
           >
             <div className="p-8 border-b border-[var(--color-text)]/5 flex justify-between items-center bg-[var(--color-bg)]/30">
               <div>
-                <h2 className="text-2xl font-serif font-bold text-[var(--color-text)]">{t('Edit Company Profile')}</h2>
-                <p className="text-sm text-[var(--color-text)]/40">{t('Update your organization\'s public identity')}</p>
+                <h2 className="text-2xl font-serif font-bold text-[var(--color-text)]">Edit Company Profile</h2>
+                <p className="text-sm text-[var(--color-text)]/40">Update your organization's public identity</p>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-[var(--color-text)]/5 rounded-full transition-colors">
                 <X size={24} />
@@ -135,7 +134,7 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
               {/* Visual Assets */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Company Logo')}</label>
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Company Logo</label>
                   <div className="relative group">
                     <div className="w-32 h-32 bg-[var(--color-bg)] rounded-3xl flex items-center justify-center border-2 border-dashed border-[var(--color-text)]/10 overflow-hidden">
                       {formData.logoUrl ? (
@@ -152,7 +151,7 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
                 </div>
 
                 <div className="space-y-4">
-                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Banner Image')}</label>
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Banner Image</label>
                   <div className="relative group">
                     <div className="w-full h-32 bg-[var(--color-bg)] rounded-3xl flex items-center justify-center border-2 border-dashed border-[var(--color-text)]/10 overflow-hidden">
                       {formData.bannerUrl ? (
@@ -172,7 +171,7 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
               {/* Basic Info */}
               <div className="space-y-6">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Company Name')}</label>
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Company Name</label>
                   <div className="relative">
                     <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={20} />
                     <input
@@ -186,7 +185,7 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Address')}</label>
+                  <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Address</label>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={20} />
                     <input
@@ -201,7 +200,7 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Phone')}</label>
+                    <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Phone</label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
                       <input
@@ -214,7 +213,7 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Email')}</label>
+                    <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Email</label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
                       <input
@@ -235,8 +234,8 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
                   onClick={onClose}
                   className="flex-1 px-6 py-4 rounded-2xl font-bold text-[var(--color-text)]/60 hover:bg-[var(--color-text)]/5 transition-colors"
                 >
-                  {t('Cancel')}
-                                                  </button>
+                  Cancel
+                </button>
                 <button
                   type="submit"
                   disabled={loading}
@@ -245,7 +244,7 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ isOpen, onClose, co
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <span>{t('Save Changes')}</span>
+                    <span>Save Changes</span>
                   )}
                 </button>
               </div>

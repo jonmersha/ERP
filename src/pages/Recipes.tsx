@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { useInventoryData } from '../hooks/useInventoryData';
 import { Loader2, Plus, BookOpen } from 'lucide-react';
 import Modal from '../components/Modal';
-import { useTranslation } from "react-i18next";
 
 const Recipes: React.FC = () => {
   const { profile } = useAuth();
@@ -114,13 +113,13 @@ const Recipes: React.FC = () => {
   return (
     <div className="space-y-8">
       <header>
-        <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Recipe & BOM Management')}</h2>
-        <p className="text-[var(--color-text)]/40 mt-1">{t('Define product recipes and ingredient requirements.')}</p>
+        <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Recipe & BOM Management</h2>
+        <p className="text-[var(--color-text)]/40 mt-1">Define product recipes and ingredient requirements.</p>
       </header>
 
       <div className="bg-[var(--color-surface)] p-8 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-[var(--color-text)]">{t('Recipes')}</h3>
+          <h3 className="text-xl font-bold text-[var(--color-text)]">Recipes</h3>
           <div className="flex space-x-3">
             <button 
               onClick={handleAutoGenerate}
@@ -128,14 +127,14 @@ const Recipes: React.FC = () => {
               className="flex items-center space-x-2 bg-[var(--color-text)]/10 text-[var(--color-text)] px-4 py-2 rounded-xl hover:bg-[var(--color-text)]/20 disabled:opacity-50"
             >
               {generating ? <Loader2 size={16} className="animate-spin" /> : <BookOpen size={16} />}
-              <span>{t('Auto-Generate Missing')}</span>
+              <span>Auto-Generate Missing</span>
             </button>
             <button 
               onClick={() => setIsModalOpen(true)}
               className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-4 py-2 rounded-xl"
             >
               <Plus size={16} />
-              <span>{t('New Recipe')}</span>
+              <span>New Recipe</span>
             </button>
           </div>
         </div>
@@ -146,19 +145,19 @@ const Recipes: React.FC = () => {
                 <BookOpen className="text-[var(--color-main)]" />
                 <h4 className="font-bold text-lg text-[var(--color-text)]">{recipe.name}</h4>
               </div>
-              <p className="text-sm text-[var(--color-text)]/60">{t('Product:')} {products.find(p => p.id === recipe.productId)?.name}</p>
+              <p className="text-sm text-[var(--color-text)]/60">Product: {products.find(p => p.id === recipe.productId)?.name}</p>
               <div className="text-sm text-[var(--color-text)]/40">
-                <p>{t('Ingredients:')} {recipe.bom.length}</p>
+                <p>Ingredients: {recipe.bom.length}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={t('Add New Recipe')}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Recipe">
         <div className="space-y-4 text-[var(--color-text)]">
           <input
             type="text"
-            placeholder={t('Recipe Name')}
+            placeholder="Recipe Name"
             className="w-full p-3 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded-xl"
             value={newRecipe.name}
             onChange={e => setNewRecipe(prev => ({ ...prev, name: e.target.value }))}
@@ -168,16 +167,16 @@ const Recipes: React.FC = () => {
             value={newRecipe.productId}
             onChange={e => setNewRecipe(prev => ({ ...prev, productId: e.target.value }))}
           >
-            <option value="">{t('Select Product')}</option>
+            <option value="">Select Product</option>
             {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           
           <div className="space-y-2">
-            <h4 className="font-bold">{t('BOM Ingredients')}</h4>
+            <h4 className="font-bold">BOM Ingredients</h4>
             {newRecipe.bom.map((ing, i) => <div key={i} className="text-sm">{ing.materialId}: {ing.quantity}</div>)}
             <div className="flex space-x-2">
-              <input type="text" placeholder={t('Material ID')} className="flex-1 p-2 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded" value={newIngredient.materialId} onChange={e => setNewIngredient(prev => ({...prev, materialId: e.target.value}))} />
-              <input type="number" placeholder={t('Qty')} className="w-20 p-2 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded" value={newIngredient.quantity} onChange={e => setNewIngredient(prev => ({...prev, quantity: parseInt(e.target.value) || 0}))} />
+              <input type="text" placeholder="Material ID" className="flex-1 p-2 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded" value={newIngredient.materialId} onChange={e => setNewIngredient(prev => ({...prev, materialId: e.target.value}))} />
+              <input type="number" placeholder="Qty" className="w-20 p-2 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded" value={newIngredient.quantity} onChange={e => setNewIngredient(prev => ({...prev, quantity: parseInt(e.target.value) || 0}))} />
               <button onClick={() => {
                 setNewRecipe(prev => ({...prev, bom: [...prev.bom, newIngredient]}));
                 setNewIngredient({materialId: '', quantity: 0});
@@ -186,10 +185,10 @@ const Recipes: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <h4 className="font-bold">{t('Processing Steps')}</h4>
-            {newRecipe.processingSteps.map((step, i) => <div key={i} className="text-sm">{step.order}. {step.description} ({step.durationMinutes} {t('mins)')}</div>)}
+            <h4 className="font-bold">Processing Steps</h4>
+            {newRecipe.processingSteps.map((step, i) => <div key={i} className="text-sm">{step.order}. {step.description} ({step.durationMinutes} mins)</div>)}
             <div className="flex space-x-2">
-              <input type="text" placeholder={t('Step description')} className="flex-1 p-2 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded" value={newStep} onChange={e => setNewStep(e.target.value)} />
+              <input type="text" placeholder="Step description" className="flex-1 p-2 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded" value={newStep} onChange={e => setNewStep(e.target.value)} />
               <button onClick={() => {
                 setNewRecipe(prev => ({...prev, processingSteps: [...prev.processingSteps, {
                   order: prev.processingSteps.length + 1,
@@ -205,8 +204,8 @@ const Recipes: React.FC = () => {
             onClick={handleAddRecipe}
             className="w-full bg-[var(--color-main)] text-white p-3 rounded-xl"
           >
-            {t('Save Recipe')}
-                                </button>
+            Save Recipe
+          </button>
         </div>
       </Modal>
     </div>

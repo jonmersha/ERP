@@ -3,7 +3,6 @@ import React from 'react';
 import Link from 'next/link';
 import { learningContent } from '../constants/learning';
 import { ArrowLeft, BookOpen } from 'lucide-react';
-import { useTranslation } from "react-i18next";
 
 const Learning: React.FC<{ feature?: string; }> = ({ feature }) => {
   const content = feature ? learningContent[feature] : null;
@@ -11,8 +10,8 @@ const Learning: React.FC<{ feature?: string; }> = ({ feature }) => {
   if (!content) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-2xl font-bold">{t('Learning module not found.')}</h2>
-        <Link href="/" className="text-[var(--color-main)] underline mt-4 block">{t('Return to Dashboard')}</Link>
+        <h2 className="text-2xl font-bold">Learning module not found.</h2>
+        <Link href="/" className="text-[var(--color-main)] underline mt-4 block">Return to Dashboard</Link>
       </div>
     );
   }
@@ -20,8 +19,8 @@ const Learning: React.FC<{ feature?: string; }> = ({ feature }) => {
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
       <Link href="/" className="flex items-center text-[var(--color-text)]/60 hover:text-[var(--color-text)]">
-        <ArrowLeft size={16} className="mr-2" /> {t('Back to Dashboard')}
-                    </Link>
+        <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
+      </Link>
       <header className="flex items-center space-x-4">
         <div className="p-4 bg-[var(--color-main)]/10 rounded-2xl text-[var(--color-main)]">
           <BookOpen size={32} />
@@ -33,7 +32,7 @@ const Learning: React.FC<{ feature?: string; }> = ({ feature }) => {
       </header>
 
       <div className="bg-[var(--color-surface)] p-8 rounded-3xl border border-[var(--color-text)]/5 shadow-sm space-y-6">
-        <h3 className="text-xl font-bold text-[var(--color-text)]">{t('How it Works')}</h3>
+        <h3 className="text-xl font-bold text-[var(--color-text)]">How it Works</h3>
         <ul className="space-y-4">
           {content.howItWorks.map((step, index) => (
             <li key={index} className="flex items-start space-x-3">

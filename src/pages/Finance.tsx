@@ -3,7 +3,6 @@ import { Invoice, Payment, FinancialPlan } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { CreditCard, FileText, Loader2, TrendingUp } from 'lucide-react';
 import { getInvoices, getPayments, getFinancialPlans } from '../services/financeService';
-import { useTranslation } from "react-i18next";
 
 const Finance: React.FC = () => {
   const { profile } = useAuth();
@@ -49,14 +48,14 @@ const Finance: React.FC = () => {
   return (
     <div className="space-y-8">
       <header>
-        <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Finance')}</h2>
-        <p className="text-[var(--color-text)]/40 mt-1">{t('Financial reports, invoices, payments, and yearly plans')}</p>
+        <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Finance</h2>
+        <p className="text-[var(--color-text)]/40 mt-1">Financial reports, invoices, payments, and yearly plans</p>
       </header>
 
       <div className="bg-[var(--color-surface)] p-6 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
         <div className="flex items-center space-x-2 mb-6">
           <TrendingUp className="text-[var(--color-main)]" />
-          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">{t('Financial Plan (')}{currentYear})</h3>
+          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">Financial Plan ({currentYear})</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {['Q1', 'Q2', 'Q3', 'Q4'].map(q => {
@@ -64,8 +63,8 @@ const Finance: React.FC = () => {
             return (
               <div key={q} className="p-4 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5">
                 <p className="font-bold text-[var(--color-text)]">{q}</p>
-                <p className="text-xs text-[var(--color-text)]/40">{t('Revenue: $')}{plan ? plan.targetRevenue.toLocaleString() : 0}</p>
-                <p className="text-xs text-[var(--color-text)]/40">{t('Expense: $')}{plan ? plan.targetExpense.toLocaleString() : 0}</p>
+                <p className="text-xs text-[var(--color-text)]/40">Revenue: ${plan ? plan.targetRevenue.toLocaleString() : 0}</p>
+                <p className="text-xs text-[var(--color-text)]/40">Expense: ${plan ? plan.targetExpense.toLocaleString() : 0}</p>
               </div>
             );
           })}
@@ -76,13 +75,13 @@ const Finance: React.FC = () => {
         <div className="bg-[var(--color-surface)] p-6 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
           <div className="flex items-center space-x-2 mb-6">
             <FileText className="text-[var(--color-main)]" />
-            <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">{t('Invoices')}</h3>
+            <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">Invoices</h3>
           </div>
           <div className="space-y-4">
             {invoices.map(inv => (
               <div key={inv.id} className="flex justify-between items-center p-4 bg-[var(--color-bg)] rounded-xl">
                 <div>
-                  <p className="font-bold text-[var(--color-text)]">{t('Order #')}{inv.orderId.slice(-4)}</p>
+                  <p className="font-bold text-[var(--color-text)]">Order #{inv.orderId.slice(-4)}</p>
                   <p className="text-xs text-[var(--color-text)]/40">{inv.dueDate}</p>
                 </div>
                 <div className="text-right">
@@ -97,13 +96,13 @@ const Finance: React.FC = () => {
         <div className="bg-[var(--color-surface)] p-6 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
           <div className="flex items-center space-x-2 mb-6">
             <CreditCard className="text-[var(--color-main)]" />
-            <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">{t('Payments')}</h3>
+            <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">Payments</h3>
           </div>
           <div className="space-y-4">
             {payments.map(pay => (
               <div key={pay.id} className="flex justify-between items-center p-4 bg-[var(--color-bg)] rounded-xl">
                 <div>
-                  <p className="font-bold text-[var(--color-text)]">{t('Invoice #')}{pay.invoiceId.slice(-4)}</p>
+                  <p className="font-bold text-[var(--color-text)]">Invoice #{pay.invoiceId.slice(-4)}</p>
                   <p className="text-xs text-[var(--color-text)]/40">{pay.paymentDate}</p>
                 </div>
                 <div className="text-right">

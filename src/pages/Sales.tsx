@@ -8,7 +8,6 @@ import { Store, ShoppingBag, CreditCard, Plus, Search, FileText, Loader2, Trash2
 import Modal from '../components/Modal';
 import StatsCard from '../components/common/StatsCard';
 import Badge from '../components/common/Badge';
-import { useTranslation } from "react-i18next";
 
 const Sales: React.FC = () => {
   const { profile } = useAuth();
@@ -117,8 +116,8 @@ const Sales: React.FC = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Sales Management')}</h2>
-          <p className="text-[var(--color-text)]/40 mt-1">{t('Manage customer orders and revenue')}</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Sales Management</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">Manage customer orders and revenue</p>
         </div>
         <div className="flex space-x-4">
           <button 
@@ -136,7 +135,7 @@ const Sales: React.FC = () => {
             className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
           >
             <Plus size={20} />
-            <span className="font-bold">{t('New Sales Order')}</span>
+            <span className="font-bold">New Sales Order</span>
           </button>
         </div>
       </header>
@@ -152,19 +151,19 @@ const Sales: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard 
-          title={t('Total Revenue')}
+          title="Total Revenue"
           value={`$${totalSales.toLocaleString()}`}
           icon={CreditCard}
           color="emerald"
         />
         <StatsCard 
-          title={t('Total Orders')}
+          title="Total Orders"
           value={orders.length}
           icon={ShoppingBag}
           color="indigo"
         />
         <StatsCard 
-          title={t('Pending Orders')}
+          title="Pending Orders"
           value={pendingOrders}
           icon={Store}
           color="amber"
@@ -173,12 +172,12 @@ const Sales: React.FC = () => {
 
       <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 overflow-hidden">
         <div className="p-6 border-b border-[var(--color-text)]/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">{t('Sales Orders')}</h3>
+          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">Sales Orders</h3>
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
             <input 
               type="text"
-              placeholder={t('Search orders...')}
+              placeholder="Search orders..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-sm"
@@ -190,12 +189,12 @@ const Sales: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[var(--color-bg)]/50 text-[10px] font-bold text-[var(--color-text)]/40 uppercase tracking-widest">
-                <th className="px-6 py-4">{t('Order ID')}</th>
-                <th className="px-6 py-4">{t('Outlet')}</th>
-                <th className="px-6 py-4">{t('Date')}</th>
-                <th className="px-6 py-4">{t('Amount')}</th>
-                <th className="px-6 py-4">{t('Status')}</th>
-                <th className="px-6 py-4 text-right">{t('Actions')}</th>
+                <th className="px-6 py-4">Order ID</th>
+                <th className="px-6 py-4">Outlet</th>
+                <th className="px-6 py-4">Date</th>
+                <th className="px-6 py-4">Amount</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-text)]/5 text-sm">
@@ -221,7 +220,7 @@ const Sales: React.FC = () => {
                           <button 
                             onClick={() => handleStatusUpdate(order.id, 'paid')}
                             className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                            title={t('Mark as Paid')}
+                            title="Mark as Paid"
                           >
                             <CreditCard size={18} />
                           </button>
@@ -238,7 +237,7 @@ const Sales: React.FC = () => {
                               setIsModalOpen(true);
                             }}
                             className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                            title={t('Edit Order')}
+                            title="Edit Order"
                           >
                             <FileText size={18} />
                           </button>
@@ -248,7 +247,7 @@ const Sales: React.FC = () => {
                         <button 
                           onClick={() => handleStatusUpdate(order.id, 'ready_to_ship')}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title={t('Ready to Ship')}
+                          title="Ready to Ship"
                         >
                           <Truck size={18} />
                         </button>
@@ -257,7 +256,7 @@ const Sales: React.FC = () => {
                         <button 
                           onClick={() => handleStatusUpdate(order.id, 'cancelled')}
                           className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                          title={t('Cancel Order')}
+                          title="Cancel Order"
                         >
                           <XCircle size={18} />
                         </button>
@@ -279,21 +278,21 @@ const Sales: React.FC = () => {
         <form onSubmit={handleCreate} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Customer Outlet')}</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Customer Outlet</label>
               <select 
                 required
                 value={form.outletId}
                 onChange={e => setForm({ ...form, outletId: e.target.value })}
                 className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
               >
-                <option value="">{t('Select Outlet')}</option>
+                <option value="">Select Outlet</option>
                 {outlets.map(o => (
                   <option key={o.id} value={o.id}>{o.name}</option>
                 ))}
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Order Date')}</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Order Date</label>
               <input 
                 type="date"
                 required
@@ -306,33 +305,33 @@ const Sales: React.FC = () => {
 
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Order Items')}</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Order Items</label>
               <button 
                 type="button"
                 onClick={addItem}
                 className="text-xs font-bold text-[var(--color-main)] hover:text-[var(--color-main)]/80 flex items-center"
               >
-                <Plus size={14} className="mr-1" /> {t('Add Item')}
-                                            </button>
+                <Plus size={14} className="mr-1" /> Add Item
+              </button>
             </div>
             {form.items.map((item, index) => (
               <div key={index} className="grid grid-cols-12 gap-3 items-end bg-[var(--color-text)]/[0.02] p-3 rounded-2xl border border-[var(--color-text)]/5">
                 <div className="col-span-5 space-y-1">
-                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">{t('Product')}</label>
+                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">Product</label>
                   <select 
                     required
                     value={item.productId}
                     onChange={e => updateItem(index, 'productId', e.target.value)}
                     className="w-full p-2 bg-[var(--color-bg)] rounded-lg border border-[var(--color-text)]/5 text-sm text-[var(--color-text)]"
                   >
-                    <option value="">{t('Select Product')}</option>
+                    <option value="">Select Product</option>
                     {products.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
                 </div>
                 <div className="col-span-3 space-y-1">
-                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">{t('Qty')}</label>
+                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">Qty</label>
                   <input 
                     type="number"
                     required
@@ -343,7 +342,7 @@ const Sales: React.FC = () => {
                   />
                 </div>
                 <div className="col-span-3 space-y-1">
-                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">{t('Price')}</label>
+                  <label className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">Price</label>
                   <input 
                     type="number"
                     required
@@ -369,7 +368,7 @@ const Sales: React.FC = () => {
 
           <div className="pt-4 border-t border-[var(--color-text)]/5 flex justify-between items-center">
             <div className="text-right flex-1 pr-4">
-              <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Total Amount')}</p>
+              <p className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Total Amount</p>
               <p className="text-2xl font-serif font-bold text-[var(--color-text)]">
                 ${form.items.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.price || 0)), 0).toLocaleString()}
               </p>

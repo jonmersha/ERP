@@ -6,7 +6,6 @@ import { Calendar, ShoppingCart, TrendingUp, Package, Loader2 } from 'lucide-rea
 import ProductionPlanList from '../components/planning/ProductionPlanList';
 import ProcurementPlanList from '../components/planning/ProcurementPlanList';
 import SalesPlanList from '../components/planning/SalesPlanList';
-import { useTranslation } from "react-i18next";
 
 const Planning: React.FC = () => {
   const { profile } = useAuth();
@@ -18,8 +17,8 @@ const Planning: React.FC = () => {
   return (
     <div className="space-y-8">
       <header>
-        <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Planning & Forecasting')}</h2>
-        <p className="text-[var(--color-text)]/40 mt-1">{t('Manage production, procurement, and sales targets.')}</p>
+        <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Planning & Forecasting</h2>
+        <p className="text-[var(--color-text)]/40 mt-1">Manage production, procurement, and sales targets.</p>
       </header>
 
       {/* Tabs */}

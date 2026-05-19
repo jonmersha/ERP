@@ -4,7 +4,6 @@ import { getMaintenanceLogs, addMaintenanceLog } from '../services/maintenanceSe
 import { useAuth } from '../context/AuthContext';
 import { Loader2, Plus, Wrench } from 'lucide-react';
 import Modal from '../components/Modal';
-import { useTranslation } from "react-i18next";
 
 const Maintenance: React.FC = () => {
   const { profile } = useAuth();
@@ -53,19 +52,19 @@ const Maintenance: React.FC = () => {
   return (
     <div className="space-y-8">
       <header>
-        <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Maintenance Management (CMMS)')}</h2>
-        <p className="text-[var(--color-text)]/40 mt-1">{t('Track equipment maintenance schedules, spare parts, and breakdown history.')}</p>
+        <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Maintenance Management (CMMS)</h2>
+        <p className="text-[var(--color-text)]/40 mt-1">Track equipment maintenance schedules, spare parts, and breakdown history.</p>
       </header>
 
       <div className="bg-[var(--color-surface)] p-8 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-[var(--color-text)]">{t('Maintenance Logs')}</h3>
+          <h3 className="text-xl font-bold text-[var(--color-text)]">Maintenance Logs</h3>
           <button 
             onClick={() => setIsModalOpen(true)}
             className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-4 py-2 rounded-xl"
           >
             <Plus size={16} />
-            <span>{t('Log Maintenance')}</span>
+            <span>Log Maintenance</span>
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -75,32 +74,32 @@ const Maintenance: React.FC = () => {
                 <Wrench className="text-[var(--color-main)]" />
                 <h4 className="font-bold text-lg text-[var(--color-text)]">{log.description}</h4>
               </div>
-              <p className="text-sm text-[var(--color-text)]/60">{t('Date:')} {log.date}</p>
-              <p className="text-sm text-[var(--color-text)]/60">{t('Technician:')} {log.technician}</p>
+              <p className="text-sm text-[var(--color-text)]/60">Date: {log.date}</p>
+              <p className="text-sm text-[var(--color-text)]/60">Technician: {log.technician}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={t('Log Maintenance')}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Log Maintenance">
         <div className="space-y-4 text-[var(--color-text)]">
           <input
             type="text"
-            placeholder={t('Description')}
+            placeholder="Description"
             className="w-full p-3 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded-xl"
             value={newLog.description}
             onChange={e => setNewLog(prev => ({ ...prev, description: e.target.value }))}
           />
           <input
             type="text"
-            placeholder={t('Technician')}
+            placeholder="Technician"
             className="w-full p-3 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded-xl"
             value={newLog.technician}
             onChange={e => setNewLog(prev => ({ ...prev, technician: e.target.value }))}
           />
           <input
             type="number"
-            placeholder={t('Cost')}
+            placeholder="Cost"
             className="w-full p-3 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded-xl"
             value={newLog.cost}
             onChange={e => setNewLog(prev => ({ ...prev, cost: Number(e.target.value) }))}
@@ -109,8 +108,8 @@ const Maintenance: React.FC = () => {
             onClick={handleAddLog}
             className="w-full bg-[var(--color-main)] text-white p-3 rounded-xl"
           >
-            {t('Save Log')}
-                                </button>
+            Save Log
+          </button>
         </div>
       </Modal>
     </div>

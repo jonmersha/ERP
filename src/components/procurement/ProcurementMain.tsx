@@ -19,7 +19,6 @@ import {
 import SupplierModal from './SupplierModal';
 import PurchaseOrderModal from './PurchaseOrderModal';
 import Badge from '../common/Badge';
-import { useTranslation } from "react-i18next";
 
 const Procurement: React.FC = () => {
   const { suppliers, orders, materials, factories, warehouses, loading, refreshData } = useProcurementData();
@@ -63,8 +62,8 @@ const Procurement: React.FC = () => {
     <div className="space-y-8 pb-12">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Procurement Management')}</h2>
-          <p className="text-[var(--color-text)]/40 mt-1">{t('Manage suppliers, purchase orders, and material acquisition.')}</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Procurement Management</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">Manage suppliers, purchase orders, and material acquisition.</p>
         </div>
         <div className="flex items-center space-x-3">
           <button 
@@ -72,14 +71,14 @@ const Procurement: React.FC = () => {
             className="flex items-center space-x-2 px-6 py-2.5 rounded-xl border border-[var(--color-text)]/10 text-sm font-bold hover:bg-[var(--color-text)]/5 transition-all text-[var(--color-text)]"
           >
             <Users size={16} />
-            <span>{t('Add Supplier')}</span>
+            <span>Add Supplier</span>
           </button>
           <button 
             onClick={() => { setSelectedPO(null); setIsPOModalOpen(true); }}
             className="flex items-center space-x-2 px-6 py-2.5 bg-[var(--color-main)] text-white rounded-xl text-sm font-bold shadow-lg shadow-[var(--color-main)]/20 hover:scale-[1.02] transition-all"
           >
             <Plus size={16} />
-            <span>{t('New Purchase Order')}</span>
+            <span>New Purchase Order</span>
           </button>
         </div>
       </header>
@@ -91,9 +90,9 @@ const Procurement: React.FC = () => {
             <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
               <ShoppingCart size={24} />
             </div>
-            <Badge color="blue" label={t('+12% vs last month')} className="text-[10px]" />
+            <Badge color="blue" label="+12% vs last month" className="text-[10px]" />
           </div>
-          <p className="text-sm font-medium text-[var(--color-text)]/40 uppercase tracking-widest">{t('Active Orders')}</p>
+          <p className="text-sm font-medium text-[var(--color-text)]/40 uppercase tracking-widest">Active Orders</p>
           <h3 className="text-3xl font-light text-[var(--color-text)] mt-1">{orders.filter(o => o.status !== 'received' && o.status !== 'cancelled').length}</h3>
         </div>
         <div className="bg-[var(--color-surface)] p-6 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
@@ -101,9 +100,9 @@ const Procurement: React.FC = () => {
             <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
               <TrendingUp size={24} />
             </div>
-            <Badge color="emerald" label={t('Optimal')} className="text-[10px]" />
+            <Badge color="emerald" label="Optimal" className="text-[10px]" />
           </div>
-          <p className="text-sm font-medium text-[var(--color-text)]/40 uppercase tracking-widest">{t('Total Spend')}</p>
+          <p className="text-sm font-medium text-[var(--color-text)]/40 uppercase tracking-widest">Total Spend</p>
           <h3 className="text-3xl font-light text-[var(--color-text)] mt-1">${orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0).toLocaleString()}</h3>
         </div>
         <div className="bg-[var(--color-surface)] p-6 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
@@ -111,9 +110,9 @@ const Procurement: React.FC = () => {
             <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
               <Users size={24} />
             </div>
-            <Badge color="amber" label={t('Active')} className="text-[10px]" />
+            <Badge color="amber" label="Active" className="text-[10px]" />
           </div>
-          <p className="text-sm font-medium text-[var(--color-text)]/40 uppercase tracking-widest">{t('Trusted Suppliers')}</p>
+          <p className="text-sm font-medium text-[var(--color-text)]/40 uppercase tracking-widest">Trusted Suppliers</p>
           <h3 className="text-3xl font-light text-[var(--color-text)] mt-1">{suppliers.length}</h3>
         </div>
       </div>
@@ -126,14 +125,14 @@ const Procurement: React.FC = () => {
               onClick={() => setActiveTab('orders')}
               className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'orders' ? 'bg-[var(--color-surface)] text-[var(--color-main)] shadow-sm' : 'text-[var(--color-text)]/40 hover:text-[var(--color-text)]/60'}`}
             >
-              {t('Purchase Orders')}
-                                      </button>
+              Purchase Orders
+            </button>
             <button 
               onClick={() => setActiveTab('suppliers')}
               className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'suppliers' ? 'bg-[var(--color-surface)] text-[var(--color-main)] shadow-sm' : 'text-[var(--color-text)]/40 hover:text-[var(--color-text)]/60'}`}
             >
-              {t('Suppliers')}
-                                      </button>
+              Suppliers
+            </button>
           </div>
 
           <div className="relative group max-w-sm w-full">
@@ -150,16 +149,16 @@ const Procurement: React.FC = () => {
 
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-20 text-center text-[var(--color-text)]/30 animate-pulse">{t('Loading')} {activeTab} {t('data...')}</div>
+            <div className="p-20 text-center text-[var(--color-text)]/30 animate-pulse">Loading {activeTab} data...</div>
           ) : activeTab === 'orders' ? (
             <table className="w-full text-left">
               <thead>
                 <tr className="text-[var(--color-text)]/30 text-[10px] font-bold uppercase tracking-widest">
-                  <th className="px-8 py-4">{t('PO Code')}</th>
-                  <th className="px-8 py-4">{t('Supplier')}</th>
-                  <th className="px-8 py-4">{t('Status')}</th>
-                  <th className="px-8 py-4">{t('Amount')}</th>
-                  <th className="px-8 py-4">{t('Created')}</th>
+                  <th className="px-8 py-4">PO Code</th>
+                  <th className="px-8 py-4">Supplier</th>
+                  <th className="px-8 py-4">Status</th>
+                  <th className="px-8 py-4">Amount</th>
+                  <th className="px-8 py-4">Created</th>
                   <th className="px-8 py-4"></th>
                 </tr>
               </thead>
@@ -176,7 +175,7 @@ const Procurement: React.FC = () => {
                     </td>
                     <td className="px-8 py-4">
                       <p className="font-bold text-[var(--color-text)] text-sm">{order.supplierName}</p>
-                      <p className="text-[10px] text-[var(--color-text)]/40">{order.items?.length || 0} {t('items')}</p>
+                      <p className="text-[10px] text-[var(--color-text)]/40">{order.items?.length || 0} items</p>
                     </td>
                     <td className="px-8 py-4">
                       <Badge 
@@ -208,9 +207,9 @@ const Procurement: React.FC = () => {
             <table className="w-full text-left">
               <thead>
                 <tr className="text-[var(--color-text)]/30 text-[10px] font-bold uppercase tracking-widest">
-                  <th className="px-8 py-4">{t('Supplier Name')}</th>
-                  <th className="px-8 py-4">{t('Contact Details')}</th>
-                  <th className="px-8 py-4">{t('Email')}</th>
+                  <th className="px-8 py-4">Supplier Name</th>
+                  <th className="px-8 py-4">Contact Details</th>
+                  <th className="px-8 py-4">Email</th>
                   <th className="px-8 py-4"></th>
                 </tr>
               </thead>
@@ -242,7 +241,7 @@ const Procurement: React.FC = () => {
             <div className="w-16 h-16 bg-[var(--color-text)]/5 rounded-full flex items-center justify-center mx-auto mb-4 text-[var(--color-text)]/20">
               <ShoppingCart size={32} />
             </div>
-            <p className="text-[var(--color-text)]/40 font-medium">{t('No results found for your search.')}</p>
+            <p className="text-[var(--color-text)]/40 font-medium">No results found for your search.</p>
           </div>
         )}
       </div>

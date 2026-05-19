@@ -249,9 +249,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               </button>
               {isLangMenuOpen && (
                 <div className="absolute top-full right-0 mt-2 w-32 bg-[var(--color-surface)] shadow-lg border border-[var(--color-border)] py-1 z-50 rounded-md">
-                  <button onClick={() => changeLanguage('en')} className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]">{t('English')}</button>
+                  <button onClick={() => changeLanguage('en')} className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]">English</button>
                   <button onClick={() => changeLanguage('am')} className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]">አማርኛ</button>
-                  <button onClick={() => changeLanguage('om')} className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]">{t('Afaan Oromoo')}</button>
+                  <button onClick={() => changeLanguage('om')} className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]">Afaan Oromoo</button>
                 </div>
               )}
             </div>

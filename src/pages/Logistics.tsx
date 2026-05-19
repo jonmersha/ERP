@@ -4,7 +4,6 @@ import { getShipments, addShipment } from '../services/logisticsService';
 import { useAuth } from '../context/AuthContext';
 import { Loader2, Plus, Truck } from 'lucide-react';
 import Modal from '../components/Modal';
-import { useTranslation } from "react-i18next";
 
 const Logistics: React.FC = () => {
   const { profile } = useAuth();
@@ -52,19 +51,19 @@ const Logistics: React.FC = () => {
   return (
     <div className="space-y-8">
       <header>
-        <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Logistics & Distribution')}</h2>
-        <p className="text-[var(--color-text)]/40 mt-1">{t('Manage cold-chain logistics, delivery routing, and shelf-life monitoring.')}</p>
+        <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Logistics & Distribution</h2>
+        <p className="text-[var(--color-text)]/40 mt-1">Manage cold-chain logistics, delivery routing, and shelf-life monitoring.</p>
       </header>
 
       <div className="bg-[var(--color-surface)] p-8 rounded-3xl border border-[var(--color-text)]/5 shadow-sm">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-[var(--color-text)]">{t('Shipments')}</h3>
+          <h3 className="text-xl font-bold text-[var(--color-text)]">Shipments</h3>
           <button 
             onClick={() => setIsModalOpen(true)}
             className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-4 py-2 rounded-xl"
           >
             <Plus size={16} />
-            <span>{t('Track Shipment')}</span>
+            <span>Track Shipment</span>
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -72,20 +71,20 @@ const Logistics: React.FC = () => {
             <div key={shipment.id} className="border border-[var(--color-text)]/5 p-6 rounded-2xl space-y-4">
               <div className="flex items-center space-x-3">
                 <Truck className="text-[var(--color-main)]" />
-                <h4 className="font-bold text-lg text-[var(--color-text)]">{t('Order:')} {shipment.orderId}</h4>
+                <h4 className="font-bold text-lg text-[var(--color-text)]">Order: {shipment.orderId}</h4>
               </div>
-              <p className="text-sm text-[var(--color-text)]/60">{t('Status:')} {shipment.status}</p>
-              <p className="text-sm text-[var(--color-text)]/60">{t('Delivery Date:')} {shipment.deliveryDate}</p>
+              <p className="text-sm text-[var(--color-text)]/60">Status: {shipment.status}</p>
+              <p className="text-sm text-[var(--color-text)]/60">Delivery Date: {shipment.deliveryDate}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={t('Track Shipment')}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Track Shipment">
         <div className="space-y-4 text-[var(--color-text)]">
           <input
             type="text"
-            placeholder={t('Order ID')}
+            placeholder="Order ID"
             className="w-full p-3 bg-[var(--color-bg)] border border-[var(--color-text)]/5 rounded-xl"
             value={newShipment.orderId}
             onChange={e => setNewShipment(prev => ({ ...prev, orderId: e.target.value }))}
@@ -94,8 +93,8 @@ const Logistics: React.FC = () => {
             onClick={handleAddShipment}
             className="w-full bg-[var(--color-main)] text-white p-3 rounded-xl"
           >
-            {t('Save Shipment')}
-                                </button>
+            Save Shipment
+          </button>
         </div>
       </Modal>
     </div>

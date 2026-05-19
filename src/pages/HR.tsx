@@ -6,7 +6,6 @@ import { motion } from 'motion/react';
 import { Users, UserPlus, Search, Briefcase, Mail, DollarSign, Loader2, XCircle } from 'lucide-react';
 import Modal from '../components/Modal';
 import StatsCard from '../components/common/StatsCard';
-import { useTranslation } from "react-i18next";
 
 const HR: React.FC = () => {
   const { profile } = useAuth();
@@ -69,8 +68,8 @@ const HR: React.FC = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Human Resources')}</h2>
-          <p className="text-[var(--color-text)]/40 mt-1">{t('Manage workforce across all production units')}</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Human Resources</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">Manage workforce across all production units</p>
         </div>
         <button 
           onClick={() => {
@@ -80,7 +79,7 @@ const HR: React.FC = () => {
           className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
         >
           <UserPlus size={20} />
-          <span className="font-bold">{t('Add Employee')}</span>
+          <span className="font-bold">Add Employee</span>
         </button>
       </header>
 
@@ -95,19 +94,19 @@ const HR: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard 
-          title={t('Total Workforce')}
+          title="Total Workforce"
           value={employees.length}
           icon={Users}
           color="indigo"
         />
         <StatsCard 
-          title={t('Departments')}
+          title="Departments"
           value={new Set(employees.map(e => e.department)).size}
           icon={Briefcase}
           color="emerald"
         />
         <StatsCard 
-          title={t('Monthly Payroll')}
+          title="Monthly Payroll"
           value={`$${totalPayroll.toLocaleString()}`}
           icon={DollarSign}
           color="amber"
@@ -116,12 +115,12 @@ const HR: React.FC = () => {
 
       <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 overflow-hidden">
         <div className="p-6 border-b border-[var(--color-text)]/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">{t('Employee Directory')}</h3>
+          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">Employee Directory</h3>
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
             <input 
               type="text"
-              placeholder={t('Search employees...')}
+              placeholder="Search employees..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-sm text-[var(--color-text)]"
@@ -160,7 +159,7 @@ const HR: React.FC = () => {
                   {Number(emp.salary || 0).toLocaleString()}
                 </div>
                 <div className="text-[10px] text-[var(--color-text)]/40">
-                  {t('Hired:')} {emp.hireDate ? new Date(emp.hireDate).toLocaleDateString() : 'N/A'}
+                  Hired: {emp.hireDate ? new Date(emp.hireDate).toLocaleDateString() : 'N/A'}
                 </div>
               </div>
             </motion.div>
@@ -168,57 +167,57 @@ const HR: React.FC = () => {
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={t('Add New Employee')}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Employee">
         <form onSubmit={handleCreate} className="space-y-6">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-black/40 uppercase tracking-widest">{t('Full Name')}</label>
+            <label className="text-xs font-bold text-black/40 uppercase tracking-widest">Full Name</label>
             <input 
               type="text"
               required
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
               className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
-              placeholder={t('e.g., Jane Smith')}
+              placeholder="e.g., Jane Smith"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Role')}</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Role</label>
               <input 
                 type="text"
                 required
                 value={form.role}
                 onChange={e => setForm({ ...form, role: e.target.value })}
                 className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
-                placeholder={t('e.g., Quality Manager')}
+                placeholder="e.g., Quality Manager"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Department')}</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Department</label>
               <input 
                 type="text"
                 required
                 value={form.department}
                 onChange={e => setForm({ ...form, department: e.target.value })}
                 className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
-                placeholder={t('e.g., Operations')}
+                placeholder="e.g., Operations"
               />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Email Address')}</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Email Address</label>
             <input 
               type="email"
               required
               value={form.email}
               onChange={e => setForm({ ...form, email: e.target.value })}
               className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
-              placeholder={t('e.g., jane@factory.com')}
+              placeholder="e.g., jane@factory.com"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Monthly Salary')}</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Monthly Salary</label>
               <input 
                 type="number"
                 required
@@ -229,7 +228,7 @@ const HR: React.FC = () => {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Hire Date')}</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Hire Date</label>
               <input 
                 type="date"
                 required
@@ -240,14 +239,14 @@ const HR: React.FC = () => {
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Assigned Factory')}</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Assigned Factory</label>
             <select 
               required
               value={form.factoryId}
               onChange={e => setForm({ ...form, factoryId: e.target.value })}
               className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
             >
-              <option value="">{t('Select Factory')}</option>
+              <option value="">Select Factory</option>
               {factories.map(f => (
                 <option key={f.id} value={f.id}>{f.name}</option>
               ))}

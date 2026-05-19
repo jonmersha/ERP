@@ -18,7 +18,6 @@ import OutgoingGoods from '../components/inventory/OutgoingGoods';
 import MovementHistory from '../components/inventory/MovementHistory';
 import GRNModal from '../components/inventory/GRNModal';
 import DNModal from '../components/inventory/DNModal';
-import { useTranslation } from "react-i18next";
 
 const Inventory: React.FC = () => {
   const { profile } = useAuth();
@@ -101,8 +100,8 @@ const Inventory: React.FC = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Inventory Management')}</h2>
-          <p className="text-[var(--color-text)]/40 mt-1">{t('Track stock levels and manage material movements')}</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Inventory Management</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">Track stock levels and manage material movements</p>
         </div>
         <div className="flex space-x-4">
           <button 
@@ -114,7 +113,7 @@ const Inventory: React.FC = () => {
             className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[var(--color-main)]/90 transition-all"
           >
             <ArrowDownLeft size={20} />
-            <span className="font-bold">{t('New GRN')}</span>
+            <span className="font-bold">New GRN</span>
           </button>
           <button 
             onClick={() => {
@@ -125,7 +124,7 @@ const Inventory: React.FC = () => {
             className="flex items-center space-x-2 bg-[var(--color-accent)] text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[var(--color-accent)]/90 transition-all"
           >
             <ArrowUpRight size={20} />
-            <span className="font-bold">{t('New Delivery Note')}</span>
+            <span className="font-bold">New Delivery Note</span>
           </button>
         </div>
       </header>
