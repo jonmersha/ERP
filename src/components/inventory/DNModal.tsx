@@ -1,6 +1,7 @@
 import React from 'react';
 import Modal from '../Modal';
 import { SalesOrder, Warehouse } from '../../types';
+import { useTranslation } from "react-i18next";
 
 interface DNModalProps {
   isOpen: boolean;
@@ -28,18 +29,18 @@ const DNModal: React.FC<DNModalProps> = ({
   submitting
 }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Delivery Note (Dispatch)">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('Delivery Note (Dispatch)')}>
       <form onSubmit={onSubmit} className="space-y-6">
         {!selectedSO ? (
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Select Sales Order</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Select Sales Order')}</label>
             <select 
               required
               value={selectedSO?.id || ''}
               onChange={e => setSelectedSO(pendingSOs.find(so => so.id === e.target.value) || null)}
               className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
             >
-              <option value="">Select Paid SO</option>
+              <option value="">{t('Select Paid SO')}</option>
               {(pendingSOs || []).map(so => (
                 <option key={so.id} value={so.id}>#{so.id?.slice(0, 8)} - {so.outletName || 'Unknown Outlet'}</option>
               ))}
@@ -52,9 +53,9 @@ const DNModal: React.FC<DNModalProps> = ({
               onClick={() => setSelectedSO(null)}
               className="absolute top-2 right-2 text-indigo-600 hover:text-indigo-800 text-xs font-bold"
             >
-              Change SO
-            </button>
-            <p className="text-sm text-indigo-800 font-medium">Dispatching SO #{selectedSO.id?.slice(0, 8)}</p>
+              {t('Change SO')}
+                                          </button>
+            <p className="text-sm text-indigo-800 font-medium">{t('Dispatching SO #')}{selectedSO.id?.slice(0, 8)}</p>
             <div className="mt-2 space-y-1">
               {(selectedSO.items || []).map((item, i) => (
                 <p key={i} className="text-xs text-indigo-700">• {item.productName || 'Unknown Product'}: <span className="font-bold">{item.quantity || 0}</span></p>
@@ -63,26 +64,26 @@ const DNModal: React.FC<DNModalProps> = ({
           </div>
         )}
         <div className="space-y-1">
-          <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Dispatch From Warehouse</label>
+          <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Dispatch From Warehouse')}</label>
           <select 
             required
             value={dnForm.warehouseId}
             onChange={e => setDnForm({ ...dnForm, warehouseId: e.target.value })}
             className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
           >
-            <option value="">Select Warehouse</option>
+            <option value="">{t('Select Warehouse')}</option>
             {(warehouses || []).map(w => (
               <option key={w.id} value={w.id}>{w.name}</option>
             ))}
           </select>
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Notes</label>
+          <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Notes')}</label>
           <textarea 
             value={dnForm.notes}
             onChange={e => setDnForm({ ...dnForm, notes: e.target.value })}
             className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 h-24 resize-none text-[var(--color-text)]"
-            placeholder="Shipping details, carrier info, etc..."
+            placeholder={t('Shipping details, carrier info, etc...')}
           />
         </div>
         <button 

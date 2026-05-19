@@ -1,6 +1,7 @@
 import React from 'react';
 import { Package, Search, Filter, Warehouse as WarehouseIcon, AlertTriangle } from 'lucide-react';
 import { InventoryItem, Warehouse, Factory, RawMaterial, Product } from '../../types';
+import { useTranslation } from "react-i18next";
 
 interface StockLevelsProps {
   inventory: InventoryItem[];
@@ -43,7 +44,7 @@ const StockLevels: React.FC<StockLevelsProps> = ({
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={20} />
           <input 
             type="text"
-            placeholder="Search materials or products..."
+            placeholder={t('Search materials or products...')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 transition-all"
@@ -56,11 +57,11 @@ const StockLevels: React.FC<StockLevelsProps> = ({
             onChange={(e) => setSelectedUnit(e.target.value)}
             className="bg-transparent focus:outline-none text-sm font-medium text-[var(--color-text)]"
           >
-            <option value="all">All Locations</option>
-            <optgroup label="Warehouses">
+            <option value="all">{t('All Locations')}</option>
+            <optgroup label={t('Warehouses')}>
               {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
             </optgroup>
-            <optgroup label="Factories">
+            <optgroup label={t('Factories')}>
               {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
             </optgroup>
           </select>
@@ -94,7 +95,7 @@ const StockLevels: React.FC<StockLevelsProps> = ({
               {item.quantity < 50 && (
                 <div className="mt-4 flex items-center space-x-2 text-amber-600 bg-amber-50 p-2 rounded-xl text-xs font-bold">
                   <AlertTriangle size={14} />
-                  <span>Low Stock Warning</span>
+                  <span>{t('Low Stock Warning')}</span>
                 </div>
               )}
             </div>

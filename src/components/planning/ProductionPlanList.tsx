@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Loader2, Plus, Info } from 'lucide-react';
 import ProductionPlanModal from './ProductionPlanModal';
 import ProductionPlanDetailsModal from './ProductionPlanDetailsModal';
+import { useTranslation } from "react-i18next";
 
 interface Props {
   factories: Factory[];
@@ -98,24 +99,24 @@ const ProductionPlanList: React.FC<Props> = ({ factories, products, materials })
   return (
     <div className="space-y-4 text-[var(--color-text)]">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold">Production Plans</h3>
+        <h3 className="text-xl font-bold">{t('Production Plans')}</h3>
         <button 
           onClick={() => { setSelectedPlan(null); setIsModalOpen(true); }}
           className="flex items-center space-x-2 bg-[var(--color-main)] text-white px-4 py-2 rounded-xl"
         >
           <Plus size={16} />
-          <span>New Plan</span>
+          <span>{t('New Plan')}</span>
         </button>
       </div>
       <table className="w-full text-left">
         <thead>
           <tr className="text-[var(--color-text)]/40 text-sm">
-            <th className="pb-2">Factory</th>
-            <th className="pb-2">Product</th>
-            <th className="pb-2">Year</th>
-            <th className="pb-2">Total Quantity</th>
-            <th className="pb-2">Status</th>
-            <th className="pb-2">Actions</th>
+            <th className="pb-2">{t('Factory')}</th>
+            <th className="pb-2">{t('Product')}</th>
+            <th className="pb-2">{t('Year')}</th>
+            <th className="pb-2">{t('Total Quantity')}</th>
+            <th className="pb-2">{t('Status')}</th>
+            <th className="pb-2">{t('Actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -134,7 +135,7 @@ const ProductionPlanList: React.FC<Props> = ({ factories, products, materials })
                 <button 
                   onClick={() => setSelectedPlan(plan)}
                   className="text-[var(--color-main)] hover:text-[var(--color-main)]/80"
-                  title="View Details"
+                  title={t('View Details')}
                 >
                   <Info size={18} />
                 </button>
@@ -168,21 +169,21 @@ const ProductionPlanList: React.FC<Props> = ({ factories, products, materials })
       {planToDelete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-[var(--color-surface)] p-6 rounded-2xl w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4 text-[var(--color-text)]">Delete Plan</h3>
-            <p className="text-[var(--color-text)]/70 mb-6">Are you sure you want to delete this production plan? This action cannot be undone.</p>
+            <h3 className="text-xl font-bold mb-4 text-[var(--color-text)]">{t('Delete Plan')}</h3>
+            <p className="text-[var(--color-text)]/70 mb-6">{t('Are you sure you want to delete this production plan? This action cannot be undone.')}</p>
             <div className="flex justify-end space-x-3">
               <button 
                 onClick={() => setPlanToDelete(null)}
                 className="px-4 py-2 rounded-xl text-[var(--color-text)]/70 hover:bg-[var(--color-text)]/5"
               >
-                Cancel
-              </button>
+                {t('Cancel')}
+                                            </button>
               <button 
                 onClick={handleDelete}
                 className="px-4 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600"
               >
-                Delete
-              </button>
+                {t('Delete')}
+                                            </button>
             </div>
           </div>
         </div>

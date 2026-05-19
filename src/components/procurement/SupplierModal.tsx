@@ -4,6 +4,7 @@ import { createSupplier } from '../../services/procurementService';
 import { useAuth } from '../../context/AuthContext';
 import { X, Loader2 } from 'lucide-react';
 import Modal from '../Modal';
+import { useTranslation } from "react-i18next";
 
 interface Props {
   isOpen: boolean;
@@ -60,7 +61,7 @@ const SupplierModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, supplier }
     <Modal isOpen={isOpen} onClose={onClose} title={supplier ? 'Edit Supplier' : 'New Supplier'}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">Supplier Name</label>
+          <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">{t('Supplier Name')}</label>
           <input 
             type="text" 
             required 
@@ -70,7 +71,7 @@ const SupplierModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, supplier }
           />
         </div>
         <div>
-          <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">Contact Person / Phone</label>
+          <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">{t('Contact Person / Phone')}</label>
           <input 
             type="text" 
             required 
@@ -80,7 +81,7 @@ const SupplierModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, supplier }
           />
         </div>
         <div>
-          <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">Email</label>
+          <label className="block text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest mb-1">{t('Email')}</label>
           <input 
             type="email" 
             className="w-full p-3 rounded-xl border border-[var(--color-text)]/10 bg-[var(--color-bg)]"

@@ -6,6 +6,7 @@ import { Users as UsersIcon, Shield, Mail, Search, Loader2, CheckCircle, XCircle
 import Modal from '../components/Modal';
 import { apiService } from '../services/apiService';
 import { fetchCollection } from '../utils/firestore';
+import { useTranslation } from "react-i18next";
 
 const Users: React.FC = () => {
   const { isAdmin, profile } = useAuth();
@@ -81,8 +82,8 @@ const Users: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-black/40">
         <Shield size={48} className="mb-4" />
-        <p className="text-xl font-serif">Access Denied</p>
-        <p className="text-sm">You do not have permission to view this page.</p>
+        <p className="text-xl font-serif">{t('Access Denied')}</p>
+        <p className="text-sm">{t('You do not have permission to view this page.')}</p>
       </div>
     );
   }
@@ -99,19 +100,19 @@ const Users: React.FC = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">User Management</h2>
-          <p className="text-[var(--color-text)]/40 mt-1">Manage system access and role assignments</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('User Management')}</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">{t('Manage system access and role assignments')}</p>
         </div>
       </header>
 
       <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 overflow-hidden">
         <div className="p-6 border-b border-[var(--color-text)]/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">System Users</h3>
+          <h3 className="font-serif font-bold text-lg text-[var(--color-text)]">{t('System Users')}</h3>
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text)]/20" size={18} />
             <input 
               type="text"
-              placeholder="Search users..."
+              placeholder={t('Search users...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-sm text-[var(--color-text)]"
@@ -123,9 +124,9 @@ const Users: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[var(--color-bg)]/50 text-[10px] font-bold text-[var(--color-text)]/40 uppercase tracking-widest">
-                <th className="px-6 py-4">User</th>
-                <th className="px-6 py-4">Roles</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-4">{t('User')}</th>
+                <th className="px-6 py-4">{t('Roles')}</th>
+                <th className="px-6 py-4 text-right">{t('Actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-text)]/5 text-sm">
@@ -165,8 +166,8 @@ const Users: React.FC = () => {
                       }}
                       className="text-[var(--color-main)] font-bold hover:underline"
                     >
-                      Manage Roles
-                    </button>
+                      {t('Manage Roles')}
+                                                  </button>
                   </td>
                 </tr>
               ))}
@@ -178,7 +179,7 @@ const Users: React.FC = () => {
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        title="Manage User Roles"
+        title={t('Manage User Roles')}
       >
         {selectedUser && (
           <form onSubmit={handleUpdateRoles} className="space-y-6">
@@ -188,7 +189,7 @@ const Users: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Assign Roles</label>
+              <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Assign Roles')}</label>
               <div className="grid grid-cols-2 gap-3">
                 {availableRoles.map(role => (
                   <button

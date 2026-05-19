@@ -1,6 +1,7 @@
 import React from 'react';
 import Modal from '../Modal';
 import { PurchaseOrder, Warehouse } from '../../types';
+import { useTranslation } from "react-i18next";
 
 interface GRNModalProps {
   isOpen: boolean;
@@ -28,18 +29,18 @@ const GRNModal: React.FC<GRNModalProps> = ({
   submitting
 }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Goods Receiving Note (GRN)">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('Goods Receiving Note (GRN)')}>
       <form onSubmit={onSubmit} className="space-y-6">
         {!selectedPO ? (
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Select Purchase Order</label>
+            <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Select Purchase Order')}</label>
             <select 
               required
               value={selectedPO?.id || ''}
               onChange={e => setSelectedPO(pendingPOs.find(po => po.id === e.target.value) || null)}
               className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
             >
-              <option value="">Select Approved PO</option>
+              <option value="">{t('Select Approved PO')}</option>
               {(pendingPOs || []).map(po => (
                 <option key={po.id} value={po.id}>#{po.id?.slice(0, 8)} - {po.supplierName || 'Unknown Supplier'}</option>
               ))}
@@ -52,9 +53,9 @@ const GRNModal: React.FC<GRNModalProps> = ({
               onClick={() => setSelectedPO(null)}
               className="absolute top-2 right-2 text-emerald-600 hover:text-emerald-800 text-xs font-bold"
             >
-              Change PO
-            </button>
-            <p className="text-sm text-emerald-800 font-medium">Receiving for PO #{selectedPO.id?.slice(0, 8)}</p>
+              {t('Change PO')}
+                                          </button>
+            <p className="text-sm text-emerald-800 font-medium">{t('Receiving for PO #')}{selectedPO.id?.slice(0, 8)}</p>
             <div className="mt-2 space-y-1">
               {(selectedPO.items || []).map((item, i) => (
                 <p key={i} className="text-xs text-emerald-700">• {item.itemName || 'Unknown Item'}: <span className="font-bold">{item.quantity || 0}</span></p>
@@ -63,26 +64,26 @@ const GRNModal: React.FC<GRNModalProps> = ({
           </div>
         )}
         <div className="space-y-1">
-          <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Receiving Warehouse</label>
+          <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Receiving Warehouse')}</label>
           <select 
             required
             value={grnForm.warehouseId}
             onChange={e => setGrnForm({ ...grnForm, warehouseId: e.target.value })}
             className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 text-[var(--color-text)]"
           >
-            <option value="">Select Warehouse</option>
+            <option value="">{t('Select Warehouse')}</option>
             {(warehouses || []).map(w => (
               <option key={w.id} value={w.id}>{w.name}</option>
             ))}
           </select>
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">Notes</label>
+          <label className="text-xs font-bold text-[var(--color-text)]/40 uppercase tracking-widest">{t('Notes')}</label>
           <textarea 
             value={grnForm.notes}
             onChange={e => setGrnForm({ ...grnForm, notes: e.target.value })}
             className="w-full p-3 bg-[var(--color-bg)] rounded-xl border border-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-main)]/20 h-24 resize-none text-[var(--color-text)]"
-            placeholder="Any observations about the received goods..."
+            placeholder={t('Any observations about the received goods...')}
           />
         </div>
         <button 

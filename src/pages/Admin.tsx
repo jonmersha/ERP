@@ -2,6 +2,7 @@
 import React from 'react';
 import { Shield, Users, Database } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from "react-i18next";
 
 const Admin: React.FC = () => {
   const adminTasks = [
@@ -14,8 +15,8 @@ const Admin: React.FC = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-center">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">Admin Panel</h2>
-          <p className="text-[var(--color-text)]/40 mt-1">Manage core application operations and settings</p>
+          <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">{t('Admin Panel')}</h2>
+          <p className="text-[var(--color-text)]/40 mt-1">{t('Manage core application operations and settings')}</p>
         </div>
       </header>
 

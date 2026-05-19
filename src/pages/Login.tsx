@@ -8,6 +8,7 @@ import { apiService } from '../services/apiService';
 import { seedDatabase } from '../utils/seedData';
 import { motion, AnimatePresence } from 'motion/react';
 import { LogIn, ShieldCheck, Building2, Plus, Users, ArrowRight, MapPin, Phone, Mail, Image as ImageIcon } from 'lucide-react';
+import { useTranslation } from "react-i18next";
 
 const Login: React.FC = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -129,8 +130,8 @@ const Login: React.FC = () => {
             <div className="w-16 h-16 bg-[var(--color-main)] rounded-sm flex items-center justify-center mx-auto mb-4 border border-[var(--color-border)]">
               <ShieldCheck className="text-white" size={32} />
             </div>
-            <h1 className="text-3xl font-light text-[var(--color-text)]">Sheger ERP</h1>
-            <p className="text-[var(--color-text)]/60 mt-2 text-sm">Enterprise Identity Provider</p>
+            <h1 className="text-3xl font-light text-[var(--color-text)]">{t('Sheger ERP')}</h1>
+            <p className="text-[var(--color-text)]/60 mt-2 text-sm">{t('Enterprise Identity Provider')}</p>
           </div>
 
           {error && (
@@ -149,15 +150,15 @@ const Login: React.FC = () => {
             ) : (
               <>
                 <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-                <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-main)]">Sign in with Google</span>
+                <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-main)]">{t('Sign in with Google')}</span>
               </>
             )}
           </button>
 
           <div className="mt-10 pt-6 border-t border-[var(--color-border)] text-center">
             <p className="text-xs text-[var(--color-text)]/40 uppercase tracking-widest font-normal">
-              SAP Fiori Experience
-            </p>
+              {t('SAP Fiori Experience')}
+                                      </p>
           </div>
         </motion.div>
       </AnimatePresence>
