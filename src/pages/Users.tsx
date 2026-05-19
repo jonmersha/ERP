@@ -102,28 +102,6 @@ const Users: React.FC = () => {
           <h2 className="text-4xl font-serif font-bold text-[var(--color-main)]">User Management</h2>
           <p className="text-[var(--color-text)]/40 mt-1">Manage system access and role assignments</p>
         </div>
-        {company && (
-          <div className="bg-[var(--color-surface)] px-6 py-3 rounded-2xl border border-[var(--color-text)]/5 shadow-sm flex items-center space-x-4">
-            <div className="p-2 bg-[var(--color-main)]/10 text-[var(--color-main)] rounded-xl">
-              <Building2 size={20} />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-[var(--color-text)]/20 uppercase tracking-widest">Join Code</p>
-              <div className="flex items-center space-x-2">
-                <span className="font-mono font-bold text-lg text-[var(--color-main)] tracking-widest">{company.code}</span>
-                <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(company.code);
-                    alert('Join code copied to clipboard!');
-                  }}
-                  className="p-1 text-[var(--color-text)]/20 hover:text-[var(--color-main)] transition-colors"
-                >
-                  <Copy size={14} />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
       <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-text)]/5 overflow-hidden">

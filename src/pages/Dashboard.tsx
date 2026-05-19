@@ -251,10 +251,6 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="flex flex-col items-end space-y-3 mt-4 md:mt-0">
-          <div className="px-3 py-1 bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] text-xs font-bold uppercase">
-            Org: {company?.code}
-          </div>
-          
           {isAdmin && (
             <div className="flex items-center space-x-3">
               <button 
