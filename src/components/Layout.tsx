@@ -26,9 +26,11 @@ import {
   Moon,
   Shield,
   Menu,
-  X
+  X,
+  Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { profile, hasRole } = useAuth();
@@ -37,6 +39,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const { t, i18n } = useTranslation();
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    setIsLangMenuOpen(false);
+  };
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' || 'light';
@@ -57,45 +66,45 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['admin', 'finance', 'store', 'procurement', 'sales', 'factory_manager'] },
+    { name: t('Dashboard'), path: '/', icon: LayoutDashboard, roles: ['admin', 'finance', 'store', 'procurement', 'sales', 'factory_manager'] },
     { 
-      name: 'Operations', 
+      name: t('Operations'), 
       icon: Factory, 
       roles: ['admin', 'factory_manager', 'procurement', 'store'],
       submenu: [
-        { name: 'Planning', path: '/planning', icon: Calendar },
-        { name: 'Procurement', path: '/procurement', icon: ShoppingCart },
-        { name: 'Inventory', path: '/inventory', icon: Warehouse },
-        { name: 'Production', path: '/production', icon: Factory },
-        { name: 'Recipes', path: '/recipes', icon: BookOpen },
-        { name: 'Maintenance', path: '/maintenance', icon: Wrench },
-        { name: 'Logistics', path: '/logistics', icon: Truck },
-        { name: 'Quality', path: '/quality', icon: CheckCircle2 },
+        { name: t('Planning'), path: '/planning', icon: Calendar },
+        { name: t('Procurement'), path: '/procurement', icon: ShoppingCart },
+        { name: t('Inventory'), path: '/inventory', icon: Warehouse },
+        { name: t('Production'), path: '/production', icon: Factory },
+        { name: t('Recipes'), path: '/recipes', icon: BookOpen },
+        { name: t('Maintenance'), path: '/maintenance', icon: Wrench },
+        { name: t('Logistics'), path: '/logistics', icon: Truck },
+        { name: t('Quality'), path: '/quality', icon: CheckCircle2 },
       ]
     },
     { 
-      name: 'Sales & Finance', 
+      name: t('Sales & Finance'), 
       icon: CreditCard, 
       roles: ['admin', 'sales', 'finance'],
       submenu: [
-        { name: 'Sales', path: '/sales', icon: TrendingUp },
-        { name: 'Finance', path: '/finance', icon: CreditCard },
+        { name: t('Sales'), path: '/sales', icon: TrendingUp },
+        { name: t('Finance'), path: '/finance', icon: CreditCard },
       ]
     },
     { 
-      name: 'Admin Panel', 
+      name: t('Admin Panel'), 
       path: '/admin', 
       icon: Shield, 
       roles: ['admin'] 
     },
     { 
-      name: 'Administration', 
+      name: t('Administration'), 
       icon: Database, 
       roles: ['admin'],
       submenu: [
-        { name: 'HR', path: '/hr', icon: Users },
-        { name: 'Users', path: '/users', icon: Users },
-        { name: 'Master Data', path: '/master-data', icon: Database },
+        { name: t('HR'), path: '/hr', icon: Users },
+        { name: t('Users'), path: '/users', icon: Users },
+        { name: t('Master Data'), path: '/master-data', icon: Database },
       ]
     },
   ];
@@ -110,7 +119,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="w-full px-4 h-12 flex items-center justify-between">
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-2">
-              <span className="text-xl font-bold tracking-tight"><span className="text-white/60 text-sm font-normal ml-1">Sheger ERP</span></span>
+               <span className="text-xl font-bold tracking-tight"><span className="text-white/60 text-sm font-normal ml-1">{t('Sheger ERP')}</span></span>
             </div>
             {/* Mobile Hamburger Button */}
             <button 
@@ -230,7 +239,23 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <button onClick={toggleTheme} className="p-2 text-white/80 hover:bg-[var(--color-shell-hover)] rounded-full transition-colors" title="Toggle Theme">
+            <div className="relative group flex items-center">
+              <button 
+                onClick={() => setIsLangMenuOpen(!isLangMenuOpen)} 
+                className="p-2 text-white/80 hover:bg-[var(--color-shell-hover)] rounded-full transition-colors flex items-center" 
+                title={t('Change Language')}
+              >
+                <Globe size={16} />
+              </button>
+              {isLangMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-32 bg-[var(--color-surface)] shadow-lg border border-[var(--color-border)] py-1 z-50 rounded-md">
+                  <button onClick={() => changeLanguage('en')} className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]">English</button>
+                  <button onClick={() => changeLanguage('am')} className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]">አማርኛ</button>
+                  <button onClick={() => changeLanguage('om')} className="w-full text-left px-4 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]">Afaan Oromoo</button>
+                </div>
+              )}
+            </div>
+            <button onClick={toggleTheme} className="p-2 text-white/80 hover:bg-[var(--color-shell-hover)] rounded-full transition-colors" title={t('Toggle Theme')}>
               {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
             <div className="flex items-center space-x-2 px-3 py-1 cursor-pointer hover:bg-[var(--color-shell-hover)] rounded-full transition-colors" title={profile?.name}>
@@ -238,7 +263,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 {profile?.name?.[0] || 'U'}
               </div>
             </div>
-            <button onClick={handleSignOut} className="p-2 text-white/80 hover:bg-red-500/80 hover:text-white rounded-full transition-colors" title="Sign Out">
+            <button onClick={handleSignOut} className="p-2 text-white/80 hover:bg-red-500/80 hover:text-white rounded-full transition-colors" title={t('Sign Out')}>
               <LogOut size={16} />
             </button>
           </div>
